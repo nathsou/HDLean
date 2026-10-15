@@ -10,3 +10,4 @@ import Designs.Fifo.Challenge
 import Designs.Counter.Challenge
 import Designs.Toy16.Challenge
 import Designs.SkidBuffer.Pipeline
+import Designs.SkidBuffer.Challenge

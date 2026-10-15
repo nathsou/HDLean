@@ -4,10 +4,10 @@ import Lean
 open HDLean HDLean.Backend HDLean.Verification
 
 private def usage : String := "HDLean 0.1.0\n\
-  hdlean emit <fifo|counter> <sv|aiger|rtlil> <path> [width=8]\n\
-  hdlean metrics <fifo|counter> [width=8]\n\
-  hdlean trace <fifo|counter> <path.json> [width=8] [cycles=60] [seed=1]\n\
-  hdlean check <fifo|counter> [width=8] [cycles=200] [seed=1]\n\
+  hdlean emit <fifo|counter|pipeline|ram> <sv|aiger|rtlil> <path> [width=8]\n\
+  hdlean metrics <fifo|counter|pipeline|ram> [width=8]\n\
+  hdlean trace <fifo|counter|pipeline|ram> <path.json> [width=8] [cycles=60] [seed=1]\n\
+  hdlean check <fifo|counter|pipeline|ram> [width=8] [cycles=200] [seed=1]\n\
   hdlean toy16 [cycles=60]\n\
 FIFO is a verified two-entry skid buffer. Inputs: valid, ready, payload LSB first, reset.\n\
 Outputs: ready, valid, payload LSB first. Counter inputs: enable, reset. Clock is implicit."
@@ -22,6 +22,8 @@ private def withDesign (name : String) (width : Nat)
   match name with
   | "fifo" => f (Fifo.hardware width)
   | "counter" => f Counter.hardware
+  | "pipeline" => f (SkidBuffer.hardware width)
+  | "ram" => f (RAMCircuit.hardware 4 width)
   | _ => throw (IO.userError s!"unknown design: {name}")
 
 private def parseNum (s : String) (max : Nat := 1000000) : IO Nat :=
@@ -45,15 +47,16 @@ private def execute (args : List String) : IO Unit := do
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
     withDesign design width fun c => do
-      let graph ← match checkedCompile c with
-        | .ok g => pure g.val
-        | .error e => throw (IO.userError e)
-      let text ← match format with
-        | "sv" => pure (systemVerilog graph)
-        | "aiger" => pure (aiger graph)
-        | "rtlil" => pure (rtlil graph)
+      let format ← match format with
+        | "sv" => pure Format.systemVerilog
+        | "aiger" => pure Format.aiger
+        | "rtlil" => pure Format.rtlil
         | _ => throw (IO.userError s!"unknown format: {format}; expected sv, aiger, rtlil")
-      writeFile path text
+      let artifact ← match checkedPrint format c with
+        | .ok a => pure a
+        | .error e => throw (IO.userError e)
+      let graph := compile (lower c)
+      writeFile path artifact.text
       IO.println s!"Wrote {path} ({graph.ffBits} flip-flops, {graph.andCount} AND gates)."
   | "metrics" :: design :: rest =>
     if rest.length > 1 then throw (IO.userError usage)

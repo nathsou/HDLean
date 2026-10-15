@@ -7,7 +7,7 @@ structure Gate where
   lhs : Nat
   a : Lit
   b : Lit
-  deriving Repr, BEq
+  deriving Repr, BEq, DecidableEq
 
 /-- A topologically ordered shared AIG, with explicit arbitrary initial latch values. -/
 structure Graph where

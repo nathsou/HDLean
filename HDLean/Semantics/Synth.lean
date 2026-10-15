@@ -15,6 +15,12 @@ instance : Synth Bool where
   decode v := v != 0
   decode_encode b := by cases b <;> decide
 
+instance : Synth Unit where
+  width := 0
+  encode _ := 0
+  decode _ := ()
+  decode_encode a := by cases a; rfl
+
 /-- An encoding is injective: two distinct hardware values never share a bit pattern. -/
 theorem Synth.encode_injective [Synth α] : Function.Injective (Synth.encode (α := α)) := by
   intro a b h
@@ -38,14 +44,25 @@ instance [Synth α] [Synth β] : Synth (α × β) where
   decode b := decode (Synth.decode b)
   decode_encode a := by rw [Synth.decode_encode, inverse]
 
-/-- A conservative fixed-width encoding of nonempty finite types; unused patterns decode modulo n. -/
+/-- Minimal unsigned width for values 0..maximum; a singleton needs no wire bits. -/
+def finWidth (maximum : Nat) : Nat := if maximum = 0 then 0 else maximum.log2 + 1
+
+theorem finWidth_bound (a : Fin (n + 1)) : a.val < 2 ^ finWidth n := by
+  by_cases hn : n = 0
+  · subst n
+    have ha : a.val = 0 := by omega
+    simp [finWidth]
+  · simp only [finWidth, ite_eq_right hn]
+    exact Nat.lt_of_le_of_lt (by omega) Nat.lt_log2_self
+
+/-- Compact finite-type encoding; unused bit patterns decode modulo the cardinality. -/
 instance : Synth (Fin (n + 1)) where
-  width := n + 1
-  encode a := BitVec.ofNat (n + 1) a.val
+  width := finWidth n
+  encode a := BitVec.ofNat (finWidth n) a.val
   decode b := ⟨b.toNat % (n + 1), Nat.mod_lt _ (by omega)⟩
   decode_encode a := by
     apply Fin.ext
-    have h : a.val < 2 ^ (n + 1) := Nat.lt_trans a.isLt (Nat.lt_two_pow_self)
+    have h := finWidth_bound a
     simp [BitVec.toNat_ofNat, Nat.mod_eq_of_lt h, Nat.mod_eq_of_lt a.isLt]
 
 @[instance_reducible] private def synthVector [Synth α] : (n : Nat) → Synth (Vector α n)

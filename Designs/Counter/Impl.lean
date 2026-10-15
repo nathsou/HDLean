@@ -1,4 +1,5 @@
 import HDLean.Netlist.Lower
+import HDLean.Core.Syntax
 import Designs.Counter.Spec
 namespace HDLean.Counter
 

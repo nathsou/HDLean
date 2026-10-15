@@ -19,4 +19,5 @@ theorem counter_graph : (Backend.compile (lower Counter.hardware)).Equivalent Co
 theorem fifo8_graph : (Backend.compile (lower (Fifo.hardware 8))).Equivalent (Fifo.hardware 8) := by
   apply Backend.Graph.validate_sound
   decide +kernel
+
 end HDLean.Tests

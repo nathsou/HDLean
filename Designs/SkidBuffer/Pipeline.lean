@@ -1,14 +1,8 @@
 import HDLean.Lib.Network
 import Designs.Fifo.Scenarios
+import Designs.SkidBuffer.Spec
 namespace HDLean.SkidBuffer
 open Fifo
-
-/-- Three stages coupled by valid/ready, including backward pressure. -/
-def wiring (fallback : α) (i : Input α) (o : Fin 3 → Output α) : Fin 3 → Input α := fun k =>
-  match k.val with
-  | 0 => ⟨i.enqValid, i.enqData, (o 1).enqReady⟩
-  | 1 => ⟨(o 0).deqValid, (o 0).deqData.getD fallback, (o 2).enqReady⟩
-  | _ => ⟨(o 1).deqValid, (o 1).deqData.getD fallback, i.deqReady⟩
 
 /-- The local initial state is the state after reset; payload contents remain arbitrary. -/
 def stage (garbage : α) : Machine (State α) (Input α) (Output α) where

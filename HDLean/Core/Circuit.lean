@@ -44,9 +44,4 @@ def denote (c : Circuit d i r o) (_moore : c.IsMoore) : PMachine (Fin r → Bool
 
 end Circuit
 
-/-- Ordinary Lean do-notation builds expressions; no arbitrary Lean function is a hardware node. -/
-abbrev CircuitM := Id
-syntax "circuit" " do " doSeq : term
-macro_rules | `(circuit do $s) => `(Id.run do $s)
-
 end HDLean

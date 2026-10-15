@@ -1,5 +1,6 @@
 import HDLean.Core.Expr
-import Std.Tactic.BVDecide
+import Init.Data.BitVec.Bitblast
+import Init.Data.Nat.Power2.Bitwise
 namespace HDLean
 
 /-- Each global step carries independent edges, chosen by the environment. -/
@@ -76,17 +77,78 @@ def crossBit (s : Sync2 Bool) (sourceOld sourceNew : Signal a Bool)
   let s' := sync2Step s (oracle.edge dest) sourceOld.value sourceNew.value (oracle.sampleNew dest 0)
   (s', ⟨s'.second⟩)
 
-/-- Fixed-width examples use the explicitly reported native bit-blasting trust level. -/
+
+/-- A single differing bit gives the relational adjacency needed by the sampler. -/
+theorem adjacent_of_xor_twoPow (a b : BitVec w) (k : Fin w)
+    (h : a ^^^ b = BitVec.twoPow w k.val) : Adjacent a b := by
+  refine ⟨k, ?_⟩
+  intro j hj
+  have hne : k.val ≠ j.val := by
+    intro he
+    exact hj (Fin.ext he.symm)
+  have hb := congrArg (fun x : BitVec w => x.getLsbD j.val) h
+  simp only [BitVec.getLsbD_xor, BitVec.getLsbD_twoPow] at hb
+  simp [hne] at hb
+  exact hb
+
+/-- The standard bit trick detects zero or one set bit at every width. -/
+theorem eq_zero_or_twoPow_of_and_pred_eq_zero (d : BitVec w)
+    (h : d &&& (d - 1) = 0) : d = 0 ∨ ∃ k : Fin w, d = BitVec.twoPow w k.val := by
+  by_cases hz : d = 0
+  · exact Or.inl hz
+  right
+  have hn : d.toNat ≠ 0 := by
+    intro he
+    apply hz
+    apply BitVec.eq_of_toNat_eq
+    simpa using he
+  have hw : 0 < w := by
+    have := d.isLt
+    cases w with
+    | zero => simp at this; omega
+    | succ n => omega
+  have hone : (1 : BitVec w).toNat = 1 := by simp [BitVec.toNat_ofNat, Nat.one_mod_two_pow hw]
+  have hle : (1 : BitVec w) ≤ d := by rw [BitVec.le_def, hone]; omega
+  have hd := congrArg BitVec.toNat h
+  simp only [BitVec.toNat_and, BitVec.toNat_sub_of_le hle, hone] at hd
+  obtain ⟨k, hk⟩ := (Nat.and_sub_one_eq_zero_iff_isPowerOfTwo hn).mp hd
+  have hkw : k < w := by
+    have := d.isLt
+    rw [hk] at this
+    exact (Nat.pow_lt_pow_iff_right (by decide)).mp this
+  refine ⟨⟨k, hkw⟩, ?_⟩
+  apply BitVec.eq_of_toNat_eq
+  simpa [BitVec.toNat_twoPow_of_lt hkw] using hk
+
+/-- Width-generic, kernel-only version of the bit-mixture safety theorem. -/
+theorem one_bit_mix (a b m : BitVec w) (h : (a ^^^ b) &&& ((a ^^^ b) - 1) = 0) :
+    sampleBits a b m = a ∨ sampleBits a b m = b := by
+  rcases eq_zero_or_twoPow_of_and_pred_eq_zero (a ^^^ b) h with hz | ⟨k, hk⟩
+  · have hab : a = b := BitVec.xor_eq_zero_iff.mp hz
+    subst b
+    left
+    apply BitVec.eq_of_getLsbD_eq
+    intro j hj
+    simp only [sampleBits, BitVec.getLsbD_or, BitVec.getLsbD_and, BitVec.getLsbD_not]
+    cases a.getLsbD j <;> cases m.getLsbD j <;> simp [hj]
+  · exact sample_adjacent a b m (adjacent_of_xor_twoPow a b k hk)
+
+/-- Exhaustive eight-bit adjacency certificate, replayable by the kernel and nanoda. -/
+theorem gray_one_bit8_kernel : ∀ x : BitVec 8,
+    let d := gray x ^^^ gray (x + 1)
+    d ≠ 0 ∧ d &&& (d - 1) = 0 := by
+  decide +kernel
+
+
+/-- Fixed-width Gray adjacency certificate, checked in the kernel. -/
 theorem gray_one_bit8 (x : BitVec 8) :
     let d := gray x ^^^ gray (x + 1)
     d ≠ 0 ∧ d &&& (d - 1) = 0 := by
-  simp only [gray]
-  bv_decide
+  exact gray_one_bit8_kernel x
 
 theorem one_bit_mix8 (a b m : BitVec 8) (h : (a ^^^ b) &&& ((a ^^^ b) - 1) = 0) :
     sampleBits a b m = a ∨ sampleBits a b m = b := by
-  simp only [sampleBits]
-  bv_decide
+  exact one_bit_mix a b m h
 
 example : sampleBits (7 : BitVec 4) 8 7 = 15 := by decide
 end HDLean

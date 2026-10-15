@@ -55,20 +55,20 @@ def bitXor (a b : WordExpr d i r w) : WordExpr d i r w := a.zipWith Expr.xor b
 def eq (a b : WordExpr d i r w) : Expr d i r :=
   (a.zipWith (fun x y => .inv (.xor x y)) b).foldl Expr.and (.lit true)
 
+/-- Structural carry recurrence exposes a local proof obligation for each bit. -/
+def carryAt (a b : WordExpr d i r w) (initial : Expr d i r) : Nat → Expr d i r
+  | 0 => initial
+  | n + 1 => if h : n < w then
+      (Expr.and a[n] b[n]).or (.and (.xor a[n] b[n]) (carryAt a b initial n))
+    else carryAt a b initial n
+
 /-- Ripple-carry addition. Carry out is explicit, so overflow can be specified. -/
 def addWithCarry (a b : WordExpr d i r w) (carry : Expr d i r := .lit false) :
-    WordExpr d i r w × Expr d i r := Id.run do
-  let mut c := carry
-  let mut out := Vector.replicate w (Expr.lit false)
-  for k in List.finRange w do
-    let p := Expr.xor a[k] b[k]
-    out := out.set k (.xor p c)
-    c := (Expr.and a[k] b[k]).or (.and p c)
-  return (out, c)
+    WordExpr d i r w × Expr d i r :=
+  (Vector.ofFn (fun k => .xor (.xor a[k] b[k]) (carryAt a b carry k.val)), carryAt a b carry w)
 def add (a b : WordExpr d i r w) : WordExpr d i r w := (addWithCarry a b).1
 
 def eval (a : WordExpr d i r w) (xs : Fin i → Bool) (s : Fin r → Bool) : BitVec w :=
-  BitVec.ofNat w ((List.finRange w).foldl
-    (fun v k => if a[k].eval xs s then v + 2 ^ k.val else v) 0)
+  BitVec.cast (by simp) (BitVec.ofBoolListLE ((a.map fun e => e.eval xs s).toList))
 end WordExpr
 end HDLean
