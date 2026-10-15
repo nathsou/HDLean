@@ -13,3 +13,4 @@ import Designs.SkidBuffer.Pipeline
 import Designs.SkidBuffer.Challenge
 import Designs.AsyncFifo.Proof
 import Designs.AsyncFifo.Hardware
+import Designs.Fifo.CircularHardware

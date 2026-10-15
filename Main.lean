@@ -4,10 +4,10 @@ import Lean
 open HDLean HDLean.Backend HDLean.Verification
 
 private def usage : String := "HDLean 0.1.0\n\
-  hdlean emit <fifo|counter|pipeline|ram|toy16> <sv|aiger|rtlil> <path> [width=8]\n\
-  hdlean metrics <fifo|counter|pipeline|ram|toy16> [width=8]\n\
-  hdlean trace <fifo|counter|pipeline|ram|toy16> <path.json> [width=8] [cycles=60] [seed=1]\n\
-  hdlean check <fifo|counter|pipeline|ram|toy16> [width=8] [cycles=200] [seed=1]\n\
+  hdlean emit <fifo|counter|pipeline|ram|ring|toy16> <sv|aiger|rtlil> <path> [width=8]\n\
+  hdlean metrics <fifo|counter|pipeline|ram|ring|toy16> [width=8]\n\
+  hdlean trace <fifo|counter|pipeline|ram|ring|toy16> <path.json> [width=8] [cycles=60] [seed=1]\n\
+  hdlean check <fifo|counter|pipeline|ram|ring|toy16> [width=8] [cycles=200] [seed=1]\n\
   hdlean toy16 [cycles=60]\n\
 FIFO is a verified two-entry skid buffer. Inputs: valid, ready, payload LSB first, reset.\n\
 Outputs: ready, valid, payload LSB first. Counter inputs: enable, reset. Clock is implicit."
@@ -23,6 +23,7 @@ private def withDesign (name : String) (width : Nat)
   | "fifo" => f (Fifo.hardware width)
   | "counter" => f Counter.hardware
   | "pipeline" => f (SkidBuffer.hardware width)
+  | "ring" => f (Fifo.Circular.Physical.hardware 4 width)
   | "ram" => f (RAMCircuit.hardware 4 width)
   | "toy16" => f (Toy16.Physical.hardware Toy16.sumProgram)
   | _ => throw (IO.userError s!"unknown design: {name}")

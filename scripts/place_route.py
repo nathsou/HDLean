@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure mapped utilization and routed timing on an iCE40HX8K-CT256 FPGA."""
+"""Measure FPGA mapped utilization and routed timing on iCE40HX8K or ECP5-25K."""
 import argparse
 import hashlib
 import json
@@ -27,27 +27,31 @@ def command(args, cwd, log, env=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('design', choices=['counter', 'fifo', 'pipeline', 'ram', 'toy16'])
+    p.add_argument('--device', choices=['ice40-hx8k','ecp5-25k'], default='ice40-hx8k')
     p.add_argument('--width', type=int, default=8)
     p.add_argument('--frequency-mhz', type=float, default=12)
     p.add_argument('--seed', type=int, default=1)
     p.add_argument('--yosys', default=os.environ.get('YOSYS', 'yosys'))
     p.add_argument('--abc', default=os.environ.get('ABC', 'yosys-abc'))
-    p.add_argument('--nextpnr', default=os.environ.get('NEXTPNR', 'nextpnr-ice40'))
+    p.add_argument('--nextpnr', default=os.environ.get('NEXTPNR'))
     p.add_argument('--chipdb-model', type=Path, help='chipdb-8k.bin used by nextpnr; defaults to installed shared model')
     p.add_argument('--output', type=Path, default=ROOT / 'build/physical')
     a = p.parse_args()
     if not 0 <= a.width <= 64 or not 0 < a.frequency_mhz <= 1000 or not 0 <= a.seed < 2**32:
         p.error('invalid width, frequency, or seed')
+    a.nextpnr = a.nextpnr or ('nextpnr-ecp5' if a.device == 'ecp5-25k' else 'nextpnr-ice40')
     tools = {}
     for name in ['yosys', 'abc', 'nextpnr']:
         binary = shutil.which(getattr(a, name))
         if not binary:
             p.error(f'missing {name}: {getattr(a,name)}')
         tools[name] = Path(binary).resolve()
-    model = a.chipdb_model or (tools['nextpnr'].parent.parent / 'share/nextpnr/ice40/chipdb-8k.bin')
+    embedded = tools['nextpnr'].parent.parent / 'libexec' / tools['nextpnr'].name
+    model = a.chipdb_model or ((embedded if embedded.is_file() else tools['nextpnr']) if a.device == 'ecp5-25k' else
+                              tools['nextpnr'].parent.parent / 'share/nextpnr/ice40/chipdb-8k.bin')
     if not model.is_file():
         p.error('missing device model; pass --chipdb-model with the model used by nextpnr')
-    work = a.output.resolve() / f'{a.design}-{a.width}'
+    work = a.output.resolve() / f'{a.design}-{a.width}-{a.device}'
     work.mkdir(parents=True, exist_ok=True)
     report_path = work / 'report.json'
     report_path.unlink(missing_ok=True)
@@ -57,12 +61,19 @@ def main():
     module = {'counter':'hd_decade', 'fifo':f'hd_fifo2_w{a.width}',
               'pipeline':f'hd_pipeline3_w{a.width}', 'ram':f'hd_ram_16x{a.width}', 'toy16':'hd_toy16'}[a.design]
     # Filenames/module identifiers are controlled; no user path enters Yosys source.
+    flow = 'synth_ecp5' if a.device == 'ecp5-25k' else 'synth_ice40'
     command([tools['yosys'], '-Q', '-T', '-p',
-             f'read_verilog -sv input.sv; synth_ice40 -top {module} -json mapped.json'],
+             f'read_verilog -sv input.sv; {flow} -top {module} -json mapped.json'],
             work, work / 'synthesis.log', env)
-    command([tools['nextpnr'], '--hx8k', '--package', 'ct256', '--json', 'mapped.json',
-             '--asc', 'routed.asc', '--freq', a.frequency_mhz, '--seed', a.seed,
-             '--pcf-allow-unconstrained', '--report', 'routed.json', '--detailed-timing-report'],
+    if a.device == 'ecp5-25k':
+        physical_args = ['--25k','--package','CABGA381','--speed','6','--textcfg','routed.config','--lpf-allow-unconstrained']
+        configured = 'routed.config'
+    else:
+        physical_args = ['--hx8k','--package','ct256','--asc','routed.asc','--pcf-allow-unconstrained']
+        configured = 'routed.asc'
+    command([tools['nextpnr'], *physical_args, '--json', 'mapped.json',
+             '--freq', a.frequency_mhz, '--seed', a.seed,
+             '--report', 'routed.json', '--detailed-timing-report'],
             work, work / 'routing.log', env)
     measured = json.loads((work / 'routed.json').read_text())
     if not measured.get('fmax') or not measured.get('utilization'):
@@ -76,11 +87,13 @@ def main():
                               work / f'{name}-version.log', env)
                 for name,binary in tools.items() if name != 'abc'}
     report = {'schema':1, 'passed':True, 'kind':'measured-after-placement-and-routing',
-              'design':a.design, 'width':a.width, 'device':'iCE40HX8K', 'package':'CT256',
+              'design':a.design, 'width':a.width, 'device':a.device, 'package':'CABGA381' if a.device == 'ecp5-25k' else 'CT256',
               'seed':a.seed, 'target_frequency_mhz':a.frequency_mhz,
               'chipdb_model':{'path':str(model.resolve()),'sha256':digest(model)},
-              'tools':{k:{'path':str(v),'sha256':digest(v),'version':versions.get(k)} for k,v in tools.items()},
-              'artifacts':{name:digest(work/name) for name in ['input.sv','mapped.json','routed.json','routed.asc']},
+              'tools':{k:{'path':str(v),'sha256':digest(v),'version':versions.get(k),
+                         'implementation_sha256':digest(v.parent.parent/'libexec'/v.name)
+                         if (v.parent.parent/'libexec'/v.name).is_file() else digest(v)} for k,v in tools.items()},
+              'artifacts':{name:digest(work/name) for name in ['input.sv','mapped.json','routed.json',configured]},
               'fmax_mhz':measured['fmax'], 'utilization':measured['utilization'],
               'power':None, 'io_constraints':'Automatic package pin placement; no external input/output delay assumptions.',
               'limitations':'Device-model register timing; no board measurement, ASIC area, external interface timing, or power claim.'}
