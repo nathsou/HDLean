@@ -21,3 +21,4 @@ import HDLean.Core.Network
 import HDLean.Core.Syntax
 import HDLean.Semantics.DeriveSynth
 import HDLean.Lib.MemoryCircuit
+import HDLean.MultiClock.Backend
