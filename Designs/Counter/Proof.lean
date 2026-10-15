@@ -1,5 +1,6 @@
 import Designs.Counter.Impl
 import Designs.Counter.Interface
+import HDLean.Semantics.Reset
 namespace HDLean.Counter
 
 def unpack (a b c d : Bool) : Fin 4 → Bool := fun k =>
@@ -52,6 +53,24 @@ theorem correct : RefinesAfterReset (hardware.denote moore) wireSpec value 1 := 
     simp
   · intro s q xs h
     change value (hardware.next s (xs, false)) = _ ∧ _
+    rw [next_correct s xs false (Or.inl (by omega))]
+    simp only [Bool.false_eq_true, ↓reduceIte, wireSpec, spec, h.1]
+    constructor
+    · trivial
+    · split
+      · exact Nat.mod_lt _ (by decide)
+      · exact h.2
+  · intro s q h
+    exact h.1
+/-- Reset may be reasserted on any later edge after startup. -/
+theorem reset_schedule : RefinesResetSchedule (hardware.denote moore) wireSpec value := by
+  apply refinesResetSchedule_of_simulation _ _ _ (fun s q => value s = q ∧ q < 10)
+  · intro s xs
+    change value (hardware.next s (xs,true)) = 0 ∧ 0 < 10
+    rw [next_correct s xs true (Or.inr rfl)]
+    simp
+  · intro s q xs h
+    change value (hardware.next s (xs,false)) = _ ∧ _
     rw [next_correct s xs false (Or.inl (by omega))]
     simp only [Bool.false_eq_true, ↓reduceIte, wireSpec, spec, h.1]
     constructor

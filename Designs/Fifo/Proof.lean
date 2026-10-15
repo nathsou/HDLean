@@ -1,6 +1,7 @@
 import Designs.Fifo.Impl
 import Designs.Fifo.Interface
 import HDLean.Netlist.Lower
+import HDLean.Semantics.Reset
 namespace HDLean.Fifo
 
 /-- Decode the physical payload registers; all bit patterns are legal power-up contents. -/
@@ -66,5 +67,21 @@ theorem hardware_correct (w : Nat) :
 
 /-- Exact flip-flop budget for this shift-register implementation; no hidden resettable payload. -/
 theorem hardware_ffBits (w : Nat) : (lower (hardware w)).ffBits = 2 * w + 2 := rfl
+
+theorem hardware_reset_schedule (w : Nat) :
+    RefinesResetSchedule ((hardware w).denote (hardware_moore w)) (wireSpec w) observe := by
+  apply refinesResetSchedule_of_simulation _ _ _ (fun s q => Relation (decodeState s) q)
+  · intro s xs
+    change Relation (decodeState ((hardware w).next s (xs,true))) []
+    rw [decode_next]
+    simp [machine, Relation]
+  · intro s q xs h
+    change Relation (decodeState ((hardware w).next s (xs,false))) _
+    rw [decode_next]
+    exact relation_step _ _ _ h
+  · intro s q h
+    change observe ((hardware w).evalOutput s (fun _ => false)) = _
+    rw [decode_output]
+    exact relation_out _ _ h
 
 end HDLean.Fifo

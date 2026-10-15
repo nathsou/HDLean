@@ -12,6 +12,8 @@ run_cmd do
     ``HDLean.Verification.FiniteSystem.check_sound,
     ``HDLean.refinesAfterReset_of_simulation,
     ``HDLean.reset_noninterference,
+    ``HDLean.refinesResetSchedule_of_simulation,
+    ``HDLean.Counter.reset_schedule, ``HDLean.Fifo.hardware_reset_schedule,
     ``HDLean.lowerExpr_correct, ``HDLean.lower_next, ``HDLean.lower_output,
     ``HDLean.Backend.Graph.validate_sound, ``HDLean.Backend.Graph.validateLocal_sound,
     ``HDLean.Backend.Format.validates_sound, ``HDLean.Backend.Format.correct_of_validated,
