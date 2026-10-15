@@ -12,7 +12,7 @@ private def require (condition : Bool) (message : String) : IO Unit :=
 def checkBackendTexts : IO Unit := do
   for width in [0, 1, 8, 16, 64] do
     let c := Fifo.hardware width
-    let g := compile (lower c)
+    let g := compileCandidate c
     for format in [Format.systemVerilog, .aiger, .rtlil] do
       match checkedPrint format c with
       | .ok artifact => require (format.validates artifact.text g) s!"text validation {repr format} width={width}"

@@ -56,14 +56,14 @@ private def execute (args : List String) : IO Unit := do
       let artifact ← match checkedPrint format c with
         | .ok a => pure a
         | .error e => throw (IO.userError e)
-      let graph := compile (lower c)
+      let graph := compileCandidate c
       writeFile path artifact.text
       IO.println s!"Wrote {path} ({graph.ffBits} flip-flops, {graph.andCount} AND gates)."
   | "metrics" :: design :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
     withDesign design width fun c => do
-      let g := compile (lower c)
+      let g := compileCandidate c
       IO.println (Lean.Json.mkObj [("design", .str g.name), ("ff_bits", Lean.toJson g.ffBits),
         ("memory_bits", Lean.toJson (0 : Nat)), ("and_gates", Lean.toJson g.andCount),
         ("logic_depth", Lean.toJson g.depth), ("physical_metrics", .null)]).pretty
@@ -72,7 +72,7 @@ private def execute (args : List String) : IO Unit := do
     let width ← parseNum (rest[0]?.getD "8") 64
     let cycles ← parseNum (rest[1]?.getD "60") 10000
     let seed ← parseNum (rest[2]?.getD "1") 4294967295
-    withDesign design width fun c => writeFile path (traceJson (trace (compile (lower c)) cycles seed)).pretty
+    withDesign design width fun c => writeFile path (traceJson (trace (compileCandidate c) cycles seed)).pretty
   | "check" :: design :: rest =>
     if rest.length > 3 then throw (IO.userError usage)
     let width ← parseNum (rest[0]?.getD "8") 64

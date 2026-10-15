@@ -1,6 +1,6 @@
 import Designs.Toy16.Core
 import HDLean.Core.WordBank
-import HDLean.Lib.MemoryCircuit
+import HDLean.Lib.Select
 import HDLean.Netlist.Lower
 
 set_option maxHeartbeats 2000000
@@ -24,7 +24,7 @@ def fetched : W 16 := word ⟨3, by decide⟩
 
 def regWord (j : Fin 8) : W 16 := word ⟨4+j.val, by omega⟩
 def memWord (j : Fin 256) : W 16 := word ⟨12+j.val, by omega⟩
-def readReg (a : W 3) : W 16 := select a (fun j => if j.val = 0 then literal 0 else regWord j)
+def readReg (a : W 3) : W 16 := selectBalanced a (fun j => if j.val = 0 then literal 0 else regWord j)
 
 def rd : W 3 := extract fetched 9 3 (by decide)
 def rs : W 3 := extract fetched 6 3 (by decide)
@@ -40,7 +40,7 @@ def isOp (n : Nat) : E := equal opcode (literal (BitVec.ofNat 4 n))
 def flagWord (b : E) : W 16 := mux b (literal 1) (literal 0)
 def trap : E := .inv (ult opcode (literal 11))
 
-def result : W 16 := select opcode fun j => match j.val with
+def result : W 16 := selectBalanced opcode fun j => match j.val with
   | 0 => add operandA operandB
   | 1 => sub operandA operandB
   | 2 => bitAnd operandA operandB
@@ -48,7 +48,7 @@ def result : W 16 := select opcode fun j => match j.val with
   | 4 => bitXor operandA operandB
   | 5 => flagWord (ult operandA operandB)
   | 6 => add operandA (WordExpr.signExtend imm 16)
-  | 7 => select ea memWord
+  | 7 => selectBalanced ea memWord
   | _ => literal 0
 
 def nextPc : W 8 :=
@@ -65,7 +65,7 @@ def nextWord (imem : Addr → Word) (j : Fin 268) : W 16 :=
   else if j.val = 1 then mux active (flagWord trap) (word j)
   else if j.val = 2 then mux halted (word j) (flagWord (.inv execute))
   else if j.val = 3 then mux (.and (.inv halted) (.inv execute))
-    (select pc (fun a => literal (imem (BitVec.ofNat 8 a.val)))) (word j)
+    (selectBalanced pc (fun a => literal (imem (BitVec.ofNat 8 a.val)))) (word j)
   else if j.val < 12 then
     mux (.and active (.and writeEnable (equal rd (literal (BitVec.ofNat 3 (j.val-4)))))) result (word j)
   else mux (.and active (.and (isOp 8) (equal ea (literal (BitVec.ofNat 8 (j.val-12))))))
@@ -98,7 +98,7 @@ def decode (s : Fin (268*16) → Bool) : CoreState :=
 
 @[simp] theorem readReg_correct (a : W 3) (s) :
     (readReg a).eval Fin.elim0 s = (decode s).arch.read (a.eval Fin.elim0 s) := by
-  simp [readReg, select_correct, ArchState.read, decode]
+  simp [readReg, selectBalanced_correct, ArchState.read, decode]
   have he : (a.eval Fin.elim0 s).toFin = 0 ↔ a.eval Fin.elim0 s = 0 := by
     constructor
     · intro h; exact BitVec.eq_of_toFin_eq h
@@ -144,7 +144,7 @@ theorem effect_correct (s : Fin (268*16) → Bool) :
     have ho := h
     rw [op_toNat] at ho
     simp only [evaluatedEffect, effectWord, ← op_toNat, h]
-    simp [nextPc, trap, isOp, writeEnable, result, flagWord, select_correct,
+    simp [nextPc, trap, isOp, writeEnable, result, flagWord, selectBalanced_correct,
       operandA, operandB, storeData, ea, WordExpr.ult_correct, Expr.eval,
       BitVec.lt_def, hv, readReg_eval, ArchState.read, rd, rs, rt, imm, offset, decode,
       WordExpr.extract_correct]
@@ -234,7 +234,7 @@ theorem decode_next (imem : Addr → Word) (s rst) :
   all_goals
     try simp only [regWord, memWord, word_next, nextWord_reg, nextWord_mem]
     simp (disch := omega) [pc, fetched, halted_bit, execute_bit, word_next, nextWord, hr, hh, he,
-      active, Expr.eval, hhbit, hebit, low_flag, numeral_index, flagWord_eval, WordExpr.select_correct,
+      active, Expr.eval, hhbit, hebit, low_flag, numeral_index, flagWord_eval, WordExpr.selectBalanced_correct,
       evaluatedEffect, applyEffect, decode, regWord, memWord, ArchState.atReset, Fin.instOfNat, Fin.ofNat]
 
   all_goals try apply And.intro

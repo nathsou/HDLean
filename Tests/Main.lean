@@ -42,6 +42,20 @@ private def checkPipeline (width cycles seed : Nat) : IO Unit := do
     let snapshot := Vector.ofFn next
     q := fun j => snapshot[j]
 
+private def checkToy16 (cycles seed : Nat) : IO Unit := do
+  let c := Toy16.Physical.hardware Toy16.sumProgram
+  let rows := trace (Backend.compileCandidate c) cycles seed
+  let mut initial := true
+  let mut q : Toy16.CoreState := ⟨Toy16.ArchState.atReset (fun _ => 0) (fun _ => 0),0,false⟩
+  for row in rows do
+    if initial then
+      q := Toy16.Physical.decode (fun k => row.state[k.val]!)
+      initial := false
+    let actual := Toy16.Physical.observe (fun k => row.outputs[k.val]!)
+    require (actual == (Toy16.core Toy16.sumProgram).out q)
+      s!"physical CPU retirement mismatch seed={seed} cycle={row.cycle}"
+    q := (Toy16.core Toy16.sumProgram).next q row.inputs[0]!
+
 private def checkRAM (a width cycles seed : Nat) : IO Unit := do
   let c := RAMCircuit.hardware a width
   let rows := trace (Backend.compile (lower c)) cycles seed
@@ -58,6 +72,8 @@ private def checkRAM (a width cycles seed : Nat) : IO Unit := do
 
 def main : IO Unit := do
   HDLean.Tests.checkBackendTexts
+  for seed in [1,42,999] do checkToy16 80 seed
+  IO.println "PASS: 240 physical CPU cycles against retirement model from arbitrary power-up."
   for a in [0,1,2,4] do
     for w in [0,1,8,16] do
       for seed in [1,42,999] do checkRAM a w 200 seed

@@ -1,4 +1,4 @@
-import HDLean.Backend.Graph
+import HDLean.Backend.FastCompile
 namespace HDLean.Verification
 
 /-- Reproducible PRNG, independent of platform random-number implementations. -/
@@ -19,7 +19,7 @@ def natToBits (n value : Nat) : Array Bool := (List.range n).toArray.map (fun k 
 
 /-- Compare the executable AST with the shared IR on arbitrary state, including during reset. -/
 def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit := do
-  let graph := Backend.compile (lower c)
+  let graph := Backend.compileCandidate c
   unless graph.wellFormed do throw "malformed shared graph"
   let (initial, seed) := randomBits r seed
   let mut state := initial
