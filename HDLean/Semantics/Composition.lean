@@ -47,7 +47,7 @@ theorem compose_contracts (ab : CausalContract A B) (ba : CausalContract B A) :
       exact ⟨ba.step t hb ha, ab.step t ha hb⟩
 
 /-- A bounded-history invariant packages k-induction's base window and one local closure rule. -/
-theorem k_induction (P : Nat → Prop) (k : Nat) (hk : 0 < k)
+theorem k_induction (P : Nat → Prop) (k : Nat) (_hk : 0 < k)
     (base : ∀ t, t < k → P t)
     (step : ∀ t, (∀ j, j < k → P (t + j)) → P (t + k)) : ∀ t, P t := by
   intro t

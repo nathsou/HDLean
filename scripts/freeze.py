@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""Create a review candidate manifest. This command does not approve specifications."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def protected_files():
+    paths = set(ROOT.glob('HDLean/**/*.lean')) | {ROOT / 'HDLean.lean'}
+    for name in ('Spec.lean', 'Interface.lean', 'Challenge.lean'):
+        paths.update(ROOT.glob(f'Designs/*/{name}'))
+    for name in ('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'Tests/Axioms.lean',
+                 'scripts/verify.py', 'scripts/check_backends.py', 'scripts/freeze.py'):
+        paths.add(ROOT / name)
+    return sorted(paths)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--write', action='store_true', help='replace the candidate manifest')
+    args = parser.parse_args()
+    manifest = {'schema': 1, 'approval': 'review-required', 'framework': 'HDLean 0.1.0',
+                'files': {str(p.relative_to(ROOT)): sha(p) for p in protected_files()}}
+    text = json.dumps(manifest, indent=2, sort_keys=True) + '\n'
+    if args.write:
+        path = ROOT / 'verification/frozen.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        print(f'Candidate manifest SHA-256: {sha(path)}')
+    else:
+        print(text, end='')
+
+
+if __name__ == '__main__':
+    main()

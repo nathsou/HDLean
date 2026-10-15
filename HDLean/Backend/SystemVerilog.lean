@@ -10,11 +10,10 @@ private def svLit (l : Lit) : String :=
 
 /-- A deliberately small two-state synthesizable SystemVerilog subset. -/
 def systemVerilog (g : Graph) : String := Id.run do
-  let mut lines := #[s!"module {identifier g.name}(", "  input wire clk,"]
-  for k in [:g.inputs] do lines := lines.push s!"  input wire in_{k},"
-  for k in [:g.outputs.size] do
-    lines := lines.push s!"  output wire out_{k}{if k + 1 < g.outputs.size then "," else ""}"
-  lines := lines.push ");"
+  let ports := #["input wire clk"] ++
+    (Array.range g.inputs).map (fun k => s!"input wire in_{k}") ++
+    (Array.range g.outputs.size).map (fun k => s!"output wire out_{k}")
+  let mut lines := #[s!"module {identifier g.name}(\n  {String.intercalate ",\n  " ports.toList}\n);"]
   for k in [:g.inputs] do lines := lines.push s!"  wire n{k + 1} = in_{k};"
   for k in [:g.latches] do lines := lines.push s!"  logic n{g.inputs + k + 1};"
   for gate in g.gates do

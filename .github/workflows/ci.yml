@@ -1,0 +1,28 @@
+name: HDLean verification
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: true
+          test: false
+      - name: Install independent RTL checkers
+        run: sudo apt-get update && sudo apt-get install -y iverilog yosys
+      - name: Verify proofs, axioms, artifacts and backends
+        run: python3 scripts/verify.py --backends
+      - name: Test rejection paths and type errors
+        run: python3 Tests/test_workflow.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-report
+          path: build/

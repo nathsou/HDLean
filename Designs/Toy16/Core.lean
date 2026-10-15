@@ -92,6 +92,34 @@ theorem core_progress (imem : Addr → Word) (regs mem garbage) :
       change ((core imem).out ((core imem).next s false)).isSome = true
       simp [core, hh', he']
 
+private theorem after_reset_state (imem : Addr → Word) (s₀ : CoreState) (rst : Nat → Bool)
+    (hr : rst 0 = true) (hd : ∀ t, 0 < t → rst t = false) (t : Nat) :
+    (core imem).stateFrom s₀ rst (t + 1) =
+      (coreMachine imem s₀.arch.regs s₀.arch.dmem s₀.fetched).stateAt (fun _ => ()) t := by
+  induction t with
+  | zero => simp [PMachine.stateFrom, core, hr, coreMachine]
+  | succ t ih =>
+    rw [PMachine.stateFrom_succ, ih, hd _ (by omega), Machine.stateAt_succ]
+    rfl
+
+/-- Complete reset/retirement/progress challenge, universally quantified over garbage state. -/
+theorem core_correct (imem : Addr → Word) (s₀ : CoreState) (rst : Nat → Bool)
+    (hr : rst 0 = true) (hd : ∀ t, 0 < t → rst t = false) :
+    ∃ regs mem,
+      let retire := fun t => (core imem).runFrom s₀ rst (t + 1)
+      RetiresLike retire (isaRetire imem (ArchState.atReset regs mem)) ∧
+      Progress 2 retire Retire.halt := by
+  refine ⟨s₀.arch.regs, s₀.arch.dmem, ?_⟩
+  have he : (fun t => (core imem).runFrom s₀ rst (t + 1)) =
+      (coreMachine imem s₀.arch.regs s₀.arch.dmem s₀.fetched).run (fun _ => ()) := by
+    funext t
+    unfold PMachine.runFrom Machine.run
+    rw [after_reset_state imem s₀ rst hr hd t]
+    rfl
+  dsimp only
+  rw [he]
+  exact ⟨core_retires _ _ _ _, core_progress _ _ _ _⟩
+
 /-- A single-cycle implementation shares the ISA state and retires every live cycle. -/
 def singleCycle (imem : Addr → Word) : PMachine ArchState Bool (Option Retire) where
   out s := if s.halted then none else some (effect imem s)

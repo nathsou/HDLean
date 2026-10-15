@@ -25,7 +25,7 @@ structure Graph where
 
 private structure Build (d i r : Nat) where
   gates : Array Gate := #[]
-  cache : Std.HashMap (Netlist.Node d i r) Lit := {}
+  cache : List (Netlist.Node d i r × Lit) := []
 
 def invert (a : Lit) : Lit := a ^^^ 1
 
@@ -40,7 +40,7 @@ private def gate (a b : Lit) : StateM (Build d i r) Lit := do
   return 2 * v
 
 private def compileNode (n : Netlist.Node d i r) : StateM (Build d i r) Lit := do
-  if let some l := (← get).cache[n]? then return l
+  if let some (_, l) := (← get).cache.find? (fun p => p.1 == n) then return l
   let l ← match n with
     | .lit b => pure (if b then 1 else 0)
     | .input k => pure (2 * (k.val + 1))
@@ -50,7 +50,7 @@ private def compileNode (n : Netlist.Node d i r) : StateM (Build d i r) Lit := d
       let a ← compileNode a
       let b ← compileNode b
       gate a b
-  modify fun s => { s with cache := s.cache.insert n l }
+  modify fun s => { s with cache := (n, l) :: s.cache }
   return l
 
 private def muxLit (c a b : Lit) : StateM (Build d i r) Lit := do

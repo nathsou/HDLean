@@ -13,7 +13,7 @@ namespace Pipe
 def comb (f : α → β) : Pipe 0 α β where
   run xs t := f (xs t)
   function := f
-  causal xs ys t h := congrArg f (h t (Nat.le_refl _))
+  causal _xs _ys t h := congrArg f (h t (Nat.le_refl _))
   correct _ _ := rfl
 
 /-- Sequential composition adds latencies. -/

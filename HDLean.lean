@@ -12,3 +12,5 @@ import HDLean.Lib.Memory
 import HDLean.Semantics.Clock
 import HDLean.Tactics.Basic
 import HDLean.Verification.Simulation
+import HDLean.Lib.Network
+import HDLean.Netlist.Optimize

@@ -1,4 +1,5 @@
 import HDLean.Netlist.Lower
+import Designs.Counter.Spec
 namespace HDLean.Counter
 
 /-- Four-bit decade counter with enable and synchronous reset. Invalid power-up values are allowed. -/
@@ -11,12 +12,6 @@ def hardware : Circuit 0 1 4 4 := circuit do
   return { name := "decade"
            state := Vector.ofFn fun k => ⟨s!"count_{k.val}", .synchronous false, next[k], "Designs/Counter/Impl.lean"⟩
            output := count }
-
-/-- Mathematical counter model for review. -/
-def spec : Machine Nat Bool Nat where
-  init := 0
-  out := id
-  next n en := if en then (n + 1) % 10 else n
 
 /-- Exact structural budget, independent of any synthesis tool. -/
 theorem ffBits : (lower hardware).ffBits = 4 := rfl

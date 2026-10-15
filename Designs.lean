@@ -3,3 +3,10 @@ import Designs.Toy16.Programs
 import Designs.Toy16.Core
 import Designs.Fifo.Proof
 import Designs.Counter.Impl
+import Designs.Counter.Proof
+import Designs.AsyncFifo.Model
+import Designs.Fifo.Circular
+import Designs.Fifo.Challenge
+import Designs.Counter.Challenge
+import Designs.Toy16.Challenge
+import Designs.SkidBuffer.Pipeline

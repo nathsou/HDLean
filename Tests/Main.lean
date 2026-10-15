@@ -37,4 +37,13 @@ def main : IO Unit := do
     | .error e => throw (IO.userError e)
     checkCounter 200 seed
   require ((Fifo.spec Nat 2).next [7,8] ⟨true,9,true⟩ == [8]) "full/dequeue convention"
+  for k in [0, 1, 2, 3, 4] do
+    for seed in [1, 42, 999] do
+      match Fifo.Circular.check 8 k 500 seed with
+      | .ok _ => pure ()
+      | .error e => throw (IO.userError e)
+      match AsyncFifo.check k 8 1000 seed with
+      | .ok _ => pure ()
+      | .error e => throw (IO.userError e)
+  IO.println "PASS: 7,500 circular FIFO cycles; 15,000 async oracle steps."
   IO.println "PASS: 9,600 AST/graph cycles; 8,400 FIFO reference cycles; 1,200 counter reference cycles."

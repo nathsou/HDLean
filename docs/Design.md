@@ -2,6 +2,8 @@
 
 Design specification v0.1 · Oct 15, 2026 · @Nathan
 
+This is the renamed design proposal supplied for implementation, not a description of completed guarantees. The current implementation and explicit gaps are tracked in [Status.md](Status.md). RTLIL replaces the originally proposed word-level model-checker backend at the user’s request.
+
 ## 1. Status, scope and how to read this spec
 
 HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.1: it fixes the guiding principles and sketches a first design that implementation is free to change. "HDLean" is a working name.
@@ -20,7 +22,7 @@ Design statements carry one of three markers:
 | Clocks | Independent clocks supplied by the environment | Clock gating, generated clocks (later, as audited primitives) |
 | Correctness | Refinement of reference models, contracts, bounded progress | Unbounded liveness |
 | Performance | Cycle-level theorems, structural bounds, measured physical metrics | Proofs about physical delay, power or area |
-| Outputs | SystemVerilog subset, AIGER, BTOR2 | Vendor-specific netlists |
+| Outputs | SystemVerilog subset, AIGER, RTLIL | Vendor-specific netlists |
 
 Three roles use HDLean:
 
@@ -759,9 +761,9 @@ The netlist IR holds bit-vector operations in SSA form, registers grouped by clo
 | Target | Priority | What it unlocks | How it is trusted |
 | --- | --- | --- | --- |
 | SystemVerilog subset: continuous assigns, `always_ff` with non-blocking assignments, no X, no `initial` | v1 | Every simulator and synthesis tool | Printer proved against a formalized semantics of the subset |
-| AIGER (bit-level), BTOR2 (word-level) | v1 | Model checkers as oracles, ABC, a golden reference | Trivial semantics: printer and parser both verified |
+| AIGER (bit-level) | v1 | Model checkers as oracles, ABC, a golden reference | Trivial semantics: printer and parser both verified |
 | CIRCT core dialects (hw, comb, seq) | v2 | Equivalence and bounded model checking (`circt-lec`, `circt-bmc`), fast simulation (arcilator), its own SystemVerilog export | Printer, plus equivalence checks of CIRCT's own lowering |
-| Yosys RTLIL | v2 | Direct entry into open synthesis and place-and-route flows | Translation validation through AIGER |
+| Yosys RTLIL | v1 | Direct entry into open synthesis and place-and-route flows | Translation validation through AIGER |
 | FIRRTL | On demand | Interop with Chisel generators | Adds firtool's optimizations to the trust chain |
 
 **Translation validation through AIGER.** Because AIGER's semantics is trivial, its parser can be verified too. An external optimizer such as ABC or Yosys can then rewrite the design freely. The result is dumped as AIGER, parsed back into Lean, and proved equivalent to the verified lowering. With a one-to-one register correspondence this reduces to one combinational check per register's input logic, which `bv_decide` handles at moderate sizes. The proof chain then extends through logic synthesis, not only through HDLean's own printers.
