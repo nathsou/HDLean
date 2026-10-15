@@ -1,0 +1,101 @@
+# Independent proof replay
+
+`scripts/independent/replay.py` exports explicitly requested theorem roots and their
+complete dependency closure, then checks the unmodified export with nanoda, a Rust
+implementation independent of Lean's kernel. The replay layer is suitable for the
+kernel-only proof requirement of L3. It does not itself provide submission
+isolation, reviewer approval, physical sign-off, or select the required challenges.
+The enclosing comparator must enforce those requirements and provide its complete
+required theorem list.
+
+## Pinned compatibility
+
+The exact revisions are recorded in `scripts/independent/pins.json`:
+
+| Component | Version / revision |
+| --- | --- |
+| Lean | 4.34.0, matching `lean-toolchain` |
+| Rust | 1.90.0 |
+| lean4export | `076e8e57707e813375e8f9da8bf989799ace9680` (v4.34.0) |
+| nanoda | `f67473ba5f9397266f89c7852082c9c914b5d219` (0.4.24) |
+| Export format | NDJSON 3.1.0 |
+
+Both upstream tools build without patches. Nanoda's older `debug` branch expects
+the obsolete text export format and is incompatible with this pipeline. Do not
+substitute that branch or a floating exporter release.
+
+## Build and run
+
+Prerequisites are Python 3.10+, Git, a C compiler/linker, the project's Lean
+toolchain, and rustup. Install the pinned Rust compiler if necessary:
+
+```sh
+rustup toolchain install 1.90.0 --profile minimal
+python3 scripts/independent/bootstrap.py --lake lake --cargo cargo
+lake build
+lake build Tests.Certificates
+python3 scripts/independent/replay.py \
+  --module HDLean --module Designs --module Tests.Certificates \
+  --theorem HDLean.Backend.Graph.validate_sound \
+  --theorem HDLean.Tests.fifo1_graph \
+  --theorem HDLean.Tests.counter_graph \
+  --theorem HDLean.Tests.fifo8_graph
+python3 -m unittest discover -s Tests/independent -p 'test_*.py' -v
+```
+
+The example deliberately names four graph theorems; its success covers precisely
+those roots and their dependencies. The comparator must pass all required roots
+for its assurance claim. The API is
+`replay(project, lake, tools_manifest, output, roots, modules, timeout=600)`.
+No default subset is silently substituted. Build the selected modules before
+calling it; the replay wrapper does not perform the comparator's clean build.
+
+The bootstrap fetches immutable Git revisions, uses Cargo's committed lockfile,
+limits Rust compilation to two jobs, and records executable SHA-256 digests in
+`work/independent-tools/tools.json`. `--cache` changes that location. To install
+Rust outside the home directory, set `CARGO_HOME` and `RUSTUP_HOME` to directories
+under `work/`, use rustup's `--no-modify-path` installation option, and put the
+resulting Cargo `bin` directory on `PATH`. The same environment must be present
+when running the bootstrap. `LAKE`, `CARGO`, and the explicit `--lake`/`--cargo`
+options support nonstandard tool locations; tests honor `LAKE` and
+`HDLEAN_INDEPENDENT_TOOLS`.
+
+## What is checked
+
+The exporter receives a nonempty, explicit, unique root list. The wrapper verifies
+that every requested root appears as a theorem, checks Lean/format versions,
+rejects unsafe/partial declarations, and permits only `propext`,
+`Classical.choice`, and `Quot.sound`. No export records are removed. Nanoda
+independently enforces the same axiom policy with
+`unpermitted_axiom_hard_error: true` and `unsafe_permit_all_axioms: false`, then
+typechecks the entire exported closure. Native-evaluation axioms, `sorryAx`, and
+foreign axioms fail even when they are exported but unused.
+
+A successful replay requires both a zero exit status and nanoda's unqualified
+`Checked ... declarations with no errors` response. Failures remove any previous
+`replay.json` before starting, so stale success reports are not reused. The result
+records roots, encountered axioms, checked declaration count, tool pins, binary
+digests, tool-manifest digest, and the proof-export digest. The export, nanoda
+configuration, and logs remain in `build/independent/` for review.
+
+The tool manifest is a provenance record created in the trusted build environment,
+not an authorization token supplied by a submission. The enclosing comparator
+must protect the checker scripts, pins, tools, manifest, required root list, and
+build outputs against submission writes. A malicious replacement of both the
+binary and its manifest is outside this wrapper's standalone protection. Hashes
+detect persistent changes during replay; process/filesystem isolation is needed
+against adversarial concurrent modification. The wrapper checks proof validity,
+while statement/challenge identity remains the comparator's responsibility.
+
+## Rejection tests
+
+`Tests/independent/Fixtures.lean` is intentionally excluded from the project's
+normal Lean library. The Python test copies it into an isolated temporary Lake
+project. It includes a valid theorem and negative fixtures using a foreign axiom,
+`sorry`, and `native_decide`. Tests require both the wrapper and the actual nanoda
+binary to reject the three axiom cases. A separate mutation changes a valid
+theorem's exported proof term to an ill-typed expression; the policy audit accepts
+the artifact's coverage while nanoda rejects its proof. Additional tests cover
+missing/duplicate/empty roots, stale success removal, and modified binary hashes.
+Tests skip with an explicit message if the pinned tools have not been built;
+release verification must require the tools and run these tests without skips.

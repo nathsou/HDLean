@@ -2,6 +2,8 @@
 
 | Date | Decision | Reason and consequence |
 | --- | --- | --- |
+| 2026-10-15 | Implement synchronous memory first as an explicit register array | The generic physical trace proof includes arbitrary initial contents and read-before-write collisions. Storage is measured honestly as flip-flops; technology RAM macros remain a separate mapping choice. |
+| 2026-10-15 | Check exact printed bytes by a strict parser and generic semantic validator | The compiler, printer and certificate generator remain untrusted. A successful kernel certificate relates actual ASCII artifact bytes to the circuit, with independent nanoda replay available. |
 | 2026-10-15 | Validate every shared graph with a generic kernel-proved symbolic checker | Closes the compiler/cache trust gap without proving a particular sharing algorithm. Canonical Boolean cones include constant folding, complements, and commutative ordering. Emission fails if the validator cannot establish equivalence. The explicit total order permits kernel replay, unlike Lean's opaque derived recursive `Ord`. |
 | 2026-10-15 | Rename the project and namespace to HDLean | Explicit user request. |
 | 2026-10-15 | Support RTLIL; remove the proposed word-level model-checker backend | Explicit user correction. All active commands and tests cover SV/AIGER/RTLIL. |

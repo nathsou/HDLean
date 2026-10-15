@@ -19,6 +19,8 @@ def protected_files():
     for name in ('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'Tests/Axioms.lean',
                  'scripts/verify.py', 'scripts/check_backends.py', 'scripts/freeze.py'):
         paths.add(ROOT / name)
+    paths.update(ROOT.glob('scripts/independent/*.py'))
+    paths.add(ROOT / 'scripts/independent/pins.json')
     return sorted(paths)
 
 

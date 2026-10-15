@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Fail-closed development verification, replay, axiom audit, and artifact provenance.
 
-This is an L1 development checker. It does not implement the specification's
-adversarial comparator sandbox or independent nanoda sign-off. L2/L3 are rejected.
+This is an L1 development checker with optional independent nanoda replay.
+It does not implement adversarial comparator isolation. L2/L3 are rejected.
 """
 import argparse
 import hashlib
@@ -16,20 +16,27 @@ from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_AXIOMS = {'propext', 'Classical.choice', 'Quot.sound'}
-NATIVE_AXIOMS = {
-    'HDLean.gray_one_bit8._native.bv_decide.ax_1_6',
-    'HDLean.one_bit_mix8._native.bv_decide.ax_1_6',
-}
+NATIVE_AXIOMS = set()
 EXPECTED_THEOREMS = {
     'HDLean.Machine.refines_of_simulation', 'HDLean.refinesAfterReset_of_simulation',
     'HDLean.reset_noninterference', 'HDLean.lowerExpr_correct', 'HDLean.lower_next',
     'HDLean.lower_output', 'HDLean.compose_contracts', 'HDLean.network_refines',
     'HDLean.Backend.Graph.validate_sound',
+    'HDLean.Backend.Format.validates_sound', 'HDLean.Backend.Format.correct_of_validated',
+    'HDLean.RAMCircuit.hardware_correct', 'HDLean.RAMCircuit.decode_output',
+    'HDLean.Circuit.network_correct', 'HDLean.SkidBuffer.Challenge.correctness',
+    'HDLean.SkidBuffer.Challenge.budget',
+    'HDLean.WordExpr.addWithCarry_correct', 'HDLean.WordExpr.addWithCarry_overflow',
+    'HDLean.WordExpr.sub_correct', 'HDLean.WordExpr.ult_correct', 'HDLean.WordExpr.equal_correct',
+    'HDLean.WordExpr.signExtend_correct', 'HDLean.WordExpr.setWidth_correct',
+    'HDLean.Tests.packet_roundtrip', 'HDLean.Tests.surfaceIncrement_correct',
     'HDLean.SkidBuffer.pipeline_correct', 'HDLean.Netlist.optimize_correct', 'HDLean.retiresLike_of_simulation',
     'HDLean.Fifo.Challenge.correctness', 'HDLean.Fifo.Challenge.budget',
     'HDLean.Fifo.full_rate', 'HDLean.Counter.Challenge.correctness',
     'HDLean.Counter.Challenge.budget', 'HDLean.Toy16.Challenge.correctness',
     'HDLean.sync2_stable', 'HDLean.sample_adjacent', 'HDLean.gray_one_bit8', 'HDLean.one_bit_mix8',
+    'HDLean.one_bit_mix', 'HDLean.gray_adjacent', 'HDLean.gray_injective',
+    'HDLean.gray_increment_ne', 'HDLean.sample_gray_increment',
     'HDLean.Tests.fifo1_graph', 'HDLean.Tests.counter_graph', 'HDLean.Tests.fifo8_graph',
 }
 
@@ -96,6 +103,8 @@ def main():
     parser.add_argument('--lake', default=os.environ.get('LAKE', 'lake'))
     parser.add_argument('--manifest-sha256', default=os.environ.get('HDLEAN_TRUSTED_MANIFEST_SHA256'))
     parser.add_argument('--backends', action='store_true', help='require Icarus and Yosys checks')
+    parser.add_argument('--independent', action='store_true', help='require independent nanoda replay')
+    parser.add_argument('--independent-tools', type=Path, default=ROOT / 'work/independent-tools/tools.json')
     parser.add_argument('--no-clean', action='store_true', help='reuse build cache for local iteration')
     parser.add_argument('--report', type=Path, default=ROOT / 'build/signoff.json')
     args = parser.parse_args()
@@ -120,8 +129,14 @@ def main():
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Designs'], work / 'kernel-designs.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Tests'], work / 'kernel-certificates.log')
     axioms = audit_axioms(run([args.lake, 'env', 'lean', 'Tests/Axioms.lean'], work / 'axioms.log'))
+    independent_report = None
+    if args.independent:
+        from independent.replay import replay
+        independent_report = replay(ROOT, args.lake, args.independent_tools,
+                                    work / 'independent', sorted(EXPECTED_THEOREMS),
+                                    ['HDLean', 'Designs', 'Tests'])
     artifacts, metrics = {}, {}
-    for design in ('fifo', 'counter'):
+    for design in ('fifo', 'counter', 'pipeline'):
         metrics[design] = json.loads(run([ROOT / '.lake/build/bin/hdlean', 'metrics', design, '8']))
         for fmt in ('sv', 'aiger', 'rtlil'):
             path = work / f'{design}.{fmt}'
@@ -140,16 +155,17 @@ def main():
         'working_tree_dirty': bool(run(['git', 'status', '--porcelain']).strip()),
         'checks': {'kernel_build': True, 'fresh_kernel_replay': True, 'axiom_policy': True,
                    'simulation': True, 'external_backends': args.backends,
-                   'adversarial_comparator': False, 'nanoda': False},
+                   'adversarial_comparator': False, 'nanoda': args.independent},
+        'independent_replay': independent_report,
         'headline_axioms': axioms, 'structural_metrics': metrics, 'physical_metrics': None,
         'artifacts_sha256': artifacts,
         'assumptions': ['The clock-domain model assumes two-flop synchronizers resolve metastability.'],
         'limitations': [
-            'Every emitted shared graph passes the generically proved translation validator; text printer correctness is pending.',
+            'Every emitted graph and final text passes generically proved translation validators for the formalized backend subsets.',
             'Concrete kernel-only graph certificates additionally cover the counter and one/eight-bit two-slot FIFO.',
             'Toy16 is a verified transition-system model and has no synthesizable core backend.',
             'Circular/async FIFO models are tested; their full generic safety/refinement proofs and RTL are pending.',
-            'L2/L3, adversarial submission isolation, physical sign-off, and nanoda are unavailable.',
+            'L2/L3, adversarial submission isolation, and physical sign-off remain unavailable.',
         ],
     }
     temporary = args.report.with_suffix('.tmp')

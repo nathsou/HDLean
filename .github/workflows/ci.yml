@@ -7,7 +7,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1
@@ -17,8 +17,14 @@ jobs:
           test: false
       - name: Install independent RTL checkers
         run: sudo apt-get update && sudo apt-get install -y iverilog yosys
+      - name: Build pinned independent proof checker
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal
+          python3 scripts/independent/bootstrap.py
       - name: Verify proofs, axioms, artifacts and backends
-        run: python3 scripts/verify.py --backends
+        run: python3 scripts/verify.py --backends --independent
+      - name: Test independent checker rejection paths
+        run: python3 -m unittest discover -s Tests/independent -p 'test_*.py' -v
       - name: Test rejection paths and type errors
         run: python3 Tests/test_workflow.py
       - uses: actions/upload-artifact@v4
