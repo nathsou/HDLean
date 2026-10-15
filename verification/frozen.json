@@ -60,13 +60,16 @@
     "lakefile.toml": "c66fce761cd6c3a7a30af4bd70b4e84629e467f464f9d808e57b1c0104c91e5a",
     "lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
     "scripts/check_backends.py": "45831d11621077267dbf1809468c696d85245847529589cd4137553d70e22f09",
-    "scripts/freeze.py": "a92d6f78a2baa674f66bb3fa9645a19ea1a416568b35ba8fe288b18e645e8fbc",
+    "scripts/comparator/canonical.py": "275e1fcbe0314b50e00c352b2edda5112e731628bae3dd18464db813116844a1",
+    "scripts/comparator/compare.py": "81cdf5da15ea8848089f540fef800884c715620f916e77ba70f36fb9f208bd09",
+    "scripts/comparator/sandbox.py": "2c31490a2af3af34ca76684051d44c032ae07484675194d1dd8ffda092690c21",
+    "scripts/freeze.py": "cd6ea8e4d89a8cc0f487deff34202dade563240da07e496b195ecf3dac5b7356",
     "scripts/independent/bootstrap.py": "6b7d8c72811b2d9de7786f706fa9ee85291fac9a29db3f53b63e9f9896fbddf3",
     "scripts/independent/byte_certificate.py": "15fb9a85ddd73c7da32269d02b688375b0427a68c34116aee2a82ab3b06685cf",
     "scripts/independent/certify_artifact.py": "a3756a5fbd301aec53f9eb35d33228fe3bcc94ae66143f616cc856edef6942fa",
     "scripts/independent/pins.json": "9b838fab1bbd07a798698e393bd84dbffc1370ebcb9944ccc8b7e98b210b072e",
     "scripts/independent/replay.py": "1624b229fa233cd114ba0ac5e19cf11a4fb6a609642a64b60f50998bda4663d4",
-    "scripts/verify.py": "e2c876e02dd6535bdb0124ab9093ab3f6b1a36edc3d7344f772f4ef1e24e0434"
+    "scripts/verify.py": "501407974a6b0ca37e525d337072379d252018063a863b2865e39f54ffa7f1de"
   },
   "framework": "HDLean 0.1.0",
   "schema": 1

@@ -2,7 +2,7 @@
 """Fail-closed development verification, replay, axiom audit, and artifact provenance.
 
 This is an L1 development checker with optional independent nanoda replay.
-It does not implement adversarial comparator isolation. L2/L3 are rejected.
+Higher levels use the separately installed receipt-pinned isolated comparator.
 """
 import argparse
 import hashlib
@@ -130,9 +130,9 @@ def main():
     args = parser.parse_args()
     args.independent = args.independent or args.certify_bytes
     if args.level != 'L1':
-        parser.error('L2/L3 unavailable: the adversarial comparator sandbox, approved trust surface, '
-                     'and complete printer proof coverage are not implemented. '
-                     'No sign-off claim has been produced.')
+        parser.error('L2/L3 unavailable through this development command: invoke the trusted '
+                     'scripts/comparator/compare.py installation with an externally approved receipt. '
+                     'No higher-assurance claim has been produced.')
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.unlink(missing_ok=True)
     manifest_path = ROOT / 'verification/frozen.json'
@@ -157,12 +157,16 @@ def main():
                                     work / 'independent', sorted(EXPECTED_THEOREMS),
                                     ['HDLean', 'Designs', 'Tests'])
     artifacts, metrics = {}, {}
-    for design in ('fifo', 'counter', 'pipeline', 'ram'):
+    for design in ('fifo', 'counter', 'pipeline', 'ram', 'ring', 'toy16'):
         metrics[design] = json.loads(run([ROOT / '.lake/build/bin/hdlean', 'metrics', design, '8']))
         for fmt in ('sv', 'aiger', 'rtlil'):
             path = work / f'{design}.{fmt}'
             run([ROOT / '.lake/build/bin/hdlean', 'emit', design, fmt, path, '8'])
             artifacts[str(path.relative_to(ROOT))] = sha(path)
+    for fmt in ('sv', 'aiger', 'rtlil'):
+        path = work / f'async.{fmt}'
+        run([ROOT / '.lake/build/bin/hdlean', 'emit-async', fmt, path, '8', '4'])
+        artifacts[str(path.relative_to(ROOT))] = sha(path)
     byte_certificates = {}
     if args.certify_bytes:
         from independent.certify_artifact import certify
@@ -211,9 +215,10 @@ def main():
         'limitations': [
             'Every emitted graph and final text passes generically proved translation validators for the formalized backend subsets.',
             'Concrete kernel-only graph certificates additionally cover the counter and one/eight-bit two-slot FIFO.',
-            'Toy16 is a verified transition-system model and has no synthesizable core backend.',
-            'Circular/async FIFO models are tested; their full generic safety/refinement proofs and RTL are pending.',
-            'L2/L3, adversarial submission isolation, and physical sign-off remain unavailable.',
+            'Toy16 has a proved physical core and validated emitted backends; full CPU kernel-only exact-byte certification exceeded the tested resource budget.',
+            'Circular and async FIFO safety/refinement and physical implementations are proved; analog synchronizer resolution remains an assumption.',
+            'This development report is L1. The separate comparator requires an externally pinned approval receipt and a working namespace sandbox for L2/L3.',
+            'Physical synthesis reports are separate measured artifacts, not timing theorems or silicon sign-off.',
         ],
     }
     temporary = args.report.with_suffix('.tmp')

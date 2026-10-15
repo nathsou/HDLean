@@ -23,6 +23,7 @@ def protected_files():
                  'scripts/verify.py', 'scripts/check_backends.py', 'scripts/freeze.py'):
         paths.add(ROOT / name)
     paths.update(ROOT.glob('scripts/independent/*.py'))
+    paths.update(ROOT.glob('scripts/comparator/*.py'))
     paths.add(ROOT / 'scripts/independent/pins.json')
     return sorted(paths)
 
