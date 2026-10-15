@@ -35,9 +35,9 @@
     "lake-manifest.json": "eafd660fe8cfeb8c2bde8e9b46acaf20392a063574b260f775ad48e69727dd52",
     "lakefile.toml": "c66fce761cd6c3a7a30af4bd70b4e84629e467f464f9d808e57b1c0104c91e5a",
     "lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
-    "scripts/check_backends.py": "cdf4408b6a558b2aaf535b84f029426097be7281c9d547c3ec1d56ec4cd782b7",
+    "scripts/check_backends.py": "05e1e418258482cbf58effc00dbd78cb4f6e75660be0b1c1d76c83df730deea2",
     "scripts/freeze.py": "c4d24b102242952c62505829f8696f611932e37392e70083a759758b0b98badb",
-    "scripts/verify.py": "134a57548864aea85cc9b9d5ef2990a52aa48b693a063690b3f531f22c69f58b"
+    "scripts/verify.py": "584cf48e342d49e0a2d0b541bd09956cb4c4f4d06ce91f7523eb53231c3c0cae"
   },
   "framework": "HDLean 0.1.0",
   "schema": 1

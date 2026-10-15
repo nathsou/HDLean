@@ -63,6 +63,12 @@ class Workflow(unittest.TestCase):
             self.assertNotEqual(p.returncode, 0)
             self.assertIn('unavailable', p.stderr)
 
+    def test_optimized_python_cannot_disable_backend_checks(self):
+        p = subprocess.run([sys.executable, '-O', ROOT / 'scripts/check_backends.py', '--help'],
+                           capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('requires Python assertions', p.stderr)
+
     def test_waveform_cycle_and_little_endian_bits(self):
         rows = [{'cycle': 3, 'inputs': [True, False, True], 'state': [], 'outputs': [False], 'next': []}]
         self.assertIn('3 | 101 | 0 | 0 | 0', render(rows, 'table'))

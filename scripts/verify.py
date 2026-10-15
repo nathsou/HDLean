@@ -114,11 +114,11 @@ def main():
         run([args.lake, 'clean'], work / 'clean.log')
     run([args.lake, 'build', 'HDLean', 'Designs', 'Tests', 'hdlean', 'tests'], work / 'build.log')
     run([ROOT / '.lake/build/bin/tests'], work / 'simulation.log')
+    if args.backends:
+        run([sys.executable, ROOT / 'scripts/check_backends.py'], work / 'backends.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Designs'], work / 'kernel-designs.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Tests'], work / 'kernel-certificates.log')
     axioms = audit_axioms(run([args.lake, 'env', 'lean', 'Tests/Axioms.lean'], work / 'axioms.log'))
-    if args.backends:
-        run([sys.executable, ROOT / 'scripts/check_backends.py'], work / 'backends.log')
     artifacts, metrics = {}, {}
     for design in ('fifo', 'counter'):
         metrics[design] = json.loads(run([ROOT / '.lake/build/bin/hdlean', 'metrics', design, '8']))

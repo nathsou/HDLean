@@ -6,10 +6,14 @@ External tools validate printers; these checks are not a theorem about every des
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+
+if not __debug__:
+    raise SystemExit('Backend verification requires Python assertions; disable optimization.')
 
 ROOT = Path(__file__).resolve().parents[1]
 EXE = ROOT / '.lake/build/bin/hdlean'
@@ -86,16 +90,48 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     binary = work / f'{name}.vvp'
     run([iverilog, *options, '-g2012', '-s', 'tb', '-o', binary, paths['sv'], tb])
     assert 'PASS' in run([vvp, binary])
-    # Independent parser + synthesis checks both text formats, then proves combinational
-    # equivalence of their complete transition relations including arbitrary latch values.
-    script = (f'read_verilog -sv {paths["sv"].name}; prep -top {module}; rename {module} gold; '
-              f'design -stash gold; read_rtlil {paths["rtlil"].name}; prep -top {module}; '
+    # Expose each matched physical register as an arbitrary-state input and its
+    # D/clock pins as outputs. This proves the complete combinational transition
+    # relation and avoids version-dependent assumptions about uninitialized flops.
+    ni, nr = len(rows[0]['inputs']), len(rows[0]['state'])
+    script = (f'read_verilog -sv {paths["sv"].name}; proc; write_json {name}_sv.json; '
+              f'rename {module} gold; design -stash gold; '
+              f'read_rtlil {paths["rtlil"].name}; write_json {name}_il.json; '
               f'rename {module} gate; design -stash gate; design -copy-from gold -as gold gold; '
-              f'design -copy-from gate -as gate gate; equiv_make gold gate equiv; '
+              f'design -copy-from gate -as gate gate; expose -evert-dff -shared; '
+              f'opt_clean; select -assert-none t:$dff; check -assert; equiv_make gold gate equiv; '
               f'hierarchy -top equiv; equiv_simple; equiv_status -assert; stat')
     log = run([yosys, '-p', script], cwd=work)
     (work / f'{name}_yosys.log').write_text(log)
     assert 'Equivalence successfully proven!' in log
+    # Eversion alone would erase edge polarity. Audit the original parsed cells
+    # so a wrong-edge, extra-state, latch, or wrong-clock printer is also rejected.
+    for suffix in ('sv', 'il'):
+        parsed = json.loads((work / f'{name}_{suffix}.json').read_text())['modules'][module]
+        registers = [c for c in parsed['cells'].values() if c['type'] == '$dff']
+        assert len(registers) == nr
+        assert all(c['type'] in ('$dff', '$and', '$not') for c in parsed['cells'].values())
+        for k in range(nr):
+            q = parsed['netnames'][f'n{ni + k + 1}']['bits']
+            drivers = [c for c in registers if c['connections']['Q'] == q]
+            assert len(drivers) == 1, f'state bit {k} has no unique driver'
+            cell = drivers[0]
+            assert int(cell['parameters']['WIDTH'], 2) == 1
+            assert int(cell['parameters']['CLK_POLARITY'], 2) == 1
+            assert cell['connections']['CLK'] == parsed['ports']['clk']['bits']
+    if design == 'counter':
+        # An intentionally corrupted next-state assignment must be refuted. This
+        # guards against accidentally checking only combinational output aliases.
+        mutant = work / f'{name}_mutant.rtlil'
+        mutant_text, count = re.subn(
+            r'    connect \\D [^\n]+', lambda _: "    connect \\D 1'0", paths['rtlil'].read_text(), count=1)
+        assert count == 1
+        mutant.write_text(mutant_text)
+        mutant_script = script.replace(f'read_rtlil {paths["rtlil"].name}', f'read_rtlil {mutant.name}')
+        mutant_script = mutant_script.replace(f'write_json {name}_il.json', f'write_json {name}_mutant_il.json')
+        result = subprocess.run([yosys, '-p', mutant_script], cwd=work, text=True, capture_output=True)
+        (work / f'{name}_mutant.log').write_text(result.stdout + result.stderr)
+        assert result.returncode != 0 and 'unproven $equiv' in result.stderr, 'corrupt next-state passed equivalence'
     print(f'PASS {name}: AIGER + 100 Icarus cycles + Yosys RTLIL equivalence')
 
 

@@ -36,7 +36,10 @@ and reset value. Sharing is not yet proved generically. All printers consume
 the same shared graph, preserve unconstrained power-up, and make reset explicit.
 
 Independent checks interpret AIGER and compare transitions, simulate SystemVerilog
-with Icarus, and ask Yosys to prove RTLIL/SystemVerilog equivalence. These are useful
+with Icarus, and ask Yosys to prove RTLIL/SystemVerilog equivalence. The check exposes matched register
+inputs and next-state outputs, checks the resulting combinational relation, and
+separately audits every original register’s width, clock, and edge polarity. A
+corrupted next-state mutation must fail. The flow is tested with Yosys 0.33 and 0.52. These are useful
 translation checks but not kernel-replayed proofs of the text printers. The report
 records this gap. The executable `emit` command is a development command, not an
 acceptance gate. Artifacts produced by `verify.py` are hashed along with the source
