@@ -70,7 +70,7 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--artifact', type=Path, required=True)
     p.add_argument('--graph-aiger', type=Path, required=True)
-    p.add_argument('--design', choices=['counter', 'fifo'], required=True)
+    p.add_argument('--design', choices=['counter', 'fifo', 'pipeline', 'ram', 'toy16', 'circular', 'ring'], required=True)
     p.add_argument('--width', type=int, default=8)
     p.add_argument('--format', choices=['aiger', 'sv', 'rtlil'], required=True)
     p.add_argument('--memory-mb', type=int, default=6144)

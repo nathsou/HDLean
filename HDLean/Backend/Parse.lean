@@ -1,5 +1,5 @@
 import Lean
-import HDLean.Backend.Validate
+import HDLean.Backend.LocalValidate
 import HDLean.Backend.SystemVerilog
 import HDLean.Backend.Aiger
 import HDLean.Backend.RTLIL
@@ -470,7 +470,7 @@ structure Emitted (format : Format) (c : Circuit d i r o) where
 
 /-- Both untrusted construction stages are gated by proved validators. -/
 def checkedPrint (format : Format) (c : Circuit d i r o) : Except String (Emitted format c) := do
-  let g ← checkedCompile c
+  let g ← checkedCompileLocal c
   let text := format.print g.val
   if h : format.validates text g.val = true then
     return ⟨text, format.correct_of_validated text g.val c g.property h⟩

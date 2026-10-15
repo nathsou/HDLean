@@ -1,4 +1,4 @@
-import HDLean.Backend.Graph
+import HDLean.Backend.FastCompile
 
 namespace HDLean.Backend
 
@@ -263,7 +263,7 @@ theorem Graph.validate_sound (g : Graph) (c : Circuit d i r o)
 
 /-- Compilation is an untrusted search followed by a proved, fail-closed validator. -/
 def checkedCompile (c : Circuit d i r o) : Except String {g : Graph // g.Equivalent c} :=
-  let g := compile (lower c)
+  let g := compileCandidate c
   if h : g.validate c = true then .ok ⟨g, g.validate_sound c h⟩
   else .error "shared-graph translation validation failed"
 

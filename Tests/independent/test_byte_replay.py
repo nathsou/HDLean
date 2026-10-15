@@ -11,6 +11,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from independent import certify_artifact as checker
+from independent import byte_certificate
 
 LAKE = os.environ.get('LAKE', 'lake')
 TOOLS = Path(os.environ.get('HDLEAN_INDEPENDENT_TOOLS', ROOT / 'work/independent-tools/tools.json'))
@@ -51,6 +52,12 @@ class ByteReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'kernel byte certificate failed'):
             self.certify()
         self.assertFalse((output / 'certificate.json').exists())
+
+    def test_chunked_lexing_preserves_exact_bytes(self):
+        with patch.object(byte_certificate, 'encode_lines',
+                          lambda lines: byte_certificate.encode_chunks(lines, size=4)):
+            report = self.certify()
+        self.assertTrue(report['exact_byte_binding'])
 
     def test_valid_proof_for_different_bytes_fails_binding(self):
         original = checker.generate

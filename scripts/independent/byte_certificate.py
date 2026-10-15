@@ -20,7 +20,11 @@ def sha(data):
 
 
 def array(xs):
-    return '#[' + ', '.join(map(str, xs)) + ']'
+    xs = list(xs)
+    if len(xs) <= 256:
+        return '#[' + ', '.join(map(str, xs)) + ']'
+    chunks = ['[' + ', '.join(map(str, xs[i:i + 128])) + ']' for i in range(0, len(xs), 128)]
+    return '(List.flatten [' + ', '.join(chunks) + ']).toArray'
 
 
 def graph_from_aiger(data):
@@ -55,27 +59,8 @@ def graph_from_aiger(data):
             f'Array.replicate {no} "", Array.replicate {nr} ""⟩')
 
 
-def generate(artifact, graph_aiger, design, width, format, namespace):
-    if not IDENTIFIER.fullmatch(namespace):
-        raise ValueError('invalid Lean namespace')
-    if design not in ('counter', 'fifo') or type(width) is not int or not 0 <= width <= 64:
-        raise ValueError('unsupported design or width')
-    if not artifact or any(b >= 128 for b in artifact) or not artifact.endswith(b'\n'):
-        raise ValueError('certificate requires nonempty ASCII bytes ending in LF')
-    circuit = 'Counter.hardware' if design == 'counter' else f'(Fifo.hardware {width})'
-    module = 'Counter' if design == 'counter' else 'Fifo'
-    lean_format = FORMATS[format]
-    out = [f'import HDLean.Backend.Parse\nimport Designs.{module}.Impl',
-           'open HDLean HDLean.Backend', f'namespace {namespace}',
-           'set_option maxRecDepth 65536\nset_option maxHeartbeats 16000000\nset_option linter.unusedSimpArgs false',
-           f'def candidate : Graph := {graph_from_aiger(graph_aiger)}',
-           '''private theorem normalize_cons (l next : List UInt8) (ls : List (List UInt8)) :
-    Format.normalizeByteLines (l :: next :: ls) =
-      Format.normalizeByteLines [l] ++ Format.normalizeByteLines (next :: ls) := by
-  unfold Format.normalizeByteLines
-  rw [List.map_cons, ← List.singleton_append, List.filter_append]
-  rfl''']
-    lines = artifact[:-1].split(b'\n')
+def encode_lines(lines):
+    out = []
     unique_lines = list(dict.fromkeys(lines))
     line_indices = {line: i for i, line in enumerate(unique_lines)}
     for i, line in enumerate(unique_lines):
@@ -104,10 +89,81 @@ def generate(artifact, graph_aiger, design, width, format, namespace):
         f'private def tokens : List (List Nat) := [{token_names}]',
         f'''private theorem lines_normalized : Format.normalizeByteLines rawLines = tokens := by
   simp only [rawLines, normalize_cons, {norm_lemmas}, List.singleton_append, List.nil_append]
+  rfl'''])
+    return out
+
+
+def encode_chunks(lines, size=64):
+    """Bound environment overhead for large files with compositional chunk proofs."""
+    chunks = [lines[i:i + size] for i in range(0, len(lines), size)]
+    out = ['''private theorem normalize_append (a b : List (List UInt8)) :
+    Format.normalizeByteLines (a ++ b) = Format.normalizeByteLines a ++ Format.normalizeByteLines b := by
+  simp only [Format.normalizeByteLines, List.map_append, List.filter_append]''']
+    for i, chunk in enumerate(chunks):
+        raw = '[' + ', '.join('[' + ', '.join(map(str, line)) + ']' for line in chunk) + ']'
+        tokens = [line.strip(b' \t\r') for line in chunk]
+        norm = '[' + ', '.join('[' + ', '.join(map(str, line)) + ']' for line in tokens if line) + ']'
+        out.extend([
+            f'private def rawChunk{i} : List (List UInt8) := {raw}',
+            f'private theorem chunk{i}_ascii : (rawChunk{i}.flatMap (fun l => l ++ [10])).all (fun b => decide (b.toNat < 128)) = true := by decide +kernel',
+            f'private theorem chunk{i}_noNL : rawChunk{i}.all (fun l => l.all (fun b => b.toNat != 10)) = true := by decide +kernel',
+            f'private def tokenChunk{i} : List (List Nat) := {norm}',
+            f'private theorem chunk{i}_normalized : Format.normalizeByteLines rawChunk{i} = tokenChunk{i} := by decide +kernel',
+        ])
+    raw_names = ', '.join(f'rawChunk{i}' for i in range(len(chunks)))
+    token_names = ', '.join(f'tokenChunk{i}' for i in range(len(chunks)))
+    ascii_lemmas = ', '.join(f'chunk{i}_ascii' for i in range(len(chunks)))
+    noNL_lemmas = ', '.join(f'chunk{i}_noNL' for i in range(len(chunks)))
+    norm_lemmas = ', '.join(f'chunk{i}_normalized' for i in range(len(chunks)))
+    out.extend([
+        f'private def rawLines : List (List UInt8) := [{raw_names}].flatten',
+        f'private def tokens : List (List Nat) := [{token_names}].flatten',
+        f'''private theorem lines_ascii : (rawLines.flatMap (fun l => l ++ [10])).all
+    (fun b => decide (b.toNat < 128)) = true := by
+  simp only [rawLines, List.flatten_cons, List.flatten_nil, List.flatMap_append, List.flatMap_nil,
+    List.all_append, List.all_nil, {ascii_lemmas}, Bool.true_and]''',
+        f'''private theorem lines_noNL : rawLines.all (fun l => l.all (fun b => b.toNat != 10)) = true := by
+  simp only [rawLines, List.flatten_cons, List.flatten_nil, List.all_append, List.all_nil, {noNL_lemmas}, Bool.true_and]''',
+        f'''private theorem lines_normalized : Format.normalizeByteLines rawLines = tokens := by
+  simp only [rawLines, tokens, List.flatten_cons, List.flatten_nil, normalize_append, {norm_lemmas}]
   rfl''',
+    ])
+    return out
+
+
+def generate(artifact, graph_aiger, design, width, format, namespace):
+    if not IDENTIFIER.fullmatch(namespace):
+        raise ValueError('invalid Lean namespace')
+    if design not in ('counter', 'fifo', 'pipeline', 'ram', 'toy16', 'circular', 'ring') or type(width) is not int or not 0 <= width <= 64:
+        raise ValueError('unsupported design or width')
+    if not artifact or any(b >= 128 for b in artifact) or not artifact.endswith(b'\n'):
+        raise ValueError('certificate requires nonempty ASCII bytes ending in LF')
+    circuit, modules = {
+        'counter': ('Counter.hardware', ['Designs.Counter.Impl']),
+        'fifo': (f'(Fifo.hardware {width})', ['Designs.Fifo.Impl']),
+        'pipeline': (f'(SkidBuffer.hardware {width})', ['Designs.SkidBuffer.Hardware']),
+        'ram': (f'(RAMCircuit.hardware 4 {width})', ['HDLean.Lib.MemoryCircuit']),
+        'toy16': ('(Toy16.Physical.hardware Toy16.sumProgram)', ['Designs.Toy16.Hardware', 'Designs.Toy16.Programs']),
+        'circular': (f'(Fifo.Circular.Physical.hardware 4 {width})', ['Designs.Fifo.CircularHardware']),
+        'ring': (f'(Fifo.Circular.Physical.hardware 4 {width})', ['Designs.Fifo.CircularHardware']),
+    }[design]
+    lean_format = FORMATS[format]
+    out = ['import HDLean.Backend.Parse\n' + '\n'.join('import ' + m for m in modules),
+           'open HDLean HDLean.Backend', f'namespace {namespace}',
+           f'set_option maxRecDepth {1000000 if artifact.count(bytes([10])) > 8192 else 65536}\nset_option maxHeartbeats 16000000\nset_option linter.unusedSimpArgs false',
+           f'def candidate : Graph := {graph_from_aiger(graph_aiger)}',
+           '''private theorem normalize_cons (l next : List UInt8) (ls : List (List UInt8)) :
+    Format.normalizeByteLines (l :: next :: ls) =
+      Format.normalizeByteLines [l] ++ Format.normalizeByteLines (next :: ls) := by
+  unfold Format.normalizeByteLines
+  rw [List.map_cons, ← List.singleton_append, List.filter_append]
+  rfl''']
+    lines = artifact[:-1].split(b'\n')
+    out.extend(encode_chunks(lines) if len(lines) > 8192 else encode_lines(lines))
+    out.extend([
         'def bytes : String := asciiText (rawLines.flatMap (fun l => l ++ [10])) lines_ascii',
         f'''theorem graph_correct : candidate.Equivalent {circuit} := by
-  apply Graph.validate_sound
+  apply Graph.validateLocal_sound (hint := Local.pointerHint)
   decide +kernel''',
         f'''private theorem tokens_valid :
     (match Format.{lean_format}.parseTokens tokens with
@@ -133,7 +189,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--artifact', type=Path, required=True)
     p.add_argument('--graph-aiger', type=Path, required=True)
-    p.add_argument('--design', choices=['counter', 'fifo'], required=True)
+    p.add_argument('--design', choices=['counter', 'fifo', 'pipeline', 'ram', 'toy16', 'circular', 'ring'], required=True)
     p.add_argument('--width', type=int, default=8)
     p.add_argument('--format', choices=FORMATS, required=True)
     p.add_argument('--namespace', required=True)

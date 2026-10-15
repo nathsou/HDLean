@@ -39,6 +39,17 @@ class ByteCertificateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 cert.graph_from_aiger(graph)
 
+    def test_extended_designs_and_bounded_graph_literals(self):
+        for design, expected in [('pipeline', 'SkidBuffer.hardware 8'),
+                                 ('ram', 'RAMCircuit.hardware 4 8'),
+                                 ('toy16', 'Toy16.Physical.hardware Toy16.sumProgram'),
+                                 ('ring', 'Fifo.Circular.Physical.hardware 4 8')]:
+            source, manifest = cert.generate(AIG, AIG, design, 8, 'aiger', 'Fixture')
+            self.assertIn(expected, source.decode())
+            self.assertEqual(manifest['design'], design)
+            self.assertIn('Graph.validateLocal_sound', source.decode())
+        self.assertIn('List.flatten', cert.array(range(300)))
+
 
 if __name__ == '__main__':
     unittest.main()
