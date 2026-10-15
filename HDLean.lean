@@ -3,4 +3,11 @@ import HDLean.Semantics.Synth
 import HDLean.Netlist.Lower
 import HDLean.Backend.SystemVerilog
 import HDLean.Backend.Aiger
-import HDLean.Backend.BTOR2
+import HDLean.Backend.RTLIL
+import HDLean.Semantics.Composition
+import HDLean.Lib.Stream
+import HDLean.Lib.Pipe
+import HDLean.Semantics.Retirement
+import HDLean.Lib.Memory
+import HDLean.Semantics.Clock
+import HDLean.Tactics.Basic

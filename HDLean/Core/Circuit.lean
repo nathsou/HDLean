@@ -39,7 +39,7 @@ def step (c : Circuit d i r o) (s : Fin r → Bool) (xs : (Fin i → Bool) × Bo
 def IsMoore (c : Circuit d i r o) : Prop :=
   ∀ s a b, c.evalOutput s a = c.evalOutput s b
 
-def denote (c : Circuit d i r o) : PMachine (Fin r → Bool) ((Fin i → Bool) × Bool) (Fin o → Bool) :=
+def denote (c : Circuit d i r o) (_moore : c.IsMoore) : PMachine (Fin r → Bool) ((Fin i → Bool) × Bool) (Fin o → Bool) :=
   ⟨fun s => c.evalOutput s (fun _ => false), c.next⟩
 
 end Circuit
