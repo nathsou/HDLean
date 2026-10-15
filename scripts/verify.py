@@ -33,7 +33,8 @@ EXPECTED_THEOREMS = {
     'HDLean.SkidBuffer.pipeline_correct', 'HDLean.Netlist.optimize_correct', 'HDLean.retiresLike_of_simulation',
     'HDLean.Fifo.Challenge.correctness', 'HDLean.Fifo.Challenge.budget',
     'HDLean.Fifo.full_rate', 'HDLean.Counter.Challenge.correctness',
-    'HDLean.Counter.Challenge.budget', 'HDLean.Toy16.Challenge.correctness',
+    'HDLean.Counter.Challenge.budget', 'HDLean.Toy16.Challenge.correctness', 'HDLean.Toy16.Challenge.budget',
+    'HDLean.Toy16.Physical.decode_next', 'HDLean.Toy16.Physical.decode_output',
     'HDLean.AsyncFifo.ungray_gray', 'HDLean.AsyncFifo.step_refines_queue',
     'HDLean.AsyncFifo.reset_establishes_queue', 'HDLean.AsyncFifo.reset_progress',
     'HDLean.sync2_stable', 'HDLean.sample_adjacent', 'HDLean.gray_one_bit8', 'HDLean.one_bit_mix8',
@@ -143,7 +144,7 @@ def main():
                                     work / 'independent', sorted(EXPECTED_THEOREMS),
                                     ['HDLean', 'Designs', 'Tests'])
     artifacts, metrics = {}, {}
-    for design in ('fifo', 'counter', 'pipeline'):
+    for design in ('fifo', 'counter', 'pipeline', 'ram'):
         metrics[design] = json.loads(run([ROOT / '.lake/build/bin/hdlean', 'metrics', design, '8']))
         for fmt in ('sv', 'aiger', 'rtlil'):
             path = work / f'{design}.{fmt}'

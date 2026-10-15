@@ -84,7 +84,7 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     rows = json.loads(tracepath.read_text())
     check_aag(paths['aiger'], rows)
     module = {'fifo': f'hd_fifo2_w{width}', 'counter': 'hd_decade',
-              'pipeline': f'hd_pipeline3_w{width}'}[design]
+              'pipeline': f'hd_pipeline3_w{width}', 'ram': f'hd_ram_16x{width}'}[design]
     tb = work / f'{name}_tb.sv'
     tb.write_text(testbench(module, rows))
     options = ['-B', ivl_base] if ivl_base else []
@@ -154,6 +154,7 @@ def main():
     check_design(work, 'counter', 8, args.iverilog, args.vvp, args.yosys, args.ivl_base)
     for width in (1, 8):
         check_design(work, 'pipeline', width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
+        check_design(work, 'ram', width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
 
 
 if __name__ == '__main__':
