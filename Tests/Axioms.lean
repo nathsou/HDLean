@@ -3,10 +3,13 @@ import Designs
 import Tests.Certificates
 import Tests.Types
 import Tests.Syntax
+import Tests.Invariant
 open Lean in
 run_cmd do
   let names := #[
     ``HDLean.Machine.refines_of_simulation,
+    ``HDLean.Delay.latency, ``HDLean.Delay.retime, ``HDLean.Delay.realizes_pipe,
+    ``HDLean.Verification.FiniteSystem.check_sound,
     ``HDLean.refinesAfterReset_of_simulation,
     ``HDLean.reset_noninterference,
     ``HDLean.lowerExpr_correct, ``HDLean.lower_next, ``HDLean.lower_output,

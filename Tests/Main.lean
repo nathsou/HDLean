@@ -42,6 +42,18 @@ private def checkPipeline (width cycles seed : Nat) : IO Unit := do
     let snapshot := Vector.ofFn next
     q := fun j => snapshot[j]
 
+private def checkRing (k width cycles seed : Nat) : IO Unit := do
+  let rows := trace (Backend.compileCandidate (Fifo.Circular.Physical.hardware k width)) cycles seed
+  let reference := Fifo.spec Nat (2^k)
+  let mut q : List Nat := []
+  for row in rows do
+    if row.cycle > 0 then
+      let actual : Fifo.Output Nat := ⟨row.outputs[0]!,row.outputs[1]!,
+        if row.outputs[1]! then some (bitsToNat (row.outputs.extract 2 row.outputs.size)) else none⟩
+      require (actual == reference.out q) s!"physical ring mismatch k={k},w={width},cycle={row.cycle}"
+    q := if row.inputs[width+2]! then [] else reference.next q
+      ⟨row.inputs[0]!,bitsToNat (row.inputs.extract 2 (width+2)),row.inputs[1]!⟩
+
 private def checkToy16 (cycles seed : Nat) : IO Unit := do
   let c := Toy16.Physical.hardware Toy16.sumProgram
   let rows := trace (Backend.compileCandidate c) cycles seed
@@ -72,6 +84,10 @@ private def checkRAM (a width cycles seed : Nat) : IO Unit := do
 
 def main : IO Unit := do
   HDLean.Tests.checkBackendTexts
+  for k in [0,1,2,3,4] do
+    for w in [0,1,8,16] do
+      for seed in [1,42,999] do checkRing k w 150 seed
+  IO.println "PASS: 9,000 physical circular FIFO cycles against List reference."
   for seed in [1,42,999] do checkToy16 80 seed
   IO.println "PASS: 240 physical CPU cycles against retirement model from arbitrary power-up."
   for a in [0,1,2,4] do

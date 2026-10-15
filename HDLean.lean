@@ -7,11 +7,13 @@ import HDLean.Backend.RTLIL
 import HDLean.Semantics.Composition
 import HDLean.Lib.Stream
 import HDLean.Lib.Pipe
+import HDLean.Lib.Delay
 import HDLean.Semantics.Retirement
 import HDLean.Lib.Memory
 import HDLean.Semantics.Clock
 import HDLean.Semantics.GrayProof
 import HDLean.Tactics.Basic
+import HDLean.Tactics.Diagnostics
 import HDLean.Verification.Simulation
 import HDLean.Lib.Network
 import HDLean.Netlist.Optimize

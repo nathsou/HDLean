@@ -199,4 +199,22 @@ theorem Format.correct_of_validated (f : Format) (text : String) (g : Graph)
   rw [f.validates_sound text g ht]
   exact congrArg some (Graph.eval_correct hg xs s rst edge)
 
+def checkedCompile (c : Circuit nd i r o) : Except String {g : Graph // g.Equivalent c} := do
+  let g ← Backend.checkedCompileLocal c.combinational
+  return ⟨⟨g.val,nd,(Vector.ofFn fun k => (c.clock k).val).toArray⟩,g.property,rfl,rfl⟩
+
+structure Emitted (format : Format) (c : Circuit nd i r o) where
+  text : String
+  correct : ∀ (xs : Vector Bool i) (s : Vector Bool r) (rst : Bool) (edge : Nat → Bool),
+    format.meaning text edge (xs.toArray.push rst) s.toArray = some
+      ((Vector.ofFn (c.next (fun k => s[k]) ((fun k => xs[k]),rst) (fun d => edge d.val))).toArray,
+       (Vector.ofFn (c.output (fun k => s[k]) (fun k => xs[k]))).toArray)
+
+def checkedPrint (format : Format) (c : Circuit nd i r o) : Except String (Emitted format c) := do
+  let g ← checkedCompile c
+  let text := format.print g.val
+  if h : format.validates text g.val = true then
+    return ⟨text,format.correct_of_validated text g.val c g.property h⟩
+  else throw "multi-clock backend text validation failed"
+
 end HDLean.MultiClock

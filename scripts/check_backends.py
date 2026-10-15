@@ -84,7 +84,7 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     rows = json.loads(tracepath.read_text())
     check_aag(paths['aiger'], rows)
     module = {'fifo': f'hd_fifo2_w{width}', 'counter': 'hd_decade',
-              'pipeline': f'hd_pipeline3_w{width}', 'ram': f'hd_ram_16x{width}'}[design]
+              'pipeline': f'hd_pipeline3_w{width}', 'ram': f'hd_ram_16x{width}', 'ring':f'hd_fifo_ring_d16_w{width}', 'toy16':'hd_toy16'}[design]
     tb = work / f'{name}_tb.sv'
     tb.write_text(testbench(module, rows))
     options = ['-B', ivl_base] if ivl_base else []
@@ -142,6 +142,8 @@ def main():
     parser.add_argument('--vvp', default=os.environ.get('VVP', 'vvp'))
     parser.add_argument('--yosys', default=os.environ.get('YOSYS', 'yosys'))
     parser.add_argument('--ivl-base', default=os.environ.get('IVL_BASE'))
+    parser.add_argument('--designs', nargs='+', choices=['fifo','counter','pipeline','ram','ring','toy16'],
+                        default=['fifo','counter','pipeline','ram','ring','toy16'])
     parser.add_argument('--output', type=Path, default=ROOT / 'build/backend-checks')
     args = parser.parse_args()
     for tool in (args.iverilog, args.vvp, args.yosys):
@@ -149,12 +151,12 @@ def main():
             parser.error(f'required external checker is missing: {tool}')
     work = args.output.resolve()
     work.mkdir(parents=True, exist_ok=True)
-    for width in (0, 1, 8, 16):
-        check_design(work, 'fifo', width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
-    check_design(work, 'counter', 8, args.iverilog, args.vvp, args.yosys, args.ivl_base)
-    for width in (1, 8):
-        check_design(work, 'pipeline', width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
-        check_design(work, 'ram', width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
+    widths = {'fifo':(0,1,8,16), 'counter':(8,), 'pipeline':(1,8),
+              'ram':(1,8), 'ring':(1,8), 'toy16':(8,)}
+    for design in args.designs:
+        for width in widths[design]:
+            check_design(work, design, width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
+
 
 
 if __name__ == '__main__':

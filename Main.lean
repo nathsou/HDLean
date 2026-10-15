@@ -5,6 +5,7 @@ open HDLean HDLean.Backend HDLean.Verification
 
 private def usage : String := "HDLean 0.1.0\n\
   hdlean emit <fifo|counter|pipeline|ram|ring|toy16> <sv|aiger|rtlil> <path> [width=8]\n\
+  hdlean emit-async <sv|rtlil|aiger> <path> [width=8] [log2depth=4]\n\
   hdlean metrics <fifo|counter|pipeline|ram|ring|toy16> [width=8]\n\
   hdlean trace <fifo|counter|pipeline|ram|ring|toy16> <path.json> [width=8] [cycles=60] [seed=1]\n\
   hdlean check <fifo|counter|pipeline|ram|ring|toy16> [width=8] [cycles=200] [seed=1]\n\
@@ -45,6 +46,25 @@ private def execute (args : List String) : IO Unit := do
   match args with
   | ["--help"] | ["help"] | [] => IO.println usage
   | ["--version"] => IO.println "HDLean 0.1.0 (Lean 4.34.0)"
+  | "emit-async" :: format :: path :: rest =>
+    if rest.length > 2 then throw (IO.userError usage)
+    let width ← parseNum (rest[0]?.getD "8") 64
+    let k ← parseNum (rest[1]?.getD "4") 8
+    let c := AsyncFifo.Physical.hardware k width
+    if format == "aiger" then
+      let artifact ← match Backend.checkedPrint .aiger c.eventCircuit with
+        | .ok a => pure a | .error e => throw (IO.userError e)
+      writeFile path artifact.text
+      IO.println s!"Wrote event-encoded {path}; independent edge inputs represent both physical clocks."
+    else
+      let f ← match format with
+        | "sv" => pure MultiClock.Format.systemVerilog
+        | "rtlil" => pure MultiClock.Format.rtlil
+        | _ => throw (IO.userError "expected sv, rtlil, or aiger")
+      let artifact ← match MultiClock.checkedPrint f c with
+        | .ok a => pure a | .error e => throw (IO.userError e)
+      writeFile path artifact.text
+      IO.println s!"Wrote {path} with native clk_0 and clk_1 ports."
   | "emit" :: design :: format :: path :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
