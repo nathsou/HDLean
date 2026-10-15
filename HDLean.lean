@@ -11,3 +11,4 @@ import HDLean.Semantics.Retirement
 import HDLean.Lib.Memory
 import HDLean.Semantics.Clock
 import HDLean.Tactics.Basic
+import HDLean.Verification.Simulation

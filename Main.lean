@@ -1,0 +1,93 @@
+import HDLean
+import Designs
+import Lean
+open HDLean HDLean.Backend HDLean.Verification
+
+private def usage : String := "HDLean 0.1.0\n\
+  hdlean emit <fifo|counter> <sv|aiger|rtlil> <path> [width=8]\n\
+  hdlean metrics <fifo|counter> [width=8]\n\
+  hdlean trace <fifo|counter> <path.json> [width=8] [cycles=60] [seed=1]\n\
+  hdlean check <fifo|counter> [width=8] [cycles=200] [seed=1]\n\
+  hdlean toy16 [cycles=60]\n\
+FIFO is a verified two-entry skid buffer. Inputs: valid, ready, payload LSB first, reset.\n\
+Outputs: ready, valid, payload LSB first. Counter inputs: enable, reset. Clock is implicit."
+
+private def number (s : String) (max : Nat := 1000000) : Except String Nat := do
+  let some n := s.toNat? | throw s!"invalid natural number: {s}"
+  if n > max then throw s!"value exceeds limit {max}: {n}"
+  return n
+
+private def withDesign (name : String) (width : Nat)
+    (f : {i r o : Nat} → Circuit 0 i r o → IO Unit) : IO Unit := do
+  match name with
+  | "fifo" => f (Fifo.hardware width)
+  | "counter" => f Counter.hardware
+  | _ => throw (IO.userError s!"unknown design: {name}")
+
+private def parseNum (s : String) (max : Nat := 1000000) : IO Nat :=
+  match number s max with | .ok n => pure n | .error e => throw (IO.userError e)
+
+private def bools (a : Array Bool) : Lean.Json := .arr (a.map Lean.toJson)
+private def traceJson (rows : Array TraceRow) : Lean.Json := .arr (rows.map fun r => Lean.Json.mkObj
+  [("cycle", Lean.toJson r.cycle), ("inputs", bools r.inputs), ("state", bools r.state),
+   ("outputs", bools r.outputs), ("next", bools r.next)])
+
+private def writeFile (path : String) (content : String) : IO Unit := do
+  let path := System.FilePath.mk path
+  if let some parent := path.parent then IO.FS.createDirAll parent
+  IO.FS.writeFile path content
+
+private def execute (args : List String) : IO Unit := do
+  match args with
+  | ["--help"] | ["help"] | [] => IO.println usage
+  | ["--version"] => IO.println "HDLean 0.1.0 (Lean 4.34.0)"
+  | "emit" :: design :: format :: path :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let width ← parseNum (rest.headD "8") 64
+    withDesign design width fun c => do
+      let graph := compile (lower c)
+      unless graph.wellFormed do throw (IO.userError "internal error: malformed graph")
+      let text ← match format with
+        | "sv" => pure (systemVerilog graph)
+        | "aiger" => pure (aiger graph)
+        | "rtlil" => pure (rtlil graph)
+        | _ => throw (IO.userError s!"unknown format: {format}; expected sv, aiger, rtlil")
+      writeFile path text
+      IO.println s!"Wrote {path} ({graph.ffBits} flip-flops, {graph.andCount} AND gates)."
+  | "metrics" :: design :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let width ← parseNum (rest.headD "8") 64
+    withDesign design width fun c => do
+      let g := compile (lower c)
+      IO.println (Lean.Json.mkObj [("design", .str g.name), ("ff_bits", Lean.toJson g.ffBits),
+        ("memory_bits", Lean.toJson (0 : Nat)), ("and_gates", Lean.toJson g.andCount),
+        ("logic_depth", Lean.toJson g.depth), ("physical_metrics", .null)]).pretty
+  | "trace" :: design :: path :: rest =>
+    if rest.length > 3 then throw (IO.userError usage)
+    let width ← parseNum (rest[0]?.getD "8") 64
+    let cycles ← parseNum (rest[1]?.getD "60") 10000
+    let seed ← parseNum (rest[2]?.getD "1") 4294967295
+    withDesign design width fun c => writeFile path (traceJson (trace (compile (lower c)) cycles seed)).pretty
+  | "check" :: design :: rest =>
+    if rest.length > 3 then throw (IO.userError usage)
+    let width ← parseNum (rest[0]?.getD "8") 64
+    let cycles ← parseNum (rest[1]?.getD "200") 10000
+    let seed ← parseNum (rest[2]?.getD "1") 4294967295
+    withDesign design width fun c => match checkCircuit c cycles seed with
+      | .ok _ => IO.println s!"PASS: {cycles} cycles, seed {seed}"
+      | .error e => throw (IO.userError e)
+  | "toy16" :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let cycles ← parseNum (rest.headD "60") 1000
+    let mut s : Toy16.CoreState := ⟨Toy16.ArchState.atReset (fun _ => 0xAAAA) (fun _ => 0x5555), 0, false⟩
+    let m := Toy16.core Toy16.sumProgram
+    IO.println "cycle,pc,instruction,next_pc,halt"
+    for t in [:cycles] do
+      if let some r := m.out s then IO.println s!"{t},{r.pc.toNat},{r.instr.toNat},{r.nextPc.toNat},{r.halt}"
+      s := m.next s false
+    IO.println s!"halted={s.arch.halted}, memory[0]={s.arch.dmem 0}"
+  | _ => throw (IO.userError usage)
+
+def main (args : List String) : IO UInt32 := do
+  try execute args; return 0
+  catch e => (← IO.getStderr).putStrLn s!"hdlean: {e}"; return 1
