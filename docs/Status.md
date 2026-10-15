@@ -1,46 +1,68 @@
 # Implementation coverage
 
-HDLean v0.1 is a working, tested foundation. **The entire proposed project is not
-complete.** No unfinished theorem is represented by `sorry` or a replacement
-axiom. Missing guarantees below are engineering work, not accepted assumptions.
+HDLean implements the v0.1 framework and all roadmap example families, with the
+explicit design choices below. No unfinished theorem is represented by `sorry`
+or a replacement axiom. Acceptance evidence and resource limitations are kept
+separate from implementation coverage.
 
-| Area | Implemented and checked | Remaining |
-| --- | --- | --- |
-| Machines/reset | Arbitrary power-up; reset schedules; generic simulation; power-up non-interference | Re-assertable reset refinement contracts beyond the startup theorem |
-| Types | Domain/dimension-indexed Boolean AST; compact finite encodings; structure/enum `deriving Synth` | Tagged unions with payloads require explicit layouts |
-| Syntax | Lean `circuit do` reifies conditionals/equality/logic; proved word arithmetic, comparisons and extension | Richer hardware diagnostics and imperative register builder |
-| Core | One driver/register; combinational trees; explicit reset; Moore proof requirement | Typed module instances/memory/CDC nodes in the synthesis AST |
-| Lowering | Generic kernel proofs for expressions, reset transitions, outputs; generically proved graph translation validator required by emission | Direct proof of compiler total acceptance (validation rejects conservatively) |
-| Backends | SystemVerilog, AIGER, RTLIL; strict parsed-text semantic validation; exact-byte kernel/nanoda certificates for counter and FIFO8 | Checked external synthesis certificates; larger text-certificate scaling |
-| Graph certificates | Generic soundness theorem; kernel certificates for counter and one/eight-bit FIFO; mandatory runtime checks through width 64 | Shared representation for very large symbolic cones |
-| FIFO | Generic payload-width proof on the actual two-entry circuit; scenarios, mutations, throughput, register budget | General-depth circular FIFO refinement and RAM lowering |
-| Circular FIFO | Power-of-two executable ring; garbage-state/reset/wraparound regressions | Generic correctness theorem and physical AST |
-| Composition | Generic Moore network theorem; physical network elaboration and trace proof; physical three-stage pipeline refinement | Heterogeneous instance ergonomics |
-| Latency | Causal stream contracts with proved `comb`, `seq`, `par`, `delay` | Finite-state realization of every contract; retiming transformations |
-| Toy16 | ISA; single-cycle model; serialized fetch/execute model; reset/retirement/progress theorem; sum scenario | Synthesizable core AST, netlist, pipelining with overlapping instructions, physical metrics |
-| Clock crossing | Independent edges/masks; sync2 behavior; generic Gray adjacency/injectivity and mixture proofs | Hardware CDC primitives and multi-clock backend |
-| Async FIFO | Generic ghost-history queue safety, actual Gray synchronizer/control/memory correspondence, held-reset startup under arbitrary edges/masks | Synthesizable primitive and multi-clock backend |
-| Memory | Physical register-array RAM; generic arbitrary-power-up trace proof and exact budget; 9,600 collision/reset test cycles | Technology RAM macro mapping |
-| Tactics | `circuit_simp`, `simulation`, `hw_cases`, `hw_step`, kernel variant, `compose`, `nonint`, `k_induction` | IC3/invariant suggestions, relation-refutation tactic, signal-level goal rendering |
-| Trust workflow | Frozen source manifest; typed challenges; fresh kernel and pinned nanoda replay; strict axiom policy; exact artifact byte certificates; adversarial rejection tests | Comparator isolation, reviewer approval enforcement and L2/L3 |
-| Performance | Structural counts/depth; throughput/progress theorems; proved local rewrites; optional Liberty synthesis script | PDK calibration, OpenSTA/OpenROAD/nextpnr flows, placed/routed timing and power |
+| Area | Implemented and checked |
+| --- | --- |
+| Machines/reset | Arbitrary power-up; explicit reset inputs; generic simulation and non-interference; arbitrary reset reassertion for physical counter and synchronous FIFO |
+| Types/syntax | Dimension/domain-indexed finite AST; compact finite layouts; generic structure/enum `deriving Synth`; ordinary `circuit do` conditionals, logic, equality and word arithmetic |
+| Core/composition | One next-state driver per register; bounded wiring; explicit reset kinds; Moore proof requirement; generic physical network transition/output/trace refinement |
+| Lowering | Generic kernel proofs for expressions, transitions and outputs; proved normalized-formula and local-gate graph validators; untrusted native DAG candidate compiler |
+| Backends | SystemVerilog, AIGER and RTLIL; strict parsed-text semantic validation before emission; native multi-clock SV/RTLIL and explicit-edge AIGER |
+| FIFO | Generic payload-width refinement on the two-entry AST; reference scenarios, mutations, throughput and exact register budget |
+| Circular FIFO | Generic power-of-two-depth queue safety/order proof; physical bounded word-bank AST; arbitrary-power-up/reset, wraparound and exact storage proofs; 9,000 physical reference cycles |
+| Memory | Physical register-array synchronous read-before-write RAM; generic arbitrary-power-up trace proof and exact budget; 9,600 collision/reset cycles |
+| Pipeline/latency | Physical three-stage elastic pipeline refinement; 2,400 reference cycles; causal `Pipe` contracts; finite delay realization and latency/retiming theorems including zero stages |
+| Toy16 | Full ISA; physical fetch/execute AST; generic opcode, transition, retirement and reset proofs; two-cycle progress bound; 240 arbitrary-power-up physical cycles; actual placed/routed CPU |
+| Clock crossing | Independent/coincident edges; typed named two-flop primitives; generic Gray adjacency/injectivity and arbitrary bit-mixture proofs |
+| Async FIFO | Generic ghost-history queue safety under arbitrary edge/sample masks; held-reset startup; physical two-domain AST/control/memory correspondence; clock-checked backend and external wrong-clock mutations |
+| Automation | Kernel proof tactics; finite invariant search with checked initialization/closure/safety; sampled relation refutation; goal rendering; named/source-aware counterexamples and VCDs |
+| Independent checking | Frozen candidate manifest; typed challenges; fresh Lean kernel replay; pinned nanoda/exporter; strict baseline-axiom policy; exact byte binding and adversarial rejection tests |
+| Physical metrics | Actual structural counts; proved progress/budgets; pinned Yosys/ABC/nextpnr flow; routed ECP5 counter, elastic pipeline and complete CPU reports |
 
-## Roadmap exit tests
+## Acceptance evidence and roadblocks
 
-- **M0:** implemented, including the reset theorem and non-vacuity witness.
-- **M1:** the two-entry FIFO is proved on its AST and external RTL checks pass;
-  the proposed L2 comparator exit test remains unmet.
-- **M2:** core tactics, deterministic refutation-by-testing and waveform output
-  work; external invariant discovery and richer diagnostics remain open.
-- **M3:** the physical three-stage circuit is proved by composition and checked
-  against the reference model on 2,400 cycles.
-- **M4:** the serialized two-stage model has the headline retirement and progress
-  proof; synthesizable core lowering and overlapping pipeline implementation remain open.
-- **M5:** the Gray-pointer model has generic queue safety and held-reset startup
-  proofs; physical multi-clock lowering remains open.
-- **M6:** structural reports and optional real synthesis are available; a physical
-  pipelined-core sign-off report is not available.
+The 77 audited headline roots have passed independent nanoda replay over **6,680
+declarations**. Exact counter and FIFO8 bytes in all three formats have passed
+kernel/nanoda replay and byte-for-byte artifact binding. Every native emission
+also requires the generic graph and final-text semantic validators.
 
-The provided challenge files are reviewer candidates. CODEOWNERS is an aid to
-review; without server-side required-review rules it is not an access-control
-boundary. Nothing in this repository self-approves its specifications.
+A full concrete CPU artifact certificate remains a **real resource roadblock**.
+Its 744,329-byte AIGER file has 40,745 AND gates and 4,288 physical state bits. Both
+per-line and chunked exact-byte proofs exceeded the 6 GiB Lean allocation cap;
+a graph-only concrete reduction also reached over 7 GiB process memory before
+being stopped. No CPU byte-certificate success was emitted. The generic semantic
+proofs and independently replayed physical CPU theorems do not erase this gap.
+
+The isolated comparator implementation is being integrated. Successful namespace
+isolation must be demonstrated on CI: this managed workspace does not permit
+creating nested user/network namespaces. No L2/L3 success is inferred from a
+failed or skipped sandbox test. A reviewer-approved receipt is always external
+input; a candidate manifest or fixture approval never approves this project.
+
+The pinned physical CPU run meets **12 MHz** on ECP5-25K and reports **47.02 MHz**
+register Fmax, 12,629 combinational cells and 4,234 mapped flip-flops. See
+[the reproducible flow and reports](Physical.md) for constraints and provenance.
+
+## Deliberate implementation bounds
+
+- Toy16 alternates fetch and execute. Its theorem promises retirement within two
+  cycles; it does not promise overlapping instruction execution or one IPC.
+- RAM and circular/async FIFO memory are explicit finite register arrays. There
+  is no technology RAM macro or hidden storage estimate. Uniform bank padding is
+  counted in AST budgets; mapped counts may shrink through synthesis.
+- Async startup holds both resets until both clocks have observed a reset edge.
+  The queue theorem then covers arbitrary edge interleavings and sample masks.
+  Independent reset assertion during traffic requires a new reset epoch/protocol.
+- The finite invariant oracle uses reachability saturation, with fuel and checked
+  obligations. It does not claim to implement IC3 or solve arbitrary instances.
+- Mathematical `Pipe` contracts may contain arbitrary functions. Synthesis uses
+  finite hardware constructors with separate realization proofs.
+- Tagged unions with payloads use explicit layouts. Deriving layouts for those
+  unions, vendor RAM mapping and alternative overlapping CPUs are extensions.
+
+The [decision log](Decisions.md) records revisions to the proposal's implementation
+choices. The [trust boundary](Trust.md) explains what each acceptance path proves.

@@ -20,7 +20,8 @@ EXE = ROOT / '.lake/build/bin/hdlean'
 
 
 def run(args, **kwargs):
-    return subprocess.run([str(x) for x in args], check=True, text=True, capture_output=True, **kwargs).stdout
+    return subprocess.run([str(x) for x in args], check=True, text=True, capture_output=True,
+                          timeout=1200, **kwargs).stdout
 
 
 def read_aag(path):
@@ -135,7 +136,7 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
         mutant.write_text(mutant_text)
         mutant_script = script.replace(f'read_rtlil {paths["rtlil"].name}', f'read_rtlil {mutant.name}')
         mutant_script = mutant_script.replace(f'write_json {name}_il.json', f'write_json {name}_mutant_il.json')
-        result = subprocess.run([yosys, '-p', mutant_script], cwd=work, text=True, capture_output=True)
+        result = subprocess.run([yosys, '-p', mutant_script], cwd=work, text=True, capture_output=True, timeout=1200)
         (work / f'{name}_mutant.log').write_text(result.stdout + result.stderr)
         assert result.returncode != 0 and 'unproven $equiv' in result.stderr, 'corrupt next-state passed equivalence'
     print(f'PASS {name}: AIGER + 100 Icarus cycles + Yosys RTLIL equivalence')

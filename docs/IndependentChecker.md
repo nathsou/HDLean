@@ -142,3 +142,29 @@ surface; hostile concurrent filesystem mutation requires process isolation.
 The byte integration tests also reject an inverted clock and a valid proof for
 a semantically equivalent file with different raw bytes. Thus semantic validity
 alone cannot silently substitute a different artifact.
+
+## Local graph certificates and large instances
+
+`Graph.validateLocal_sound` validates ordered gate equations and proof-carrying
+source-expression memo entries. AND lookups use ordered finite maps, and cache
+reuse checks structural equality before accepting a saved meaning. The arbitrary
+hint function is not an assumption: constant, colliding and pointer hints cannot
+turn a wrong graph into a valid proof. Native construction uses pointer hints;
+logical/kernel reduction uses the transparent structural fingerprint. Tests cover
+constant/adversarial hints, wrong roots, altered gates and the complete Toy16 AST.
+
+The exact-byte generator supports counter, FIFO, elastic pipeline, RAM, circular
+FIFO and Toy16 constructors. Files over 8,192 lines use compositional 64-line
+lexical chunks and bounded graph-array literals. Support in a generator does not
+mean every generated certificate fits available checker resources. The six
+counter/FIFO8 format certificates passed kernel and nanoda replay; the full CPU
+AIGER attempt exceeded a 6 GiB allocation cap during lexical checking and emitted
+no success report. A separate CPU graph-only kernel attempt reached over 7 GiB
+process memory. Native local validation, generic soundness and replayed hardware
+proofs are not labeled as a successful concrete CPU byte certificate.
+
+All 77 current headline roots have independently replayed in nanoda over 6,680
+declarations. That closure includes general circular FIFO and physical async FIFO
+proofs, finite latency/retiming, reset reassertion, invariant-certificate soundness,
+physical CPU retirement/progress and generic parsed-text semantics. It is separate
+from the exact-byte artifact closures above.

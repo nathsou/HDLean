@@ -20,9 +20,22 @@ just to make an unexpected verification failure disappear.
 
 `hw_step_kernel` uses simplification, arithmetic and kernel-checkable proof search.
 `hw_step` also permits `bv_decide`; its native axioms must appear in the report.
-Use `decide +kernel` for small exhaustive certificates. The one-bit FIFO graph
-certificate takes about 40 seconds on the development environment; large instances
-need symbolic certificates, not exponential enumeration.
+Use `decide +kernel` for fixed finite certificates. The local graph validator checks
+shared gate equations without expanding symbolic cones. Its native candidate path
+scales to the full CPU; concrete kernel reduction remains more resource intensive.
+
+`invariant? system, fuel` suggests a finite reachable-state membership invariant.
+`FiniteSystem.check_sound` turns kernel-checked initialization, closure and safety
+obligations into an all-traces theorem. Fuel exhaustion never establishes safety.
+`refute_small samples with predicate` rejects sampled counterexamples before a
+relation proof; it adds no hypothesis. `hw_goal` renders the remaining obligations.
+Trace JSON retains register/source names, and waveform VCDs expose individual bits.
+Use `--signals state.count_0 inputs.rst` to select named table/VCD signals.
+
+`Delay.hardware stages width` realizes a fixed finite latency from arbitrary
+startup storage, including a zero-stage wire. `Delay.latency`, `realizes_pipe` and
+`retime` prove the warmup and movement of pure combinational logic across the bank.
+An arbitrary mathematical `Pipe` is a contract, not an automatic synthesis request.
 
 There are no imported solver services or external invariant results silently
 trusted by the build. Future invariant-search tools must suggest replayable

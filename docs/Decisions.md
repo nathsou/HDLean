@@ -16,6 +16,19 @@
 | 2026-10-15 | Treat Gray safety as a temporal property | A Gray-encoded value alone does not make arbitrary jumps safe. The CDC model explicitly samples adjacent old/new source values; it does not expose arbitrary multi-bit casts. |
 | 2026-10-15 | Ship an honest L1 verifier and reject L2/L3 | The adversarial sandbox, full printer proofs, reviewer approval and independent checker are unfinished. A passing development report must not imply sign-off. |
 
-The guiding principles remain goals. Incomplete parts, especially the single
-verified path through text printing, are listed as incomplete rather than being
-silently added to the trusted computing base.
+## Subsequent implementation decisions
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Implement general power-of-two circular queues as well as the two-entry FIFO | Generic ghost-history proofs cover bounded occupancy, oldest data, wraparound and no overwrite. Physical word-bank circuits refine those models for every depth exponent and width. Padding and register-array storage are counted explicitly. |
+| Keep serialized fetch/execute as the Toy16 baseline | The physical AST now implements the entire ISA and retirement interface, with reset and two-cycle progress proofs. It has placed and routed on ECP5. Overlapping instruction execution remains an alternative microarchitecture, not an unstated throughput claim. This supersedes the earlier statement that the core was unsynthesizable. |
+| Add physical multi-clock circuits and typed CDC primitives | Registers carry explicit domain assignments. SV/RTLIL use actual independent clocks; AIGER uses explicit edge inputs. Generic graph/parsed-text proofs and external wrong-clock mutations cover those assignments. |
+| Replace the list compiler cache with an untrusted native DAG candidate builder | Source-pointer memoization and AND hash-consing make the full CPU practical. Acceptance still requires generic proved local gate validation; unsafe pointer hints never establish equality or a theorem. The original total compiler remains the logical fallback. |
+| Add a local graph validator alongside normalized formulas | Proof-carrying memo entries and ordered gate maps avoid expanding shared symbolic cones. Kernel certificates work for small instances; large concrete source/text certificates still have a measured memory limit. |
+| Realize finite latency using explicit delay banks | An arbitrary mathematical stream transducer is not synthesizable. Finite banks have generic latency, startup and retiming theorems, including the zero-register case. |
+| Use finite reachability as the initial invariant oracle | The oracle suggests a membership relation; initialization, closure and safety must pass a generic kernel-checkable certificate. `refute_small` is an explicit sample diagnostic. This provides the intended untrusted-oracle workflow without requiring IC3. |
+| Measure FPGA implementation with pinned Yosys/nextpnr | ECP5 fits the complete register-array CPU where iCE40HX8K did not. Reports retain constraints, binary/model/artifact hashes and actual timing/utilization. No process library or analog measurement is invented. |
+
+The historical entries above record decisions at the time. Later entries supersede
+implementation limitations as the corresponding features and proofs land. The
+[current coverage](Status.md) and [trust boundary](Trust.md) describe the result.

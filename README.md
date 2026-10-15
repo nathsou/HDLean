@@ -3,12 +3,10 @@
 HDLean is a Lean 4 embedded hardware language with executable circuit semantics,
 kernel-checked refinement proofs, and SystemVerilog, AIGER, and Yosys RTLIL output.
 
-**Status: an experimental v0.1 implementation, not the completed v1 design.**
-The two-entry FIFO and decade counter are proved against reference models on their
-actual circuit ASTs. The Toy16 transition-system core has a reset, retirement, and
-bounded-progress proof. Generic graph sharing/printer verification, synthesizable
-Toy16 and asynchronous FIFO implementations, and L2/L3 sign-off remain unfinished.
-See [the coverage table](docs/Status.md) before relying on a guarantee.
+The library includes physical counter, FIFO, circular FIFO, elastic pipeline,
+register-array RAM, Toy16 CPU and dual-clock FIFO implementations. Generic proofs
+cover reset, queue ordering, retirement, progress, lowering and parsed backend
+semantics. [Coverage and limitations](docs/Status.md) state the exact guarantees.
 
 ## Build and run
 
@@ -24,6 +22,10 @@ lake exe hdlean emit fifo rtlil build/fifo.il 8
 lake exe hdlean metrics fifo 8
 lake exe hdlean check fifo 8 200 42
 lake exe hdlean toy16 48
+lake exe hdlean emit ring rtlil build/ring.il 8
+lake exe hdlean emit ram sv build/ram.sv 8
+lake exe hdlean emit toy16 sv build/toy16.sv
+lake exe hdlean emit-async rtlil build/async.il 8 4
 ```
 
 The toolchain is pinned to **Lean 4.34.0**. No Mathlib or third-party Lean packages
@@ -54,8 +56,7 @@ read an out-of-range wire or cross a clock domain. Each register has one next-st
 expression and an explicit reset kind. Width-indexed `WordExpr` provides literal,
 input, register, mux, Boolean, equality and ripple-add builders. Arithmetic does
 not implicitly extend or narrow. The surface syntax is ordinary Lean do-notation
-with explicit expression builders; automatic reification of Lean `if` and `+` is
-not implemented.
+and reifies conditionals, equality, Boolean logic and typed word arithmetic.
 
 `Circuit.step` exposes Mealy outputs explicitly. `Circuit.denote` requires an
 `IsMoore` proof, so input-dependent outputs cannot silently become Moore outputs.
@@ -64,8 +65,9 @@ power-up contents are supplied by the environment.
 
 `Synth` has checked encodings for Booleans, bit vectors, products, nonempty `Fin`,
 and vectors. `Synth.transport` builds structure/enum layouts from a proved
-representation map. There is no automatic `deriving Synth` yet. The conservative
-`Fin (n+1)` encoding uses `n+1` bits; it is not a compact binary layout.
+representation map. `deriving Synth` handles structures and nullary enums,
+including generic structure parameters. Finite indices use compact binary layouts.
+Tagged unions with payloads use explicit layouts.
 
 ## What to review
 
@@ -108,17 +110,20 @@ structural metrics, physical assumptions, and unimplemented checks. L2/L3 reques
 fail with an explicit error. `leanchecker --fresh` replays declarations using
 Lean's own kernel; it is not the independent nanoda checker.
 
-The core suite checks 9,600 AST/shared-graph cycles, 8,400 FIFO-reference cycles,
-1,200 counter-reference cycles, 7,500 circular-buffer cycles, and 15,000 async
-oracle steps. The external suite checks AIGER evaluation, 500 Icarus cycles, and
-Yosys RTLIL/SystemVerilog equivalence across five instances. These tests do not
-turn unproved generic compiler passes into theorems.
+The core suite checks arbitrary-power-up traces against independent references:
+9,000 physical circular FIFO cycles, 9,600 RAM cycles, 240 CPU cycles, 2,400 elastic
+pipeline cycles, plus counter/FIFO/CDC scenarios and mutations. External checks
+interpret AIGER independently, simulate SystemVerilog and prove full arbitrary-state
+RTLIL/SystemVerilog transition equivalence, including clock/edge audits. Separate
+multi-clock tests exercise all four combinations of domain edges.
 
 `Tests/Certificates.lean` additionally proves shared-graph equivalence for the
 counter and width-one FIFO by kernel reduction, without native-evaluation axioms.
-The generic typed-AST-to-AND/inverter-tree lowering is proved for every expression,
-state transition, and output. Generic sharing and textual printer proofs remain
-open; see [Trust.md](docs/Trust.md).
+The generic typed-AST lowering, shared-graph translation validators and strict
+text-parser semantic validators are proved. Emission requires these checks. Exact
+ASCII byte certificates for the counter and FIFO8 replay in both Lean and nanoda;
+large concrete certificates remain resource intensive. See [Trust.md](docs/Trust.md)
+and [independent replay](docs/IndependentChecker.md).
 
 ## Pins, waveforms, and metrics
 
@@ -144,13 +149,17 @@ paths remain in the internal graph.
 Graph metrics count actual shared AND gates, flip-flops, and Boolean depth,
 including reset logic. They are not physical timing or area predictions. The
 optional synthesis script records the Liberty hash and actual tool statistics.
-It does not claim placed/routed timing or power.
+For actual FPGA placement and routing, use the [pinned physical flow](docs/Physical.md).
+The complete Toy16 CPU meets a 12 MHz target on ECP5-25K with a measured tool-model
+Fmax of 47.0 MHz. No board timing or power measurement is claimed.
 
 ## Repository
 
 `HDLean/Semantics` contains machines, reset, clocks, composition, and retirement.
 `HDLean/Core` contains the finite AST and word builders. `HDLean/Lib` contains
-memory, stream contracts, causal latency contracts, and Moore networks.
+memory, stream contracts, causal latency contracts, finite delay/retiming proofs,
+and Moore networks. `HDLean/MultiClock` supplies independent-edge circuit semantics
+and clock-checked SV/RTLIL emission; AIGER represents edges as explicit inputs.
 `HDLean/Netlist` contains the semantic IR, proved lowering, and proved rewrites.
 `HDLean/Backend` contains shared graph construction and the three printers.
 `Designs` contains reference specs, implementations/models and proofs. `Tests`
