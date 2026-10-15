@@ -136,6 +136,7 @@ def main():
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.unlink(missing_ok=True)
     manifest_path = ROOT / 'verification/frozen.json'
+    initial_manifest_sha256 = sha(manifest_path)
     manifest = check_manifest(manifest_path, args.manifest_sha256)
     before = source_snapshot()
     digest = hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest()
@@ -192,7 +193,7 @@ def main():
     for relative, expected_hash in artifacts.items():
         if sha(ROOT / relative) != expected_hash:
             raise ValueError(f'artifact changed during verification: {relative}')
-    check_manifest(manifest_path, args.manifest_sha256)
+    check_manifest(manifest_path, args.manifest_sha256 or initial_manifest_sha256)
     if before != source_snapshot():
         raise ValueError('source files changed during verification')
     report = {

@@ -60,7 +60,7 @@
     "lakefile.toml": "c66fce761cd6c3a7a30af4bd70b4e84629e467f464f9d808e57b1c0104c91e5a",
     "lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
     "scripts/check_backends.py": "45831d11621077267dbf1809468c696d85245847529589cd4137553d70e22f09",
-    "scripts/comparator/canonical.py": "275e1fcbe0314b50e00c352b2edda5112e731628bae3dd18464db813116844a1",
+    "scripts/comparator/canonical.py": "8c62bc2b2b5db1ec619c0658202bebde36ce7dbe89ccaefe90283815eea62e82",
     "scripts/comparator/compare.py": "81cdf5da15ea8848089f540fef800884c715620f916e77ba70f36fb9f208bd09",
     "scripts/comparator/sandbox.py": "2c31490a2af3af34ca76684051d44c032ae07484675194d1dd8ffda092690c21",
     "scripts/freeze.py": "cd6ea8e4d89a8cc0f487deff34202dade563240da07e496b195ecf3dac5b7356",
@@ -69,7 +69,7 @@
     "scripts/independent/certify_artifact.py": "a3756a5fbd301aec53f9eb35d33228fe3bcc94ae66143f616cc856edef6942fa",
     "scripts/independent/pins.json": "9b838fab1bbd07a798698e393bd84dbffc1370ebcb9944ccc8b7e98b210b072e",
     "scripts/independent/replay.py": "1624b229fa233cd114ba0ac5e19cf11a4fb6a609642a64b60f50998bda4663d4",
-    "scripts/verify.py": "501407974a6b0ca37e525d337072379d252018063a863b2865e39f54ffa7f1de"
+    "scripts/verify.py": "fa3dfc415b16ae71bbbdf1f1c493b337b1ba1dea48a4c79c5fe7513a09f477ac"
   },
   "framework": "HDLean 0.1.0",
   "schema": 1

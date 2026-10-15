@@ -9,6 +9,19 @@ import json
 from pathlib import Path
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result: raise ValueError('duplicate JSON field: ' + key)
+        result[key] = value
+    return result
+
+
+def exact_fields(value, expected):
+    if not isinstance(value, dict) or set(value) != set(expected):
+        raise ValueError('ambiguous or unknown export fields')
+
+
 def digest(value):
     return hashlib.sha256(json.dumps(value, separators=(',', ':'), ensure_ascii=True).encode()).hexdigest()
 
@@ -59,24 +72,29 @@ def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, pro
         declarations[label] = {'kind': kind, 'type': expr(item['type']), 'body': digest(normalized),
                                '_type_index': item['type']}
     with Path(path).open() as stream:
-        meta = json.loads(next(stream))
+        first = stream.readline(16777217)
+        if len(first) > 16777216: raise ValueError('export metadata exceeds size bound')
+        meta = json.loads(first, object_pairs_hook=unique_object)
         if meta.get('meta', {}).get('format', {}).get('version') != '3.1.0' or meta['meta']['lean']['version'] != '4.34.0':
             raise ValueError('unapproved Lean export format/toolchain')
         while True:
             line = stream.readline(16777217)
             if not line: break
             if len(line) > 16777216: raise ValueError('export record exceeds size bound')
-            item = json.loads(line)
+            item = json.loads(line, object_pairs_hook=unique_object)
             if 'in' in item:
+                if set(item) not in ({'in','str'}, {'in','num'}): raise ValueError('ambiguous name record')
                 idx = item['in']
                 if idx != len(names):
                     raise ValueError('invalid name numbering')
                 kind = 'str' if 'str' in item else 'num'
                 val = item[kind]
+                exact_fields(val, ['pre', 'str' if kind == 'str' else 'i'])
                 part = val['str'] if kind == 'str' else val['i']
                 prefix = names[val['pre']]
                 names[idx] = (digest([kind, prefix[0], part]), prefix[1] + ('.' if prefix[1] else '') + str(part))
             elif 'il' in item:
+                if len(item) != 2: raise ValueError('ambiguous universe record')
                 idx = item['il']
                 if idx != len(levels):
                     raise ValueError('invalid universe numbering')
@@ -87,10 +105,16 @@ def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, pro
                 else: raise ValueError('unknown universe form')
                 levels[idx] = digest([kind, normalized])
             elif 'ie' in item:
+                if len(item) != 2: raise ValueError('ambiguous expression record')
                 idx = item['ie']
                 if idx != len(expressions):
                     raise ValueError('invalid expression numbering')
                 kind, val = next((k,v) for k,v in item.items() if k != 'ie')
+                fields = {'const':['name','us'], 'app':['fn','arg'],
+                          'lam':['binderInfo','name','type','body'], 'forallE':['binderInfo','name','type','body'],
+                          'letE':['name','type','value','body','nondep'], 'proj':['typeName','idx','struct'],
+                          'mdata':['expr']}
+                if kind in fields: exact_fields(val, fields[kind])
                 refs = []
                 def use(x):
                     refs.append(x); return expr(x)
@@ -114,6 +138,7 @@ def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, pro
                 else: raise ValueError('unknown expression form: ' + kind)
                 expressions[idx] = digest([kind, normalized]); references[idx] = refs
             elif set(item) == {'inductive'}:
+                exact_fields(item['inductive'], ['types','ctors','recs'])
                 for group, kind in [('types', 'inductive'), ('ctors', 'constructor'), ('recs', 'recursor')]:
                     for decl in item['inductive'][group]: declare(kind, decl)
             elif len(item) == 1 and next(iter(item)) in ('axiom','def','thm','opaque','quot'):

@@ -96,6 +96,17 @@ class ComparatorUnitTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'statement differs'):
             compare(reference,candidate,['root'],['Safe'])
 
+    def test_rejects_ambiguous_export_records(self):
+        meta = {'meta':{'format':{'version':'3.1.0'},'lean':{'version':'4.34.0'}}}
+        with tempfile.TemporaryDirectory() as tmp:
+            export = Path(tmp)/'ambiguous.ndjson'
+            export.write_text(json.dumps(meta) + '\n' + '{"ie":0,"sort":0,"bvar":0}\n')
+            with self.assertRaisesRegex(ValueError, 'ambiguous expression'):
+                read_export(export)
+            export.write_text(json.dumps(meta) + '\n' + '{"ie":0,"sort":0,"sort":1}\n')
+            with self.assertRaisesRegex(ValueError, 'duplicate JSON'):
+                read_export(export)
+
     def test_mandatory_namespace_flags(self):
         sandbox = Sandbox('/bin/false','/tmp','/bin/true','/bin/true',DEFAULT_LIMITS)
         command = sandbox.command('/tmp',['/bin/true'])
