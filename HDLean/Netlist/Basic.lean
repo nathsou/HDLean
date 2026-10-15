@@ -48,6 +48,7 @@ def Module.depth (m : Module d i r o) :=
 def Module.next (m : Module d i r o) (s : Fin r → Bool) (xs : (Fin i → Bool) × Bool) : Fin r → Bool :=
   fun k => match m.state[k].reset with
     | .unreset => m.state[k].next.eval xs.1 s
+    | .hold => if xs.2 then s k else m.state[k].next.eval xs.1 s
     | .synchronous v => if xs.2 then v else m.state[k].next.eval xs.1 s
 def Module.evalOutput (m : Module d i r o) (s : Fin r → Bool) (xs : Fin i → Bool) : Fin o → Bool :=
   fun k => m.output[k].eval xs s

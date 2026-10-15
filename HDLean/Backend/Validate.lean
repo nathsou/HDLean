@@ -176,9 +176,12 @@ def symbolicMux (c a b : Formula) : Formula :=
   cases c.eval v <;> cases a.eval v <;> cases b.eval v <;> rfl
 
 def symbolicNext (c : Circuit d i r o) : Array Formula :=
-  c.state.toArray.map fun reg => match reg.reset with
+  (Vector.ofFn fun k : Fin r =>
+    let reg := c.state[k]
+    match reg.reset with
     | .unreset => (lowerExpr reg.next).symbolic
-    | .synchronous b => symbolicMux (.atom (.input i)) (.lit b) (lowerExpr reg.next).symbolic
+    | .hold => symbolicMux (.atom (.input i)) (.atom (.state k.val)) (lowerExpr reg.next).symbolic
+    | .synchronous b => symbolicMux (.atom (.input i)) (.lit b) (lowerExpr reg.next).symbolic).toArray
 
 def symbolicOutput (c : Circuit d i r o) : Array Formula :=
   c.output.toArray.map fun e => (lowerExpr e).symbolic
@@ -225,7 +228,7 @@ theorem symbolicNext_correct (c : Circuit d i r o)
   · intro k h₁ h₂
     have hk : k < r := by simpa using h₂
     cases h : c.state[k].reset <;>
-      simp [symbolicNext, Circuit.next, h, Formula.eval, lowerExpr_correct]
+      simp [symbolicNext, Circuit.next, h, Formula.eval, lowerExpr_correct, assignment_state xs state rst ⟨k,hk⟩]
 
 theorem symbolicOutput_correct (c : Circuit d i r o)
     (xs : Vector Bool i) (state : Vector Bool r) (rst : Bool) :

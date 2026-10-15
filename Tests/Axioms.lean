@@ -24,6 +24,8 @@ run_cmd do
     ``HDLean.Fifo.Challenge.correctness, ``HDLean.Fifo.Challenge.budget,
     ``HDLean.Fifo.full_rate, ``HDLean.Counter.Challenge.correctness,
     ``HDLean.Counter.Challenge.budget, ``HDLean.Toy16.Challenge.correctness,
+    ``HDLean.AsyncFifo.ungray_gray, ``HDLean.AsyncFifo.step_refines_queue,
+    ``HDLean.AsyncFifo.reset_establishes_queue, ``HDLean.AsyncFifo.reset_progress,
     ``HDLean.sync2_stable, ``HDLean.sample_adjacent, ``HDLean.gray_one_bit8, ``HDLean.one_bit_mix8,
     ``HDLean.one_bit_mix, ``HDLean.gray_adjacent, ``HDLean.gray_injective,
     ``HDLean.gray_increment_ne, ``HDLean.sample_gray_increment,

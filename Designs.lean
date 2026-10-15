@@ -11,3 +11,4 @@ import Designs.Counter.Challenge
 import Designs.Toy16.Challenge
 import Designs.SkidBuffer.Pipeline
 import Designs.SkidBuffer.Challenge
+import Designs.AsyncFifo.Proof

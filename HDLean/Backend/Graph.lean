@@ -62,10 +62,12 @@ private def muxLit (c a b : Lit) : StateM (Build d i r) Lit := do
 def compile (m : Netlist.Module d i r o) : Graph := Id.run do
   let job : StateM (Build d i r) (Array Lit × Array Lit) := do
     let mut ns := #[]
-    for reg in m.state.toArray do
+    for j in List.finRange r do
+      let reg := m.state[j]
       let n ← compileNode reg.next
       let n ← match reg.reset with
         | .unreset => pure n
+        | .hold => muxLit (2 * (i + 1)) (2 * (i + 2 + j.val)) n
         | .synchronous b => muxLit (2 * (i + 1)) (if b then 1 else 0) n
       ns := ns.push n
     let mut os := #[]

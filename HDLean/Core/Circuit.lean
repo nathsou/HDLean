@@ -4,6 +4,7 @@ namespace HDLean
 /-- Reset is attached to every state element, including explicit non-resettable storage. -/
 inductive ResetKind where
   | unreset
+  | hold
   | synchronous (value : Bool)
   deriving Repr, BEq
 
@@ -26,6 +27,7 @@ namespace Circuit
 def next (c : Circuit d i r o) (s : Fin r → Bool) (xs : (Fin i → Bool) × Bool) : Fin r → Bool :=
   fun k => match c.state[k].reset with
     | .unreset => c.state[k].next.eval xs.1 s
+    | .hold => if xs.2 then s k else c.state[k].next.eval xs.1 s
     | .synchronous v => if xs.2 then v else c.state[k].next.eval xs.1 s
 
 def evalOutput (c : Circuit d i r o) (s : Fin r → Bool) (xs : Fin i → Bool) : Fin o → Bool :=
