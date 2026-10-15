@@ -72,7 +72,7 @@ hdlean/                       framework, owned by maintainers
   HDLean/Lib/                 verified primitives: RAMs, synchronizers, async FIFO, arbiters
   HDLean/Tactics/             circuit_simp, simulation, hw_step, invariant?, compose, ...
   HDLean/Netlist/             netlist IR, verified lowering, structural metrics
-  HDLean/Backend/             SystemVerilog, AIGER, BTOR2, CIRCT, RTLIL printers
+  HDLean/Backend/             SystemVerilog, AIGER, RTLIL printers (CIRCT planned for v2)
 designs/<block>/                 one directory per hardware block
   Spec.lean                      reviewer-owned, frozen
   Challenge.lean                 headline statements with holes, reviewer-owned
