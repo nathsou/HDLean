@@ -106,8 +106,12 @@ python3 scripts/verify.py --manifest-sha256 <reviewed-digest> --backends
 The report is `build/signoff.json`. A successful run is labeled
 `L1 / development-checks-passed`, not tape-out sign-off. It includes per-theorem
 axioms, source and artifact hashes, toolchain identity, dirty-tree status,
-structural metrics, physical assumptions, and unimplemented checks. L2/L3 requests
-fail with an explicit error. `leanchecker --fresh` replays declarations using
+structural metrics and physical assumptions. L2/L3 acceptance uses the separate
+[isolated comparator](docs/Comparator.md), installed outside the submission and
+supplied with an externally approved receipt. It requires namespace isolation,
+actual theorem/definition comparison, independent replay and exact artifact byte
+binding. Development commands never silently upgrade to that acceptance.
+`leanchecker --fresh` replays declarations using
 Lean's own kernel; it is not the independent nanoda checker.
 
 The core suite checks arbitrary-power-up traces against independent references:

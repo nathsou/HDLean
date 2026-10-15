@@ -37,8 +37,9 @@ a graph-only concrete reduction also reached over 7 GiB process memory before
 being stopped. No CPU byte-certificate success was emitted. The generic semantic
 proofs and independently replayed physical CPU theorems do not erase this gap.
 
-The isolated comparator implementation is being integrated. Successful namespace
-isolation must be demonstrated on CI: this managed workspace does not permit
+The isolated comparator is implemented, with approved implementation holes,
+transitive specification-body comparison and independent byte authentication.
+Successful namespace isolation must be demonstrated on CI: this managed workspace does not permit
 creating nested user/network namespaces. No L2/L3 success is inferred from a
 failed or skipped sandbox test. A reviewer-approved receipt is always external
 input; a candidate manifest or fixture approval never approves this project.

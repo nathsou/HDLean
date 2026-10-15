@@ -15,7 +15,8 @@ used to execute hostile Lean metaprograms outside a suitable external sandbox.
 
 The trusted manifest includes the framework, reference models, observation/input
 maps, challenge files, toolchain, and verifier sources. L1 verifies the manifest's
-file set and all its hashes. A manifest stored with a submission is not its own
+file set and all its hashes, and binds the same manifest digest across the entire
+run even when no external approval digest is supplied. A manifest stored with a submission is not its own
 trust anchor: a reviewer or protected CI configuration must supply the independently
 approved SHA-256 through `--manifest-sha256`. Re-freezing sources writes
 `approval: review-required` and is never treated as approval. CODEOWNERS only
@@ -25,7 +26,12 @@ The audit harness requires every expected theorem exactly once. Missing,
 duplicated, custom-axiom and `sorryAx` reports fail. The implementation and
 interface are checked together against typed challenge declarations. L1 is still
 a development workflow; it is not sufficient against arbitrary adversarial
-checker modifications. L2 and L3 explicitly return failure.
+checker modifications. Higher levels use the separately installed
+[isolated comparator](Comparator.md), with an externally approved reference and
+receipt. Both levels require nanoda authentication, actual type/body comparison,
+OS isolation, read-only checking and kernel-proved exact byte binding. Approved
+implementation holes permit optimization while specification dependencies remain
+frozen. Namespace integration must pass CI; a local skip grants no assurance.
 
 ## What reaches bits
 
