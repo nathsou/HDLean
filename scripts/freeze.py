@@ -16,6 +16,9 @@ def protected_files():
     paths = set(ROOT.glob('HDLean/**/*.lean')) | {ROOT / 'HDLean.lean'}
     for name in ('Spec.lean', 'Interface.lean', 'Challenge.lean'):
         paths.update(ROOT.glob(f'Designs/*/{name}'))
+    # These reference models predate the uniform Spec.lean filename convention.
+    paths.update(ROOT / name for name in ('Designs/AsyncFifo/Model.lean',
+                                         'Designs/Fifo/Circular.lean'))
     for name in ('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'Tests/Axioms.lean',
                  'scripts/verify.py', 'scripts/check_backends.py', 'scripts/freeze.py'):
         paths.add(ROOT / name)
