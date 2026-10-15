@@ -104,13 +104,18 @@ def main():
     parser.add_argument('--manifest-sha256', default=os.environ.get('HDLEAN_TRUSTED_MANIFEST_SHA256'))
     parser.add_argument('--backends', action='store_true', help='require Icarus and Yosys checks')
     parser.add_argument('--independent', action='store_true', help='require independent nanoda replay')
+    parser.add_argument('--certify-bytes', action='store_true',
+                        help='kernel and nanoda proofs for exact counter/FIFO8 bytes in all three formats; implies --independent')
+    parser.add_argument('--certificate-memory-mb', type=int, default=6144,
+                        help='Lean memory bound per exact-byte certificate (default 6144 MB)')
     parser.add_argument('--independent-tools', type=Path, default=ROOT / 'work/independent-tools/tools.json')
     parser.add_argument('--no-clean', action='store_true', help='reuse build cache for local iteration')
     parser.add_argument('--report', type=Path, default=ROOT / 'build/signoff.json')
     args = parser.parse_args()
+    args.independent = args.independent or args.certify_bytes
     if args.level != 'L1':
         parser.error('L2/L3 unavailable: the adversarial comparator sandbox, approved trust surface, '
-                     'complete printer proof coverage, and independent nanoda replay are not implemented. '
+                     'and complete printer proof coverage are not implemented. '
                      'No sign-off claim has been produced.')
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.unlink(missing_ok=True)
@@ -142,6 +147,31 @@ def main():
             path = work / f'{design}.{fmt}'
             run([ROOT / '.lake/build/bin/hdlean', 'emit', design, fmt, path, '8'])
             artifacts[str(path.relative_to(ROOT))] = sha(path)
+    byte_certificates = {}
+    if args.certify_bytes:
+        from independent.certify_artifact import certify
+        for design in ('counter', 'fifo'):
+            for fmt in ('aiger', 'sv', 'rtlil'):
+                artifact = work / f'{design}.{fmt}'
+                certificate = certify(ROOT, args.lake, args.independent_tools,
+                                      work / 'byte-certificates' / f'{design}-{fmt}',
+                                      artifact, work / f'{design}.aiger', design, 8, fmt,
+                                      memory_mb=args.certificate_memory_mb)
+                expected_roots = [certificate['module'] + '.graph_correct',
+                                  certificate['module'] + '.text_correct']
+                if (certificate['passed'] is not True or
+                        certificate['exact_byte_binding'] is not True or
+                        certificate['artifact_sha256'] != artifacts[str(artifact.relative_to(ROOT))] or
+                        certificate['candidate_aiger_sha256'] != sha(work / f'{design}.aiger') or
+                        certificate['design'] != design or certificate['width'] != 8 or
+                        certificate['format'] != fmt or certificate['roots'] != expected_roots or
+                        certificate['independent']['passed'] is not True or
+                        certificate['independent']['roots'] != sorted(expected_roots)):
+                    raise ValueError('byte certificate does not bind the required artifact and theorem')
+                byte_certificates[str(artifact.relative_to(ROOT))] = certificate
+    for relative, expected_hash in artifacts.items():
+        if sha(ROOT / relative) != expected_hash:
+            raise ValueError(f'artifact changed during verification: {relative}')
     check_manifest(manifest_path, args.manifest_sha256)
     if before != source_snapshot():
         raise ValueError('source files changed during verification')
@@ -155,8 +185,10 @@ def main():
         'working_tree_dirty': bool(run(['git', 'status', '--porcelain']).strip()),
         'checks': {'kernel_build': True, 'fresh_kernel_replay': True, 'axiom_policy': True,
                    'simulation': True, 'external_backends': args.backends,
-                   'adversarial_comparator': False, 'nanoda': args.independent},
+                   'adversarial_comparator': False, 'nanoda': args.independent,
+                   'exact_byte_certificates': args.certify_bytes},
         'independent_replay': independent_report,
+        'byte_certificates': byte_certificates,
         'headline_axioms': axioms, 'structural_metrics': metrics, 'physical_metrics': None,
         'artifacts_sha256': artifacts,
         'assumptions': ['The clock-domain model assumes two-flop synchronizers resolve metastability.'],

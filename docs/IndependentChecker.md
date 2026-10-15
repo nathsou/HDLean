@@ -99,3 +99,46 @@ the artifact's coverage while nanoda rejects its proof. Additional tests cover
 missing/duplicate/empty roots, stale success removal, and modified binary hashes.
 Tests skip with an explicit message if the pinned tools have not been built;
 release verification must require the tools and run these tests without skips.
+
+## Exact backend bytes
+
+`python3 scripts/verify.py --certify-bytes` adds independently replayed proofs for
+Counter and FIFO8 in AIGER, SystemVerilog, and RTLIL; it also enables the headline
+independent replay. CI runs this option. Each artifact gets a separate kernel
+process with a default 6144 MB limit, controlled by `--certificate-memory-mb`.
+The largest current fixture, FIFO8 RTLIL (50,337 bytes), took 59 seconds and
+approximately 5.2 GB peak resident memory on the development host. Certificates
+run sequentially. These are logical correctness checks, not physical sign-off.
+
+A single artifact can be certified with:
+
+```sh
+python3 scripts/independent/certify_artifact.py \
+  --artifact build/backend-checks/counter_8.sv \
+  --graph-aiger build/backend-checks/counter_8.aiger \
+  --design counter --format sv --output build/certify-counter-sv
+```
+
+`byte_certificate.py` reads the actual artifact as bytes and an AIGER graph
+candidate. It emits an explicit graph, raw ASCII line definitions, local proofs
+of line validity and normalization, and the final `graph_correct` and
+`text_correct` theorems. Repeated lines share definitions. The generic proved
+`Format.tokenize_ascii_lines` lemma connects the exact `asciiText` byte array to
+those normalized lines. Parsing the complete token stream and graph validation
+are checked with `decide +kernel`; no native evaluation axiom is introduced.
+The final theorem is `Format.Correct bytes <the selected circuit>`, covering
+all pre-edge states, inputs, and reset values of that circuit instance.
+
+`certify_artifact.py` builds a content-addressed module, executes its compiled
+byte definition, compares every byte with the input artifact, independently
+replays both theorem roots, and checks that artifacts and generated source did
+not change. `certificate.json` records the exact artifact and graph hashes,
+generated-source hash, selected design/width/format, explicit theorem roots,
+resource bound, and nested nanoda report. A failure deletes stale success first.
+The enclosing verification report checks those bindings again. The generator,
+wrapper, source modules, and binaries remain part of the protected comparator
+surface; hostile concurrent filesystem mutation requires process isolation.
+
+The byte integration tests also reject an inverted clock and a valid proof for
+a semantically equivalent file with different raw bytes. Thus semantic validity
+alone cannot silently substitute a different artifact.
