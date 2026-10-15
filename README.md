@@ -139,7 +139,7 @@ initialization is used only to compare the same arbitrary power-up assignment;
 no initialization is inserted into generated designs. Inputs and payload words
 are LSB first. The final input bit is synchronous reset; SystemVerilog/RTLIL also
 have a `clk` port. Numeric wire names remain stable; original names and source
-locations remain in the internal graph.
+paths remain in the internal graph.
 
 Graph metrics count actual shared AND gates, flip-flops, and Boolean depth,
 including reset logic. They are not physical timing or area predictions. The

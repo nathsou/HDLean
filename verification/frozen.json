@@ -23,7 +23,7 @@
     "HDLean/Netlist/Basic.lean": "e4c72037ccf12c6c73165b5bc458380ec5416e2940f156c9d9d73d3b95e2af21",
     "HDLean/Netlist/Lower.lean": "a965f7ef8413732efd456ff5049d44a64e58554a6d97f646e92ded3cc8b2896a",
     "HDLean/Netlist/Optimize.lean": "6c1f94f9efad378773b0548bdbe99a37a5379cfe70a3a2addf8e826c724bcd67",
-    "HDLean/Semantics/Clock.lean": "fa87e9ecaad52b509b34611554407f0059c93fb6fc68ba3dfd384f399a0522af",
+    "HDLean/Semantics/Clock.lean": "3f9947db2d54519132c10adf473044b468638930e83016959003e1574ca051de",
     "HDLean/Semantics/Composition.lean": "d9f90b7a02f5d5113018d57c14db518332a7562a14cbaf991d61614d64ef6f18",
     "HDLean/Semantics/Machine.lean": "9b5f9466d579c5774234399db1d1e09a6e0c0a49c14d95acfabc49070fba3267",
     "HDLean/Semantics/Retirement.lean": "7127ec6d01d446c1a0ab6356e38bc65cea02b51da8c0525be5e61c01243683dd",
@@ -31,13 +31,13 @@
     "HDLean/Tactics/Attr.lean": "df445630b1187d1db13d0c5aff5fe158c32c421d68c6a120d8dc68eb78bb4d54",
     "HDLean/Tactics/Basic.lean": "f77794d3cbcd6621aaf40f38ebf0cd4b56d1d67953ddc45e4d9752c045280650",
     "HDLean/Verification/Simulation.lean": "292c80553ec9a9783307f40dc9f9cc7a4c89000a9e78bc86033153a2884eb66f",
-    "Tests/Axioms.lean": "35d15589b5b48e959cd04612b9a0892f6e7de8967733319f068eb8ccd09a1248",
+    "Tests/Axioms.lean": "188b8303f9b2097aee39cbdf5cb0a4b6f5aaf2bd1f49708ed89a901b531c6bd6",
     "lake-manifest.json": "eafd660fe8cfeb8c2bde8e9b46acaf20392a063574b260f775ad48e69727dd52",
     "lakefile.toml": "c66fce761cd6c3a7a30af4bd70b4e84629e467f464f9d808e57b1c0104c91e5a",
     "lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
-    "scripts/check_backends.py": "f6611d64c2abbdfbdf97eb72132e37c708cb315d1d83882100b00943ae9d670a",
+    "scripts/check_backends.py": "cdf4408b6a558b2aaf535b84f029426097be7281c9d547c3ec1d56ec4cd782b7",
     "scripts/freeze.py": "c4d24b102242952c62505829f8696f611932e37392e70083a759758b0b98badb",
-    "scripts/verify.py": "c60640636dd1f7a09f7736ca17ee78673088f1f2db23e063818ae3b405938d9a"
+    "scripts/verify.py": "134a57548864aea85cc9b9d5ef2990a52aa48b693a063690b3f531f22c69f58b"
   },
   "framework": "HDLean 0.1.0",
   "schema": 1

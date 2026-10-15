@@ -88,12 +88,12 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     assert 'PASS' in run([vvp, binary])
     # Independent parser + synthesis checks both text formats, then proves combinational
     # equivalence of their complete transition relations including arbitrary latch values.
-    script = (f'read_verilog -sv {paths["sv"]}; prep -top {module}; rename {module} gold; '
-              f'design -stash gold; read_rtlil {paths["rtlil"]}; prep -top {module}; '
+    script = (f'read_verilog -sv {paths["sv"].name}; prep -top {module}; rename {module} gold; '
+              f'design -stash gold; read_rtlil {paths["rtlil"].name}; prep -top {module}; '
               f'rename {module} gate; design -stash gate; design -copy-from gold -as gold gold; '
               f'design -copy-from gate -as gate gate; equiv_make gold gate equiv; '
               f'hierarchy -top equiv; equiv_simple; equiv_status -assert; stat')
-    log = run([yosys, '-p', script])
+    log = run([yosys, '-p', script], cwd=work)
     (work / f'{name}_yosys.log').write_text(log)
     assert 'Equivalence successfully proven!' in log
     print(f'PASS {name}: AIGER + 100 Icarus cycles + Yosys RTLIL equivalence')

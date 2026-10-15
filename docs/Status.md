@@ -18,7 +18,7 @@ axiom. Missing guarantees below are engineering work, not accepted assumptions.
 | Composition | Generic Moore network theorem; three-stage valid/ready proof; causal assume/guarantee theorem | Bit-level network elaborator and physical composition proof |
 | Latency | Causal stream contracts with proved `comb`, `seq`, `par`, `delay` | Finite-state realization of every contract; retiming transformations |
 | Toy16 | ISA; single-cycle model; serialized fetch/execute model; reset/retirement/progress theorem; sum scenario | Synthesizable core AST, netlist, pipelining with overlapping instructions, physical metrics |
-| Clock crossing | Independent edges/masks; sync2 behavior; stable-source theorem; Gray examples | Generic-width Gray proofs; hardware CDC primitives |
+| Clock crossing | Independent edges/masks; sync2 behavior; stable-source and generic adjacent-mixture theorems; Gray examples | Generic-width Gray adjacency proofs; hardware CDC primitives |
 | Async FIFO | Gray-pointer model, independent clocks, conservative full/empty; reset/no-edge theorems; oracle simulations | Full queue-safety theorem, separate-domain reset protocol, synthesizable primitive |
 | Memory | Finite synchronous read-before-write primitive and local proofs | Backend primitive lowering/macros |
 | Tactics | `circuit_simp`, `simulation`, `hw_cases`, `hw_step`, kernel variant, `compose`, `nonint`, `k_induction` | IC3/invariant suggestions, relation-refutation tactic, signal-level goal rendering |

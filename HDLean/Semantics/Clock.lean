@@ -20,6 +20,37 @@ def gray (x : BitVec w) : BitVec w := x ^^^ (x >>> 1)
 def Adjacent (a b : BitVec w) : Prop :=
   ∃ k : Fin w, ∀ j : Fin w, j ≠ k → a.getLsbD j.val = b.getLsbD j.val
 
+/-- Any per-bit mixture of adjacent words is one endpoint, for every width (kernel-only). -/
+theorem sample_adjacent (a b m : BitVec w) (h : Adjacent a b) :
+    sampleBits a b m = a ∨ sampleBits a b m = b := by
+  obtain ⟨k, hk⟩ := h
+  by_cases hm : m.getLsbD k.val = true
+  · left
+    apply BitVec.eq_of_getLsbD_eq
+    intro j hj
+    by_cases he : j = k.val
+    · subst j
+      simp only [sampleBits, BitVec.getLsbD_or, BitVec.getLsbD_and, BitVec.getLsbD_not, hm]
+      simp
+    · have he' : (⟨j, hj⟩ : Fin w) ≠ k := by intro h; exact he (congrArg Fin.val h)
+      have hab := hk ⟨j,hj⟩ he'
+      simp only [sampleBits, BitVec.getLsbD_or, BitVec.getLsbD_and, BitVec.getLsbD_not]
+      rw [hab]
+      cases b.getLsbD j <;> cases m.getLsbD j <;> simp [hj]
+  · right
+    have hm' : m.getLsbD k.val = false := by simpa using hm
+    apply BitVec.eq_of_getLsbD_eq
+    intro j hj
+    by_cases he : j = k.val
+    · subst j
+      simp only [sampleBits, BitVec.getLsbD_or, BitVec.getLsbD_and, BitVec.getLsbD_not, hm']
+      simp [k.isLt]
+    · have he' : (⟨j, hj⟩ : Fin w) ≠ k := by intro h; exact he (congrArg Fin.val h)
+      have hab := hk ⟨j,hj⟩ he'
+      simp only [sampleBits, BitVec.getLsbD_or, BitVec.getLsbD_and, BitVec.getLsbD_not]
+      rw [hab]
+      cases b.getLsbD j <;> cases m.getLsbD j <;> simp [hj]
+
 /-- One named physical assumption accompanies synchronizer reports; it is not an axiom proving logic. -/
 def metastabilityAssumption : String := "Two-flop synchronizers resolve metastability before the second sampling edge."
 
