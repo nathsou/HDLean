@@ -34,7 +34,14 @@ def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit 
     let out := (Vector.ofFn (c.evalOutput s xs)).toArray
     let actual := graph.eval (input.push rst) state
     if actual != (next, out) then
-      throw s!"cycle {t}: AST/graph mismatch; input={input}, state={state}, expected={(next,out)}, actual={actual}"
+      let mut signals := #[]
+      for k in [:r] do
+        if next[k]! != actual.1[k]! then
+          signals := signals.push s!"state {graph.stateNames[k]!} at {graph.sources[k]!}: expected {next[k]!}, actual {actual.1[k]!}"
+      for k in [:o] do
+        if out[k]! != actual.2[k]! then
+          signals := signals.push s!"output {graph.outputNames[k]!}: expected {out[k]!}, actual {actual.2[k]!}"
+      throw s!"cycle {t}: AST/graph mismatch; {String.intercalate "; " signals.toList}; input={input}, state={state}"
     state := next
 
 /-- A trace row exposes pre-edge outputs and post-edge state, avoiding cycle ambiguity. -/

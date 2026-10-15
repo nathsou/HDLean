@@ -59,7 +59,11 @@ def testbench(module, rows):
     ni, nr, no = len(rows[0]['inputs']), len(rows[0]['state']), len(rows[0]['outputs'])
     lines = ['module tb;', 'reg clk;', f'reg [{ni-1}:0] inputs;', f'wire [{no-1}:0] outputs;']
     ports = ['.clk(clk)'] + [f'.in_{k}(inputs[{k}])' for k in range(ni)] + [f'.out_{k}(outputs[{k}])' for k in range(no)]
-    lines += [f'{module} dut({", ".join(ports)});', 'initial begin', 'clk = 0;']
+    lines += [f'{module} dut({", ".join(ports)});']
+    if nr:
+        packed = ', '.join(f'dut.n{ni+k+1}' for k in reversed(range(nr)))
+        lines += [f'wire [{nr-1}:0] state_bits = {{{packed}}};']
+    lines += ['initial begin', 'clk = 0;']
     for k, b in enumerate(rows[0]['state']):
         lines.append(f'dut.n{ni+k+1} = 1\'b{int(b)};')
     for row in rows:
@@ -68,8 +72,9 @@ def testbench(module, rows):
         lines += [f'inputs = {ni}\'d{v}; #1;',
                   f'if (outputs !== {no}\'d{out}) $fatal(1, "outputs cycle {row["cycle"]}: %b", outputs);',
                   'clk = 1; #1;']
-        for k, b in enumerate(row['next']):
-            lines.append(f'if (dut.n{ni+k+1} !== 1\'b{int(b)}) $fatal(1, "state cycle {row["cycle"]} bit {k}");')
+        if nr:
+            expected = sum(int(b) << k for k,b in enumerate(row['next']))
+            lines.append(f'if (state_bits !== {nr}\'d{expected}) $fatal(1, "state cycle {row["cycle"]}: %b", state_bits);')
         lines += ['clk = 0; #1;']
     return '\n'.join(lines + ['$display("PASS"); $finish;', 'end', 'endmodule'])
 

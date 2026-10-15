@@ -33,9 +33,13 @@ private def parseNum (s : String) (max : Nat := 1000000) : IO Nat :=
   match number s max with | .ok n => pure n | .error e => throw (IO.userError e)
 
 private def bools (a : Array Bool) : Lean.Json := .arr (a.map Lean.toJson)
-private def traceJson (rows : Array TraceRow) : Lean.Json := .arr (rows.map fun r => Lean.Json.mkObj
+private def traceJson (g : Graph) (rows : Array TraceRow) : Lean.Json := .arr (rows.map fun r => Lean.Json.mkObj
   [("cycle", Lean.toJson r.cycle), ("inputs", bools r.inputs), ("state", bools r.state),
-   ("outputs", bools r.outputs), ("next", bools r.next)])
+   ("outputs", bools r.outputs), ("next", bools r.next),
+   ("signals", if r.cycle == 0 then Lean.Json.mkObj
+     [("inputs", Lean.toJson g.inputNames), ("state", Lean.toJson g.stateNames),
+      ("outputs", Lean.toJson g.outputNames), ("next", Lean.toJson g.stateNames),
+      ("sources", Lean.toJson g.sources)] else .null)])
 
 private def writeFile (path : String) (content : String) : IO Unit := do
   let path := System.FilePath.mk path
@@ -93,7 +97,9 @@ private def execute (args : List String) : IO Unit := do
     let width ← parseNum (rest[0]?.getD "8") 64
     let cycles ← parseNum (rest[1]?.getD "60") 10000
     let seed ← parseNum (rest[2]?.getD "1") 4294967295
-    withDesign design width fun c => writeFile path (traceJson (trace (compileCandidate c) cycles seed)).pretty
+    withDesign design width fun c => do
+      let g := compileCandidate c
+      writeFile path (traceJson g (trace g cycles seed)).pretty
   | "check" :: design :: rest =>
     if rest.length > 3 then throw (IO.userError usage)
     let width ← parseNum (rest[0]?.getD "8") 64

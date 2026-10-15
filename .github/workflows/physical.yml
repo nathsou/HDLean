@@ -1,0 +1,37 @@
+name: Routed FPGA measurements
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: true
+          test: false
+      - uses: actions/cache@v4
+        with:
+          path: work/eda/oss-cad-suite-linux-x64-20261014.tgz
+          key: oss-cad-suite-20261014-a6ccc6b96b2d9853
+      - name: Fetch pinned synthesis and place/route tools
+        run: python3 scripts/bootstrap_eda.py --output work/eda
+      - name: Route counter, elastic pipeline and full Toy16
+        run: |
+          export YOSYS="$PWD/work/eda/oss-cad-suite/bin/yosys"
+          export ABC="$PWD/work/eda/oss-cad-suite/bin/yosys-abc"
+          export NEXTPNR="$PWD/work/eda/oss-cad-suite/bin/nextpnr-ecp5"
+          python3 scripts/place_route.py counter --device ecp5-25k
+          python3 scripts/place_route.py pipeline --device ecp5-25k
+          python3 scripts/place_route.py toy16 --device ecp5-25k
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: routed-physical-measurements
+          path: |
+            build/physical/
+            work/eda/tools.json
