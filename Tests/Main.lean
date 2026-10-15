@@ -25,6 +25,18 @@ private def checkCounter (cycles seed : Nat) : IO Unit := do
     count := if row.inputs[1]! then 0 else if row.inputs[0]! then (count + 1) % 10 else count
 
 def main : IO Unit := do
+  for width in [0, 1, 2, 4, 8, 16, 32, 64] do
+    let c := Fifo.hardware width
+    let g := Backend.compile (lower c)
+    require (g.validate c) s!"translation validator rejected FIFO width={width}"
+    let corrupt := {g with next := g.next.set! 0 (Backend.invert g.next[0]!)}
+    require (!corrupt.validate c) s!"translation validator accepted corrupted FIFO width={width}"
+  let counter := Backend.compile (lower Counter.hardware)
+  require (counter.validate Counter.hardware) "translation validator rejected counter"
+  require (!({counter with outputs := counter.outputs.set! 0 0}).validate Counter.hardware)
+    "translation validator accepted a corrupted counter output"
+  require (!({counter with latches := counter.latches + 1}).validate Counter.hardware)
+    "translation validator accepted a malformed graph"
   for width in [0, 1, 2, 4, 8, 16, 32] do
     for seed in [1, 7, 42, 123, 999, 4294967295] do
       match checkCircuit (Fifo.hardware width) 200 seed with

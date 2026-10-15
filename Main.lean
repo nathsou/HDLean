@@ -45,8 +45,9 @@ private def execute (args : List String) : IO Unit := do
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
     withDesign design width fun c => do
-      let graph := compile (lower c)
-      unless graph.wellFormed do throw (IO.userError "internal error: malformed graph")
+      let graph ← match checkedCompile c with
+        | .ok g => pure g.val
+        | .error e => throw (IO.userError e)
       let text ← match format with
         | "sv" => pure (systemVerilog graph)
         | "aiger" => pure (aiger graph)

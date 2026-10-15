@@ -79,11 +79,9 @@ def compile (m : Netlist.Module d i r o) : Graph := Id.run do
 def litValue (values : Array Bool) (l : Lit) : Bool :=
   xor (values[l / 2]?.getD false) (l % 2 == 1)
 
-def Graph.values (g : Graph) (inputs state : Array Bool) : Array Bool := Id.run do
-  let mut values := #[false] ++ inputs ++ state
-  for gate in g.gates do
-    values := values.push (litValue values gate.a && litValue values gate.b)
-  return values
+def Graph.values (g : Graph) (inputs state : Array Bool) : Array Bool :=
+  g.gates.foldl (fun values gate =>
+    values.push (litValue values gate.a && litValue values gate.b)) (#[false] ++ inputs ++ state)
 
 def Graph.eval (g : Graph) (inputs state : Array Bool) : Array Bool × Array Bool :=
   let v := g.values inputs state

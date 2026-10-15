@@ -2,6 +2,7 @@
 
 | Date | Decision | Reason and consequence |
 | --- | --- | --- |
+| 2026-10-15 | Validate every shared graph with a generic kernel-proved symbolic checker | Closes the compiler/cache trust gap without proving a particular sharing algorithm. Canonical Boolean cones include constant folding, complements, and commutative ordering. Emission fails if the validator cannot establish equivalence. The explicit total order permits kernel replay, unlike Lean's opaque derived recursive `Ord`. |
 | 2026-10-15 | Rename the project and namespace to HDLean | Explicit user request. |
 | 2026-10-15 | Support RTLIL; remove the proposed word-level model-checker backend | Explicit user correction. All active commands and tests cover SV/AIGER/RTLIL. |
 | 2026-10-15 | Start the verified physical library with a two-entry shift-register FIFO | Small, auditable refinement proof for all payload widths. The circular model is retained separately. Storage costs `2w+2` flip-flops rather than the proposal's RAM/pointer budget. No general-depth claim is made. |

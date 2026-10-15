@@ -7,11 +7,16 @@ set_option maxHeartbeats 4000000
 
 /-- Kernel-replayed translation certificate for every state/input of a one-bit FIFO instance. -/
 theorem fifo1_graph : (Backend.compile (lower (Fifo.hardware 1))).Equivalent (Fifo.hardware 1) := by
-  unfold Backend.Graph.Equivalent
+  apply Backend.Graph.validate_sound
   decide +kernel
 
 /-- Kernel-replayed translation certificate for the complete decade counter. -/
 theorem counter_graph : (Backend.compile (lower Counter.hardware)).Equivalent Counter.hardware := by
-  unfold Backend.Graph.Equivalent
+  apply Backend.Graph.validate_sound
+  decide +kernel
+
+/-- Translation validation scales with Boolean cones rather than enumerating all states. -/
+theorem fifo8_graph : (Backend.compile (lower (Fifo.hardware 8))).Equivalent (Fifo.hardware 8) := by
+  apply Backend.Graph.validate_sound
   decide +kernel
 end HDLean.Tests

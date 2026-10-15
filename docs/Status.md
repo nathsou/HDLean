@@ -10,9 +10,9 @@ axiom. Missing guarantees below are engineering work, not accepted assumptions.
 | Types | Domain/dimension-indexed Boolean AST; finite `Synth` encodings | Automatic structure/enum deriving; compact `Fin` encoding |
 | Syntax | Lean `circuit do`, explicit typed word builders | Reification of ordinary arithmetic/conditionals; richer hardware diagnostics |
 | Core | One driver/register; combinational trees; explicit reset; Moore proof requirement | Typed module instances/memory/CDC nodes in the synthesis AST |
-| Lowering | Generic kernel proofs for expressions, reset transitions, outputs | Generic theorem for graph sharing/numbering |
+| Lowering | Generic kernel proofs for expressions, reset transitions, outputs; generically proved graph translation validator required by emission | Direct proof of compiler total acceptance (validation rejects conservatively) |
 | Backends | SystemVerilog, AIGER, RTLIL; independent parser/simulator/equivalence checks | Verified text printers/parsers and checked external synthesis certificates |
-| Graph certificates | All-state/all-input kernel certificates for counter and one-bit FIFO | Parameterized/large-instance certificate generation |
+| Graph certificates | Generic soundness theorem; kernel certificates for counter and one/eight-bit FIFO; mandatory runtime checks through width 64 | Shared representation for very large symbolic cones |
 | FIFO | Generic payload-width proof on the actual two-entry circuit; scenarios, mutations, throughput, register budget | General-depth circular FIFO refinement and RAM lowering |
 | Circular FIFO | Power-of-two executable ring; garbage-state/reset/wraparound regressions | Generic correctness theorem and physical AST |
 | Composition | Generic Moore network theorem; three-stage valid/ready proof; causal assume/guarantee theorem | Bit-level network elaborator and physical composition proof |

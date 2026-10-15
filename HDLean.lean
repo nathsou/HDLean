@@ -14,3 +14,4 @@ import HDLean.Tactics.Basic
 import HDLean.Verification.Simulation
 import HDLean.Lib.Network
 import HDLean.Netlist.Optimize
+import HDLean.Backend.Validate

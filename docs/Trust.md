@@ -30,9 +30,12 @@ checker modifications. L2 and L3 explicitly return failure.
 ## What reaches bits
 
 `lowerExpr_correct`, `lower_next` and `lower_output` prove the semantic tree IR
-matches the circuit AST. `Tests.fifo1_graph` and `Tests.counter_graph` prove the
-shared graph matches those complete circuit instances for every state, input,
-and reset value. Sharing is not yet proved generically. All printers consume
+matches the circuit AST. `Graph.validate_sound` proves that the executable symbolic
+translation validator accepts only shared graphs equivalent to the exact circuit,
+for every state, input, and reset value. Emission uses `checkedCompile`, whose
+successful result carries this proof. The compiler, cache and graph numbering are
+untrusted; a validation failure aborts emission. Concrete kernel-replayed certificates
+also cover the counter and one/eight-bit FIFO. All printers consume
 the same shared graph, preserve unconstrained power-up, and make reset explicit.
 
 Independent checks interpret AIGER and compare transitions, simulate SystemVerilog
