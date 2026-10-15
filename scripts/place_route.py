@@ -46,6 +46,14 @@ def main():
         if not binary:
             p.error(f'missing {name}: {getattr(a,name)}')
         tools[name] = Path(binary).resolve()
+    # synth_* invokes the ABC supplied beside Yosys. PATH alone does not
+    # override that selection, so reject a falsely attributed external ABC.
+    bundled_abc = tools['yosys'].parent / 'yosys-abc'
+    def implementation(binary):
+        native = binary.parent.parent / 'libexec' / binary.name
+        return native if native.is_file() else binary
+    if not bundled_abc.is_file() or digest(implementation(bundled_abc)) != digest(implementation(tools['abc'])):
+        p.error('--abc must identify the ABC implementation bundled with this Yosys installation')
     embedded = tools['nextpnr'].parent.parent / 'libexec' / tools['nextpnr'].name
     model = a.chipdb_model or ((embedded if embedded.is_file() else tools['nextpnr']) if a.device == 'ecp5-25k' else
                               tools['nextpnr'].parent.parent / 'share/nextpnr/ice40/chipdb-8k.bin')
