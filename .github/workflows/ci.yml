@@ -15,14 +15,25 @@ jobs:
           auto-config: false
           build: true
           test: false
-      - name: Install independent RTL checkers
-        run: sudo apt-get update && sudo apt-get install -y iverilog yosys
-      - name: Build pinned independent proof checker
+      - name: Install independent RTL checkers and the namespace sandbox
         run: |
-          rustup toolchain install 1.90.0 --profile minimal
-          python3 scripts/independent/bootstrap.py
+          sudo apt-get update && sudo apt-get install -y iverilog yosys bubblewrap
+          # Ubuntu AppArmor otherwise denies the unprivileged user namespaces `lake check` needs.
+          if test -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+      - name: Pin the independent kernels bundled with the Lean toolchain
+        run: python3 scripts/independent/bootstrap.py
       - name: Verify proofs, axioms, artifacts and backends
-        run: python3 scripts/verify.py --backends --independent --certify-bytes --certificate-memory-mb 6144
+        env:
+          # Approved manifest digest from a protected repository variable: the
+          # manifest stored in the branch is never its own trust anchor.
+          HDLEAN_TRUSTED_MANIFEST_SHA256: ${{ vars.HDLEAN_TRUSTED_MANIFEST_SHA256 }}
+        run: |
+          if [ -z "$HDLEAN_TRUSTED_MANIFEST_SHA256" ]; then
+            echo "::warning::HDLEAN_TRUSTED_MANIFEST_SHA256 is not set; the frozen manifest is checked only against itself."
+          fi
+          python3 scripts/verify.py --backends --independent --paranoid --certify-bytes --certificate-memory-mb 6144
       - name: Test independent checker rejection paths
         run: python3 -m unittest discover -s Tests/independent -p 'test_*.py' -v
       - name: Test rejection paths and type errors
@@ -53,10 +64,8 @@ jobs:
           if test -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
-      - name: Build pinned independent proof checker
-        run: |
-          rustup toolchain install 1.90.0 --profile minimal
-          python3 scripts/independent/bootstrap.py
+      - name: Pin the independent kernels bundled with the Lean toolchain
+        run: python3 scripts/independent/bootstrap.py
       - name: Require genuine isolated acceptance and rejection tests
         run: HDLEAN_REQUIRE_SANDBOX=1 python3 -m unittest discover -s Tests/comparator -p 'test_*.py' -v
       - uses: actions/upload-artifact@v4

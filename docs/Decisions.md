@@ -29,6 +29,19 @@
 | Use finite reachability as the initial invariant oracle | The oracle suggests a membership relation; initialization, closure and safety must pass a generic kernel-checkable certificate. `refute_small` is an explicit sample diagnostic. This provides the intended untrusted-oracle workflow without requiring IC3. |
 | Measure FPGA implementation with pinned Yosys/nextpnr | ECP5 fits the complete register-array CPU where iCE40HX8K did not. Reports retain constraints, binary/model/artifact hashes and actual timing/utilization. No process library or analog measurement is invented. |
 
+## Design revision v0.2 (2026-10-16)
+
+These follow the review of this implementation; [Design.md](Design.md) section 15.5 lists the findings and section 16 the remediation milestones.
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Move to Lean 4.35.0 | Bundles `lean4lean`, `nanoda`, `con-leche`, `con-ron` and `leanchecker-paranoid`, plus `lake check` and `lake comparator`. The project builds unchanged. The Rust build of nanoda and the separate exporter checkout are removed; `bootstrap.py` now pins the bundled binaries. Default Lake targets are libraries only, so `lake check` can export them. |
+| Require `lake check --paranoid` in CI | Every declaration of the project, not only the audited roots, is replayed by five kernels. |
+| Read the approved manifest digest from a protected CI variable | A manifest stored in the branch cannot be its own trust anchor (finding F4). CI warns until `HDLEAN_TRUSTED_MANIFEST_SHA256` is set. |
+| Planned: explicitly shared core, proved emitter, byte binding only | Replaces per-design validators that the kernel could not re-run for the CPU (finding F6). |
+| Planned: domain-indexed multi-clock logic with the sampling oracle in hardware semantics | Raw multi-bit crossings type-checked and metastability was fixed to "always old" in the hardware link (finding F1). |
+| Planned: every claimed theorem in a frozen challenge, compared by statement | A theorem weakened to `True` passed L1 (finding F2). |
+
 The historical entries above record decisions at the time. Later entries supersede
 implementation limitations as the corresponding features and proofs land. The
 [current coverage](Status.md) and [trust boundary](Trust.md) describe the result.

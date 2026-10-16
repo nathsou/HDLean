@@ -22,7 +22,7 @@ TOOLS = Path(os.environ.get('HDLEAN_INDEPENDENT_TOOLS', ROOT / 'work/independent
 
 def fixture(folder, optimized=False, wrong_type=False, hidden_axiom=False, native_spoof=False, main=None):
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / 'lean-toolchain').write_text('leanprover/lean4:v4.34.0\n')
+    (folder / 'lean-toolchain').write_text('leanprover/lean4:v4.35.0\n')
     (folder / 'lakefile.toml').write_text('''name = "comparatorfixture"
 moreLeanArgs = ["-j2"]
 [[lean_lib]]
@@ -105,7 +105,7 @@ class ComparatorUnitTests(unittest.TestCase):
             compare(reference,candidate,[],['propext'])
 
     def test_rejects_ambiguous_export_records(self):
-        meta = {'meta':{'format':{'version':'3.1.0'},'lean':{'version':'4.34.0'}}}
+        meta = {'meta':{'format':{'version':'3.1.0'},'lean':{'version':'4.35.0'}}}
         with tempfile.TemporaryDirectory() as tmp:
             export = Path(tmp)/'ambiguous.ndjson'
             export.write_text(json.dumps(meta) + '\n' + '{"ie":0,"sort":0,"bvar":0}\n')

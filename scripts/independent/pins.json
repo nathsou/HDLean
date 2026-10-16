@@ -1,14 +1,9 @@
 {
-  "schema": 1,
-  "lean": "4.34.0",
-  "rust": "1.90.0",
+  "schema": 2,
+  "lean": "4.35.0",
   "export_format": "3.1.0",
-  "lean4export": {
-    "url": "https://github.com/leanprover/lean4export.git",
-    "commit": "076e8e57707e813375e8f9da8bf989799ace9680"
-  },
-  "nanoda": {
-    "url": "https://github.com/ammkrn/nanoda_lib.git",
-    "commit": "f67473ba5f9397266f89c7852082c9c914b5d219"
-  }
+  "source": "independent checkers bundled with the Lean toolchain (since 4.35.0)",
+  "exporter": "leanexport",
+  "checker": "nanoda_bin",
+  "extra_checkers": ["con-leche", "con-ron", "leanchecker-paranoid"]
 }

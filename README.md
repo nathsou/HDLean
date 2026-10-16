@@ -28,7 +28,8 @@ lake exe hdlean emit toy16 sv build/toy16.sv
 lake exe hdlean emit-async rtlil build/async.il 8 4
 ```
 
-The toolchain is pinned to **Lean 4.34.0**. No Mathlib or third-party Lean packages
+The toolchain is pinned to **Lean 4.35.0**, which bundles the independent kernels
+`lean4lean`, `nanoda`, `con-leche` and `con-ron` used by `lake check --paranoid`. No Mathlib or third-party Lean packages
 are required. `fifo` currently means the proved two-entry skid buffer; its width
 argument is the payload width, not queue depth. `counter` is a four-bit decade
 counter; it ignores the width argument. Widths 0–64 are accepted for the FIFO.
@@ -99,6 +100,11 @@ python3 scripts/verify.py
 python3 scripts/verify.py --backends
 python3 Tests/test_workflow.py
 
+# All five kernels bundled with Lean 4.35.0 over the whole project
+# (requires bubblewrap and unprivileged user namespaces).
+lake check --paranoid
+python3 scripts/verify.py --paranoid
+
 # Independent trust anchor supplied by a reviewer/CI, rather than the submission.
 python3 scripts/verify.py --manifest-sha256 <reviewed-digest> --backends
 ```
@@ -112,7 +118,8 @@ supplied with an externally approved receipt. It requires namespace isolation,
 actual theorem/definition comparison, independent replay and exact artifact byte
 binding. Development commands never silently upgrade to that acceptance.
 `leanchecker --fresh` replays declarations using
-Lean's own kernel; it is not the independent nanoda checker.
+Lean's own kernel; `lake check --paranoid` adds `leanchecker-paranoid`,
+`lean4lean`, `nanoda`, `con-leche` and `con-ron`.
 
 The core suite checks arbitrary-power-up traces against independent references:
 9,000 physical circular FIFO cycles, 9,600 RAM cycles, 240 CPU cycles, 2,400 elastic

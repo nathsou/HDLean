@@ -1,4 +1,4 @@
-{"meta":{"exporter":{"name":"lean4export","version":"3.1.0"},"format":{"version":"3.1.0"},"lean":{"githash":"293d5d0c0c3f3dded4688b3ccd6a33939ac5102b","version":"4.34.0"}}}
+{"meta":{"exporter":{"name":"lean4export","version":"3.1.0"},"format":{"version":"3.1.0"},"lean":{"githash":"eb6cafb7290e8bd5f2937522d8d804f58f02bafc","version":"4.35.0"}}}
 {"in":1,"str":{"pre":0,"str":"Nat"}}
 {"il":1,"succ":0}
 {"ie":0,"sort":1}
@@ -399,7 +399,7 @@
 {"in":88,"num":{"i":2314059840,"pre":87}}
 {"in":89,"str":{"pre":88,"str":"_hygCtx"}}
 {"in":90,"str":{"pre":89,"str":"_hyg"}}
-{"in":91,"num":{"i":62,"pre":90}}
+{"in":91,"num":{"i":58,"pre":90}}
 {"app":{"arg":113,"fn":12},"ie":290}
 {"app":{"arg":5,"fn":290},"ie":291}
 {"ie":292,"lam":{"binderInfo":"default","body":291,"name":91,"type":1}}
@@ -421,7 +421,7 @@
 {"forallE":{"binderInfo":"default","body":303,"name":94,"type":1},"ie":304}
 {"in":95,"num":{"i":13,"pre":93}}
 {"const":{"name":65,"us":[1]},"ie":305}
-{"in":96,"num":{"i":65,"pre":93}}
+{"in":96,"num":{"i":61,"pre":93}}
 {"forallE":{"binderInfo":"default","body":1,"name":96,"type":302},"ie":306}
 {"ie":307,"lam":{"binderInfo":"default","body":306,"name":81,"type":1}}
 {"ie":308,"lam":{"binderInfo":"default","body":307,"name":74,"type":1}}

@@ -1,39 +1,38 @@
 # Independent proof replay
 
-`scripts/independent/replay.py` exports explicitly requested theorem roots and their
-complete dependency closure, then checks the unmodified export with nanoda, a Rust
-implementation independent of Lean's kernel. The replay layer is suitable for the
-kernel-only proof requirement of L3. It does not itself provide submission
-isolation, reviewer approval, physical sign-off, or select the required challenges.
-The enclosing comparator must enforce those requirements and provide its complete
-required theorem list.
+Since Lean 4.35.0 the toolchain bundles four kernels independent of Lean's own:
+`lean4lean`, `nanoda`, `con-leche` and `con-ron`, plus `leanchecker-paranoid`
+(Lean's kernel with a hardened allocator) and the exporter `leanexport`. HDLean
+uses them in two ways.
+
+- `lake check --paranoid` builds and exports every default library in a
+  `bubblewrap` sandbox and replays the whole project with all five kernels,
+  rejecting any axiom outside `propext`, `Classical.choice` and `Quot.sound`.
+  `python3 scripts/verify.py --paranoid` runs it; CI requires it.
+- `scripts/independent/replay.py` exports explicitly requested theorem roots and
+  their complete dependency closure, then checks the unmodified export with nanoda,
+  `con-leche`, `con-ron` and `leanchecker-paranoid --from-export`. `lean4lean` reads
+  `.olean` files rather than exports, so only `lake check` runs it.
+
+The replay layer does not itself provide submission isolation, reviewer approval,
+physical sign-off, or select the required challenges. The enclosing comparator
+must enforce those requirements and provide its complete required theorem list.
 
 ## Pinned compatibility
 
-The exact revisions are recorded in `scripts/independent/pins.json`:
-
-| Component | Version / revision |
-| --- | --- |
-| Lean | 4.34.0, matching `lean-toolchain` |
-| Rust | 1.90.0 |
-| lean4export | `076e8e57707e813375e8f9da8bf989799ace9680` (v4.34.0) |
-| nanoda | `f67473ba5f9397266f89c7852082c9c914b5d219` (0.4.24) |
-| Export format | NDJSON 3.1.0 |
-
-Both upstream tools build without patches. Nanoda's older `debug` branch expects
-the obsolete text export format and is incompatible with this pipeline. Do not
-substitute that branch or a floating exporter release.
+`scripts/independent/pins.json` records the toolchain version (4.35.0, matching
+`lean-toolchain`), the export format (NDJSON 3.1.0) and the bundled binaries used.
+Nothing is downloaded or compiled: `scripts/independent/bootstrap.py` locates the
+binaries in the project's toolchain and records their SHA-256 digests in
+`work/independent-tools/tools.json`. The previous Rust build of a pinned nanoda
+revision and a separate `lean4export` checkout are no longer needed.
 
 ## Build and run
 
-Prerequisites are Python 3.10+, Git, a C compiler/linker, the project's Lean
-toolchain, and rustup. Install the pinned Rust compiler if necessary:
-
 ```sh
-rustup toolchain install 1.90.0 --profile minimal
-python3 scripts/independent/bootstrap.py --lake lake --cargo cargo
+python3 scripts/independent/bootstrap.py
 lake build
-lake build Tests.Certificates
+lake check --paranoid            # requires bubblewrap and unprivileged user namespaces
 python3 scripts/independent/replay.py \
   --module HDLean --module Designs --module Tests.Certificates \
   --theorem HDLean.Backend.Graph.validate_sound \
@@ -44,21 +43,11 @@ python3 -m unittest discover -s Tests/independent -p 'test_*.py' -v
 ```
 
 The example deliberately names four graph theorems; its success covers precisely
-those roots and their dependencies. The comparator must pass all required roots
-for its assurance claim. The API is
+those roots and their dependencies. The API is
 `replay(project, lake, tools_manifest, output, roots, modules, timeout=600)`.
 No default subset is silently substituted. Build the selected modules before
-calling it; the replay wrapper does not perform the comparator's clean build.
-
-The bootstrap fetches immutable Git revisions, uses Cargo's committed lockfile,
-limits Rust compilation to two jobs, and records executable SHA-256 digests in
-`work/independent-tools/tools.json`. `--cache` changes that location. To install
-Rust outside the home directory, set `CARGO_HOME` and `RUSTUP_HOME` to directories
-under `work/`, use rustup's `--no-modify-path` installation option, and put the
-resulting Cargo `bin` directory on `PATH`. The same environment must be present
-when running the bootstrap. `LAKE`, `CARGO`, and the explicit `--lake`/`--cargo`
-options support nonstandard tool locations; tests honor `LAKE` and
-`HDLEAN_INDEPENDENT_TOOLS`.
+calling it. `LAKE` and `--lake` support nonstandard tool locations; tests honor
+`LAKE` and `HDLEAN_INDEPENDENT_TOOLS`.
 
 ## What is checked
 
@@ -97,7 +86,7 @@ binary to reject the three axiom cases. A separate mutation changes a valid
 theorem's exported proof term to an ill-typed expression; the policy audit accepts
 the artifact's coverage while nanoda rejects its proof. Additional tests cover
 missing/duplicate/empty roots, stale success removal, and modified binary hashes.
-Tests skip with an explicit message if the pinned tools have not been built;
+Tests skip with an explicit message if the bundled tools have not been pinned;
 release verification must require the tools and run these tests without skips.
 
 ## Exact backend bytes

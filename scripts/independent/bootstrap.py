@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Build the pinned, unmodified proof exporter and independent Rust checker."""
+"""Locate and pin the proof exporter and independent checkers bundled with Lean.
+
+Since Lean 4.35.0 the toolchain ships `leanexport` and the external kernels
+`nanoda`, `con-leche`, `con-ron` and `lean4lean`, plus `leanchecker-paranoid`.
+Nothing is downloaded or compiled: this script records the exact binaries of the
+project's toolchain and their SHA-256 digests in `work/independent-tools/tools.json`.
+`lean4lean` reads `.olean` files rather than exports; `lake check --paranoid` runs it.
+"""
 import argparse
 import hashlib
 import json
@@ -12,30 +19,13 @@ ROOT = HERE.parents[1]
 PINS = json.loads((HERE / 'pins.json').read_text())
 
 
-def run(command, cwd=None, env=None):
-    print('+', ' '.join(map(str, command)), flush=True)
-    return subprocess.check_output(list(map(str, command)), cwd=cwd, env=env, text=True)
-
-
-def checkout(path, pin):
-    if not path.exists():
-        path.mkdir(parents=True)
-        run(['git', 'init', path])
-        run(['git', '-C', path, 'remote', 'add', 'origin', pin['url']])
-    if run(['git', '-C', path, 'remote', 'get-url', 'origin']).strip() != pin['url']:
-        raise ValueError(f'unexpected origin: {path}')
-    if run(['git', '-C', path, 'status', '--porcelain', '--untracked-files=no']).strip():
-        raise ValueError(f'refusing modified source tree: {path}')
-    run(['git', '-C', path, 'fetch', '--depth', '1', 'origin', pin['commit']])
-    run(['git', '-C', path, 'checkout', '--detach', pin['commit']])
-    if run(['git', '-C', path, 'rev-parse', 'HEAD']).strip() != pin['commit']:
-        raise ValueError(f'wrong source revision: {path}')
+def run(command, cwd=None):
+    return subprocess.check_output(list(map(str, command)), cwd=cwd, text=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--lake', default=os.environ.get('LAKE', 'lake'))
-    parser.add_argument('--cargo', default=os.environ.get('CARGO', 'cargo'))
     parser.add_argument('--cache', type=Path, default=ROOT / 'work/independent-tools')
     args = parser.parse_args()
     cache = args.cache.resolve()
@@ -45,27 +35,18 @@ def main():
     lean_version = run([args.lake, 'env', 'lean', '--version'], cwd=ROOT).strip()
     if not lean_version.startswith(f'Lean (version {PINS["lean"]},'):
         raise ValueError(f'expected Lean {PINS["lean"]}; got {lean_version}')
-    # cargo +version works through rustup; never silently select another compiler.
-    cargo = [args.cargo, '+' + PINS['rust']]
-    rust_version = run([*cargo, '--version']).strip()
-    if not rust_version.startswith('cargo ' + PINS['rust'] + ' '):
-        raise ValueError(f'wrong Rust toolchain: {rust_version}')
-    exporter, checker = cache / 'lean4export', cache / 'nanoda'
-    checkout(exporter, PINS['lean4export'])
-    checkout(checker, PINS['nanoda'])
-    if (exporter / 'lean-toolchain').read_text().strip() != 'leanprover/lean4:v' + PINS['lean']:
-        raise ValueError('exporter and project Lean versions differ')
-    print(run([args.lake, 'build'], cwd=exporter), end='')
-    # Bound build concurrency while other project checks run.
-    print(run([*cargo, 'build', '--locked', '--release', '--jobs', '2'], cwd=checker), end='')
-    binaries = {'exporter': exporter / '.lake/build/bin/lean4export',
-                'checker': checker / 'target/release/nanoda_bin'}
-    report = {'schema': 1, 'pins': PINS, 'lean_version': lean_version,
-              'cargo_version': rust_version, 'binaries': {
-                  key: {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
-                  for key, path in binaries.items()}}
+    if (ROOT / 'lean-toolchain').read_text().strip() != 'leanprover/lean4:v' + PINS['lean']:
+        raise ValueError('lean-toolchain and pinned Lean version differ')
+    bindir = Path(run([args.lake, 'env', 'lean', '--print-prefix'], cwd=ROOT).strip()) / 'bin'
+    names = {'exporter': PINS['exporter'], 'checker': PINS['checker'],
+             **{name: name for name in PINS['extra_checkers']}}
+    binaries = {}
+    for key, name in names.items():
+        path = (bindir / name).resolve(strict=True)
+        binaries[key] = {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+    report = {'schema': 2, 'pins': PINS, 'lean_version': lean_version, 'binaries': binaries}
     manifest.write_text(json.dumps(report, indent=2) + '\n')
-    print(f'Built pinned tools: {manifest}')
+    print(f'Pinned bundled tools: {manifest}')
 
 
 if __name__ == '__main__':

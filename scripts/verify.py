@@ -67,7 +67,7 @@ def run(args, log=None):
         log.write_text(result.stdout + result.stderr)
     if result.returncode:
         raise RuntimeError(f'command failed ({result.returncode}): {args}\n{result.stdout}\n{result.stderr}')
-    # leanchecker 4.34 may print uncaught errors with exit code zero.
+    # leanchecker may print uncaught errors with exit code zero.
     if 'uncaught exception:' in result.stdout or 'uncaught exception:' in result.stderr:
         raise RuntimeError(f'checker raised an exception: {result.stdout}{result.stderr}')
     return result.stdout
@@ -119,7 +119,10 @@ def main():
     parser.add_argument('--lake', default=os.environ.get('LAKE', 'lake'))
     parser.add_argument('--manifest-sha256', default=os.environ.get('HDLEAN_TRUSTED_MANIFEST_SHA256'))
     parser.add_argument('--backends', action='store_true', help='require Icarus and Yosys checks')
-    parser.add_argument('--independent', action='store_true', help='require independent nanoda replay')
+    parser.add_argument('--independent', action='store_true',
+                        help='replay headline roots with the bundled nanoda, con-leche, con-ron and leanchecker-paranoid')
+    parser.add_argument('--paranoid', action='store_true',
+                        help='run `lake check --paranoid`: all five bundled kernels over the whole project, in a bubblewrap sandbox')
     parser.add_argument('--certify-bytes', action='store_true',
                         help='kernel and nanoda proofs for exact counter/FIFO8 bytes in all three formats; implies --independent')
     parser.add_argument('--certificate-memory-mb', type=int, default=6144,
@@ -148,6 +151,8 @@ def main():
     run([ROOT / '.lake/build/bin/tests'], work / 'simulation.log')
     if args.backends:
         run([sys.executable, ROOT / 'scripts/check_backends.py'], work / 'backends.log')
+    if args.paranoid:
+        run([args.lake, 'check', '--paranoid'], work / 'lake-check-paranoid.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Designs'], work / 'kernel-designs.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Tests'], work / 'kernel-certificates.log')
     axioms = audit_axioms(run([args.lake, 'env', 'lean', 'Tests/Axioms.lean'], work / 'axioms.log'))
@@ -207,6 +212,7 @@ def main():
         'checks': {'kernel_build': True, 'fresh_kernel_replay': True, 'axiom_policy': True,
                    'simulation': True, 'external_backends': args.backends,
                    'adversarial_comparator': False, 'nanoda': args.independent,
+                   'bundled_kernels_whole_project': args.paranoid,
                    'exact_byte_certificates': args.certify_bytes},
         'independent_replay': independent_report,
         'byte_certificates': byte_certificates,

@@ -1,6 +1,6 @@
 name = "hdlean"
 version = "0.1.0"
-defaultTargets = ["HDLean", "Designs", "hdlean", "tests"]
+defaultTargets = ["HDLean", "Designs", "Tests"]
 
 [[lean_lib]]
 name = "HDLean"

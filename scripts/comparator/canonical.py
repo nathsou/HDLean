@@ -8,6 +8,8 @@ import hashlib
 import json
 from pathlib import Path
 
+PINS = json.loads((Path(__file__).resolve().parents[1] / 'independent/pins.json').read_text())
+
 
 def unique_object(pairs):
     result = {}
@@ -75,7 +77,8 @@ def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, pro
         first = stream.readline(16777217)
         if len(first) > 16777216: raise ValueError('export metadata exceeds size bound')
         meta = json.loads(first, object_pairs_hook=unique_object)
-        if meta.get('meta', {}).get('format', {}).get('version') != '3.1.0' or meta['meta']['lean']['version'] != '4.34.0':
+        if (meta.get('meta', {}).get('format', {}).get('version') != PINS['export_format'] or
+                meta['meta']['lean']['version'] != PINS['lean']):
             raise ValueError('unapproved Lean export format/toolchain')
         while True:
             line = stream.readline(16777217)

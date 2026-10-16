@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Export explicit theorem roots and independently replay their entire dependency closure."""
+"""Export explicit theorem roots and independently replay their entire dependency closure.
+
+The export is checked by nanoda and by every other export-reading kernel bundled
+with the Lean toolchain (`con-leche`, `con-ron`, `leanchecker-paranoid`).
+"""
 import argparse
 import hashlib
 import json
@@ -26,10 +30,10 @@ def sha(path):
 
 def load_tools(path):
     manifest = json.loads(Path(path).read_text())
-    if manifest.get('schema') != 1 or manifest.get('pins') != PINS:
+    if manifest.get('schema') != 2 or manifest.get('pins') != PINS:
         raise ValueError('independent tool manifest does not match the pinned tools')
     result = {}
-    for key in ('exporter', 'checker'):
+    for key in ('exporter', 'checker', *PINS['extra_checkers']):
         info = manifest['binaries'][key]
         executable = Path(info['path']).resolve(strict=True)
         if sha(executable) != info['sha256']:
@@ -86,6 +90,12 @@ def audit_export(path, roots):
             'theorems_in_closure': len(theorems)}
 
 
+EXTRA_ARGS = {'leanchecker-paranoid': ['--from-export']}
+EXTRA_SUCCESS = {'con-leche': r'accepted [1-9][0-9]* declarations \(--verified\)',
+                 'con-ron': r'accepted [1-9][0-9]* declarations \(--verified\)',
+                 'leanchecker-paranoid': r'Lean default kernel accepts'}
+
+
 def checker_config(export_path):
     return {'export_file_path': str(Path(export_path).resolve()), 'use_stdin': False,
             'permitted_axioms': sorted(ALLOWED_AXIOMS),
@@ -131,11 +141,18 @@ def replay(project, lake, tools_manifest, output, roots, modules, timeout=600):
     success = re.fullmatch(r'Checked ([1-9][0-9]*) declarations with no errors\n?', stdout)
     if not success:
         raise RuntimeError('nanoda did not report an unqualified successful replay')
+    extra = {}
+    for name in PINS['extra_checkers']:
+        command = [tools[name], *EXTRA_ARGS.get(name, []), export_path]
+        out = checked_run(command, project, output / f'{name}.log', timeout)
+        if not re.search(EXTRA_SUCCESS[name], out):
+            raise RuntimeError(f'{name} did not report an unqualified successful replay')
+        extra[name] = {'passed': True, 'sha256': sha(tools[name])}
     # Check binaries again: do not issue a success report if tools changed during replay.
     load_tools(tools_manifest)
     if sha(tools_manifest) != manifest_digest or sha(export_path) != export_digest:
         raise RuntimeError('tool manifest or proof export changed during replay')
-    report = {'schema': 1, 'passed': True, 'checker': 'nanoda', 'pins': PINS,
+    report = {'schema': 2, 'passed': True, 'checker': 'nanoda', 'extra_checkers': extra, 'pins': PINS,
               'checked_declarations': int(success.group(1)), **audit,
               'modules': list(modules), 'export_sha256': export_digest,
               'tools_manifest_sha256': manifest_digest,

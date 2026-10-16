@@ -1,5 +1,7 @@
 # Implementation coverage
 
+The [v0.2 design revision](Design.md) reviews this implementation: section 15.5 lists six gaps (clock-domain crossing in emitted hardware, unfrozen theorem statements, the CPU observation map, a self-referential manifest check, bit-level queue models, and the CPU certificate roadblock) and section 16 the milestones that close them. Rows below describe what is implemented, not those planned changes.
+
 HDLean implements the v0.1 framework and all roadmap example families, with the
 explicit design choices below. No unfinished theorem is represented by `sorry`
 or a replacement axiom. Acceptance evidence and resource limitations are kept
@@ -20,7 +22,7 @@ separate from implementation coverage.
 | Clock crossing | Independent/coincident edges; typed named two-flop primitives; generic Gray adjacency/injectivity and arbitrary bit-mixture proofs |
 | Async FIFO | Generic ghost-history queue safety under arbitrary edge/sample masks; held-reset startup; physical two-domain AST/control/memory correspondence; clock-checked backend and external wrong-clock mutations |
 | Automation | Kernel proof tactics; finite invariant search with checked initialization/closure/safety; sampled relation refutation; goal rendering; named/source-aware counterexamples and VCDs |
-| Independent checking | Frozen candidate manifest; typed challenges; fresh Lean kernel replay; pinned nanoda/exporter; strict baseline-axiom policy; exact byte binding and adversarial rejection tests |
+| Independent checking | Frozen candidate manifest; typed challenges; fresh Lean kernel replay; `lake check --paranoid` with the five kernels bundled in Lean 4.35.0; bundled nanoda/con-leche/con-ron replay of headline roots; strict baseline-axiom policy; exact byte binding and adversarial rejection tests |
 | Physical metrics | Actual structural counts; proved progress/budgets; pinned Yosys/ABC/nextpnr flow; routed ECP5 counter, elastic pipeline and complete CPU reports |
 
 ## Acceptance evidence and roadblocks
