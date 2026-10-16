@@ -18,6 +18,7 @@ import HDLean.Core.Syntax
 import HDLean.Semantics.DeriveSynth
 import HDLean.Lib.MemoryCircuit
 import HDLean.Backend.DagEmit
+import HDLean.Backend.DagEmitValidated
 import HDLean.MultiClock.Dag
 import HDLean.Core.DagBuilder
 import HDLean.Core.DagBuilderBlock

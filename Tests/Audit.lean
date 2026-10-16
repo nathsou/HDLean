@@ -23,6 +23,8 @@ def frameworkTheorems : List Name := [
   ``HDLean.Dag.lowerTight_correct, ``HDLean.Dag.lowerTight_wellFormed,
   ``HDLean.Backend.Graph.optimize_eval, ``HDLean.Backend.Graph.optimize_wellFormed,
   ``HDLean.Dag.lowerOpt_correct, ``HDLean.Dag.lowerOpt_wellFormed,
+  ``HDLean.Backend.Validate.check_sound, ``HDLean.Backend.Validate.select_eval,
+  ``HDLean.Backend.Validate.select_wellFormed, ``HDLean.Backend.Proved.emitWith_correct,
   ``HDLean.Rtl.Design.toDag_nextState, ``HDLean.Rtl.Design.toDag_evalOutput,
   ``HDLean.Rtl.Design.parse_systemVerilog, ``HDLean.Rtl.Design.parseSystemVerilog_canonical,
   ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,

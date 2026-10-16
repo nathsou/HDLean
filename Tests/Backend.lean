@@ -27,6 +27,13 @@ def checkBackendTexts : IO Unit := do
      (.systemVerilog, sv, sv ++ "initial begin end\n"), (.systemVerilog, sv, sv.replace ";" ""),
      (.rtlil, il, il.replace "\\CLK_POLARITY 1" "\\CLK_POLARITY 0"), (.rtlil, il, il.replace "\\WIDTH 1" "\\WIDTH 2"),
      (.aiger, aag, aag.replace "aag " "aig ")]
+  -- An external graph without a valid certificate is never adopted, whether it
+  -- is correct (ABC-like: the optimised graph itself) or wrong (an inverted output).
+  let g := Dag.lowerOpt c
+  let wrong : Graph := { g with outputs := g.outputs.modify 0 (· ^^^ 1) }
+  require ((Validate.select g wrong #[]).logic == g.logic) "a wrong graph was adopted without a certificate"
+  require ((Validate.select g g #[]).logic == g.logic) "select changed the graph"
+  require (Validate.miter g wrong).isSome "the miter of graphs with equal ports was not built"
   for (f, original, mutant) in changes do
     require (mutant != original) "mutation made no change"
     match f.parse mutant with
