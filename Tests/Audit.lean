@@ -19,7 +19,12 @@ def frameworkTheorems : List Name := [
   ``HDLean.Dag.Build.run_implements,
   ``HDLean.MultiClock.Shared.MultiDag.lower_correct, ``HDLean.MultiClock.Shared.MultiDag.emitNative_correct,
   ``HDLean.refinesAfterReset_of_simulation, ``HDLean.refinesResetSchedule_of_simulation,
-  ``HDLean.retiresLike_of_simulation, ``HDLean.compose_contracts, ``HDLean.reset_noninterference]
+  ``HDLean.retiresLike_of_simulation, ``HDLean.compose_contracts, ``HDLean.reset_noninterference,
+  ``HDLean.Dag.lowerTight_correct, ``HDLean.Dag.lowerTight_wellFormed,
+  ``HDLean.Rtl.Design.toDag_nextState, ``HDLean.Rtl.Design.toDag_evalOutput,
+  ``HDLean.Rtl.Design.parse_systemVerilog, ``HDLean.Rtl.Design.parseSystemVerilog_canonical,
+  ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,
+  ``HDLean.Rtl.Build.instantiate_ensures]
 
 run_cmd liftTermElabM do
   let env ← getEnv

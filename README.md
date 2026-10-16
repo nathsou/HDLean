@@ -3,8 +3,15 @@
 HDLean is a Lean 4 embedded hardware language with executable circuit semantics,
 kernel-checked refinement proofs, and SystemVerilog, AIGER, and Yosys RTLIL output.
 
+Designs are written either in a word-level RTL (typed records of words, memories,
+module instances, arithmetic and comparison operators; [design](docs/Design.md) 3.1)
+or at the bit level. The word level prints as SystemVerilog with a proved round trip
+and reaches AIGER, RTLIL and bit-level SystemVerilog through a proved bit-blaster.
+
 The library includes physical counter, FIFO, circular FIFO, elastic pipeline,
-register-array RAM, Toy16 CPU and dual-clock FIFO implementations. Generic proofs
+register-array RAM, Toy16 CPU and dual-clock FIFO implementations, plus word-level
+RAM and Toy16 cores (register file and data memory as RTL memories, ALU as a
+submodule). [Review.md](docs/Review.md) lists every proved guarantee. Generic proofs
 cover reset, queue ordering, retirement, progress, lowering and parsed backend
 semantics. [Coverage and limitations](docs/Status.md) state the exact guarantees.
 
@@ -26,6 +33,11 @@ lake exe hdlean emit ring rtlil build/ring.il 8
 lake exe hdlean emit ram sv build/ram.sv 8
 lake exe hdlean emit toy16 sv build/toy16.sv
 lake exe hdlean emit-async rtlil build/async.il 8 4
+lake exe hdlean rtl-emit rtl-toy16 build/toy16_words.sv     # word-level SystemVerilog
+lake exe hdlean emit rtl-toy16 aiger build/toy16_words.aag   # bit-blasted, proved
+lake exe hdlean rtl-trace rtl-ram build/ram.json 100 1
+lake exe hdlean rtl-metrics rtl-toy16
+lake env .lake/build/bin/hdlean review docs/Review.md        # reviewer document
 ```
 
 The toolchain is pinned to **Lean 4.35.0**; all proofs are checked by its official
@@ -72,6 +84,11 @@ Tagged unions with payloads use explicit layouts.
 
 ## What to review
 
+- [Review.md](docs/Review.md): every challenge statement, its axioms, the definitions it
+  uses, interfaces and scenarios, generated from the checked environment.
+- Word-level Toy16 [interface](Designs/Toy16Rtl/Interface.lean) and
+  [challenge](Designs/Toy16Rtl/Challenge.lean); word-level RAM
+  [interface](Designs/RAMRtl/Interface.lean) and [challenge](Designs/RAMRtl/Challenge.lean).
 - [FIFO specification](Designs/Fifo/Spec.lean), [interface](Designs/Fifo/Interface.lean),
   and [challenge](Designs/Fifo/Challenge.lean).
 - [Counter specification](Designs/Counter/Spec.lean), [interface](Designs/Counter/Interface.lean),

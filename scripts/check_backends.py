@@ -148,14 +148,79 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     print(f'PASS {name}: AIGER + 100 Icarus cycles + Yosys RTLIL equivalence')
 
 
+def rtl_testbench(info, rows, bits_module):
+    """Drive the word-level module and the proved bit-level module with the same
+    words; both must show the Lean trace's outputs before every clock edge."""
+    ins, outs = info['inputs'], info['outputs']
+    nbits_in = sum(p['width'] for p in ins)
+    nbits_out = sum(p['width'] for p in outs)
+    lines = ['module tb;', 'reg clk = 0; reg rst = 0;']
+    lines += [f"reg [{p['width']-1}:0] {p['name']};" for p in ins]
+    lines += [f"wire [{p['width']-1}:0] {p['name']};" for p in outs]
+    ports = ['.clk(clk)', '.rst(rst)'] + [f".{p['name']}({p['name']})" for p in ins + outs]
+    lines.append(f"{info['module']} dut({', '.join(ports)});")
+    bus_in = ', '.join(['1\'b0', 'rst'] + [p['name'] for p in reversed(ins)])
+    lines += [f'wire [{nbits_out}:0] bits_out;',
+              f'{bits_module} bits(.clk(clk), .ins({{{bus_in}}}), .outs(bits_out));',
+              f"wire [{nbits_out-1}:0] word_out = {{{', '.join(p['name'] for p in reversed(outs))}}};",
+              'integer k;', 'initial begin']
+    for st in info['state']:
+        if st['depth']:
+            lines.append(f"for (k = 0; k < {st['depth']}; k = k + 1) dut.{st['path']}[k] = 0;")
+        else:
+            lines.append(f"dut.{st['path']} = 0;")
+    nstate = info['state_bits']
+    for k in range(nstate):
+        lines.append(f'bits.s_{k} = 1\'b0;')
+    for row in rows:
+        for p, v in zip(ins, row['inputs']):
+            lines.append(f"{p['name']} = {p['width']}'d{v};")
+        lines.append(f"rst = 1'b{int(row['rst'])}; #1;")
+        expected = 0
+        offset = 0
+        for p, v in zip(outs, row['outputs']):
+            expected |= (v % (1 << p['width'])) << offset
+            offset += p['width']
+        lines.append(f"if (word_out !== {nbits_out}'d{expected}) $fatal(1, \"word outputs cycle {row['cycle']}: %h\", word_out);")
+        lines.append(f"if (bits_out[{nbits_out-1}:0] !== {nbits_out}'d{expected}) $fatal(1, \"bit outputs cycle {row['cycle']}: %h\", bits_out);")
+        lines.append('clk = 1; #1; clk = 0; #1;')
+    return '\n'.join(lines + ['$display("PASS"); $finish;', 'end', 'endmodule'])
+
+
+def check_rtl(work, design, iverilog, vvp, yosys, ivl_base, cycles=200):
+    """Word-level printer: Icarus runs the word SystemVerilog against the Lean
+    trace of Design.step, alongside the proved bit-blasted netlist; Yosys must
+    elaborate the word-level text, memories and hierarchy included."""
+    words = work / f'{design}_words.sv'
+    bits = work / f'{design}_bits.sv'
+    run([EXE, 'rtl-emit', design, words])
+    run([EXE, 'emit', design, 'sv', bits])
+    tracepath = work / f'{design}_words.json'
+    run([EXE, 'rtl-trace', design, tracepath, cycles, 7])
+    info = json.loads(tracepath.read_text())
+    metrics = json.loads(run([EXE, 'rtl-metrics', design]))
+    info['state_bits'] = metrics['blasted_state_bits']
+    tb = work / f'{design}_words_tb.sv'
+    tb.write_text(rtl_testbench(info, info['rows'], 'hd_top'))
+    options = ['-B', ivl_base] if ivl_base else []
+    binary = work / f'{design}_words.vvp'
+    run([iverilog, *options, '-g2012', '-s', 'tb', '-o', binary, words, bits, tb])
+    assert 'PASS' in run([vvp, binary])
+    log = run([yosys, '-p', f'read_verilog -sv {words.name}; hierarchy -check -top {info["module"]}; proc; '
+               f'memory; flatten; opt; check -assert; stat'], cwd=work)
+    (work / f'{design}_words_yosys.log').write_text(log)
+    print(f'PASS {design}: word SV and bit-blasted SV match {cycles} cycles of Design.step; Yosys elaborates')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--iverilog', default=os.environ.get('IVERILOG', 'iverilog'))
     parser.add_argument('--vvp', default=os.environ.get('VVP', 'vvp'))
     parser.add_argument('--yosys', default=os.environ.get('YOSYS', 'yosys'))
     parser.add_argument('--ivl-base', default=os.environ.get('IVL_BASE'))
-    parser.add_argument('--designs', nargs='+', choices=['fifo','counter','pipeline','ram','ring','toy16'],
-                        default=['fifo','counter','pipeline','ram','ring','toy16'])
+    parser.add_argument('--designs', nargs='+',
+                        choices=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16'],
+                        default=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16'])
     parser.add_argument('--output', type=Path, default=ROOT / 'build/backend-checks')
     args = parser.parse_args()
     for tool in (args.iverilog, args.vvp, args.yosys):
@@ -164,10 +229,12 @@ def main():
     work = args.output.resolve()
     work.mkdir(parents=True, exist_ok=True)
     widths = {'fifo':(0,1,8,16), 'counter':(8,), 'pipeline':(1,8),
-              'ram':(1,8), 'ring':(1,8), 'toy16':(8,)}
+              'ram':(1,8), 'ring':(1,8), 'toy16':(8,), 'rtl-ram':(8,), 'rtl-toy16':(8,)}
     for design in args.designs:
         for width in widths[design]:
             check_design(work, design, width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
+        if design.startswith('rtl-'):
+            check_rtl(work, design, args.iverilog, args.vvp, args.yosys, args.ivl_base)
 
 
 

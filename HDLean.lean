@@ -24,3 +24,7 @@ import HDLean.Core.DagBuilderBlock
 import HDLean.MultiClock.NativeText
 import HDLean.Core.TreeToDag
 import HDLean.MultiClock.Core
+import HDLean.Rtl.Instance
+import HDLean.Rtl.SystemVerilog
+import HDLean.Rtl.Memory
+import HDLean.Rtl.Blast.Top
