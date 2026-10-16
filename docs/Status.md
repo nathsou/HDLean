@@ -37,7 +37,12 @@ a further attempt with separate 64 GiB address-space and 12 GiB resident/managed
 memory limits also failed during lexical checking. A graph-only concrete reduction
 reached over 7 GiB process memory before being stopped. Staging lexical proofs
 across 23 modules checked all 705 chunks, but the complete parser/graph certificate
-has not passed. No CPU byte-certificate success was emitted. The generic semantic
+has not passed. Even a graph-only experiment with separately checked header
+proofs, linear indexing and bounded cache hints exhausted an 11.5 GiB managed
+allocation limit (12 GiB RSS watchdog). No CPU byte-certificate success was emitted.
+The [measured limits](reports/cpu-certificate-resources.json) and a
+[self-contained reproducer](reports/cpu-certificate-reproducer.tar.gz) preserve
+the failed experiment. The generic semantic
 proofs and independently replayed physical CPU theorems do not erase this gap.
 
 The isolated comparator is implemented, with approved implementation holes,
@@ -46,8 +51,12 @@ Genuine namespace integration passed on GitHub Actions, including acceptance
 of changed correct implementations and rejection of altered statements, hidden
 axioms, weakened compiled specifications and mismatched bytes. This managed
 workspace does not permit nested user/network namespaces; local skips grant no
-assurance. CI also checks the additional primitive-definition authentication
-against the independently approved reference. A reviewer-approved receipt is always external
+assurance. CI also passed the additional primitive-definition authentication
+against the independently approved reference. The complete hardware and comparator
+jobs passed at `fac1947` in [run 38829509806](https://github.com/nathsou/HDLean/actions/runs/38829509806).
+The later `ef4d7ed` staging/traversal checkpoint passed the complete local L1
+proof/byte workflow and genuine comparator CI; see the PR checks for final
+external-backend results. A reviewer-approved receipt is always external
 input; a candidate manifest or fixture approval never approves this project.
 
 The pinned physical CPU run meets **12 MHz** on ECP5-25K and reports **47.02 MHz**

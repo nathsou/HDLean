@@ -59,7 +59,11 @@ and compared byte-for-byte with the artifact. Generic parser/validator proofs ar
 not a substitute for replaying that concrete certificate. The full CPU's 744 KB
 AIGER certificate exceeded both 6 GiB and 12 GiB managed-allocation attempts
 in a single module. Staged lexical proofs pass, but complete CPU parser/graph
-certification remains unverified; no CPU byte-certificate success is claimed. Runtime validation
+certification remains unverified. A further graph-only proof, with separately
+checked headers and optimized traversal/indexing, exhausted an 11.5 GiB managed
+limit under a 12 GiB RSS watchdog. See the [resource experiment](reports/cpu-certificate-resources.json)
+and [reproducer](reports/cpu-certificate-reproducer.tar.gz). No CPU byte-certificate
+success is claimed. Runtime validation
 and independently replayed CPU hardware theorems are separate evidence.
 
 Independent checks interpret AIGER and compare transitions, simulate SystemVerilog

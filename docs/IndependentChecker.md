@@ -164,7 +164,11 @@ AIGER single-module attempts exceeded 6 GiB and 12 GiB allocation caps during
 lexical checking and emitted no success report. Staging the 705 lexical chunks
 across 23 separately checked modules removes that particular obstacle, while
 the complete parser/graph certificate is still under investigation. A separate
-CPU graph-only kernel attempt reached over 7 GiB process memory. Native local validation, generic soundness and replayed hardware
+CPU graph-only kernel attempt reached over 7 GiB process memory. A staged-header
+graph-only experiment subsequently exhausted an 11.5 GiB managed-allocation limit
+under a 12 GiB RSS watchdog; the [measurement](reports/cpu-certificate-resources.json)
+and [bounded reproducer](reports/cpu-certificate-reproducer.tar.gz) preserve that
+real resource roadblock. Native local validation, generic soundness and replayed hardware
 proofs are not labeled as a successful concrete CPU byte certificate.
 
 All 77 current headline roots have independently replayed in nanoda over 6,680
