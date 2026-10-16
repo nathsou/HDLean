@@ -17,6 +17,12 @@ reviewer-owned files. There are no other proof checkers in the trusted path.
 - **Compiled Lean code for emission.** The bytes are computed by compiled code, not by
   the kernel. The CLI reads every emitted file back and decodes it with the proved
   parser, which must return exactly the lowered graph.
+- **Compiled Lean code for validated optimisation** (`hdlean abc-emit` only). ABC,
+  CaDiCaL and the binary-AIGER reader are *not* trusted: `emitWith_correct` holds for
+  every graph and certificate they return. What runs compiled is Lean's verified
+  miter, Tseitin encoding (`AIG.toCNF`) and LRAT checker (`LRAT.check`), the same
+  kind of trust as the emitter above. The proved passes (`Graph.optimize`,
+  `Design.optimize`) need no extra trust.
 - **One physical assumption:** two-flop synchronizers resolve metastability.
 - **The reviewer-owned files**, as approved: `Spec.lean`, `Interface.lean`,
   `Challenge.lean` in each design, plus `AsyncFifo/Model.lean` and `Fifo/Circular.lean`.

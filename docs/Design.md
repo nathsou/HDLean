@@ -82,10 +82,19 @@ Since v0.4 designs are written at the word level, and bits appear only after a p
 | Specs on the builder | Hoare-style `Ensures`/`Refines` per cell, `rtl_let`, `mealy_build[_with/_ex]` (body proof to cycle theorem), `mealy_mem` (memories as address→word functions), `instantiate_ensures` with `Design.env_lt` (a child's theorem is used as a black box) | `Rtl.Hoare`, `Rtl.Mealy`, `Rtl.Memory`, `Rtl.Instance` | Proved once |
 | Word SystemVerilog | One line per cell, modules and memories preserved | `Rtl.SystemVerilog` | `parse (print d) = d` and only canonical text parses |
 | Bit-blasting | Word IR to an and-inverter graph with Lean's verified `bv_decide` blasters; hierarchy flattened; memories become state bits with write decoders and read-mux trees; reset becomes per-bit reset kinds | `Rtl.Blast.*`, `Design.toDag` | `toDag_nextState`, `toDag_evalOutput`: the graph steps exactly like `Design.step` for every store, input and reset level |
-| Lowering | Node graph to gate graph with a wire table: negation free, AND one gate, constant reset one gate | `Dag.lowerTight` | `lowerTight_correct`, `lowerTight_wellFormed`, hence `emit_correct` |
+| Word-level rewriting | Constant folding, identities, constant-select muxes and common subexpressions, cell by cell in place; store layout unchanged | `Design.optimize` (`Rtl.Optimize`) | `optimize_sem`: every module keeps its semantics, so `step` and `output` are equal and challenges transfer (`Designs/Optimized`) |
+| Lowering | Node graph to gate graph with a wire table: negation free, AND one gate, constant reset one gate | `Dag.lowerTight` | `lowerTight_correct`, `lowerTight_wellFormed` |
+| AIG optimisation | Dead-gate removal, constant folding, structural hashing, repeated while the gate count drops | `Graph.optimize`, `Dag.lowerOpt` (`Netlist.Optimize`) | `optimize_eval`, `optimize_wellFormed`, hence `emit_correct` |
+| Validated external optimisation (optional) | ABC rewrites the AIG; Lean builds the miter, CaDiCaL refutes it, Lean's verified LRAT checker checks the refutation | `Validate.select`, `hdlean abc-emit` | `select_eval`, `emitWith_correct`: for every external graph and certificate |
 | Bit-level text | AIGER, RTLIL, bit-level SystemVerilog | `Backend.*` | Parse-after-print round trips |
 
-**Passes.** Elaboration is Lean's own, plus the builder's local checks. Node sharing is explicit: every `let x ← ...` is one cell referenced as often as needed, and the AIG's cached constructors hash-cons identical gates during blasting (with constant folding). There is no optimisation pass in the proved pipeline yet; any future pass only needs `(pass d).sem = d.sem`. Synthesis-grade optimisation runs downstream (Yosys/ABC) on the emitted text, outside the proof, checked by equivalence or simulation.
+**Passes.** Elaboration is Lean's own, plus the builder's local checks. Node sharing is explicit: every `let x ← ...` is one cell referenced as often as needed, and the AIG's cached constructors hash-cons identical gates during blasting. Three proved optimisation passes follow (see 13.5 for how they are trusted):
+
+1. **Word level** (`Design.optimize`): rewrites cells in place, so cell indices, registers, memories and instances keep their positions. `optimize_sem` makes it invisible to every challenge, because challenges see a design only through `step` and `output`.
+2. **AIG** (`Graph.optimize`, run by every backend): removes logic that feeds no register or output, folds constants and merges identical gates. On the bit-level designs it removes 15–93% of the gates.
+3. **Validated ABC** (`hdlean abc-emit`, optional): ABC's full combinational optimisation, accepted only with an LRAT certificate checked by Lean's verified checker.
+
+Sequential optimisation (retiming, register merging, state re-encoding) is deferred: it changes the store layout and needs per-pass state mappings.
 
 **Review.** `hdlean review` writes [Review.md](Review.md): every challenge statement as Lean prints it, its axioms, the definitions it uses, the interface of word-level designs, and scenario tables computed by running the specification and the design side by side.
 
@@ -849,9 +858,14 @@ A format's parser is its formal semantics, so it stays in the trusted base. The 
 
 ### 13.5 Optimization after the trusted point
 
-External optimizers such as ABC or Yosys may rewrite the netlist freely. Their output is parsed back and checked equivalent to the unoptimized netlist, by SAT-based equivalence per register cone when registers correspond one to one. Such checks typically rely on native SAT certificate checking, so an optimized netlist carries L2 evidence; the L3 claim stays on the unoptimized netlist that the proved emitter produces.
+**Decision (v0.5): optimisation is either proved once or validated per run, never trusted.**
 
-**Open:** sequential equivalence after retiming, where registers no longer correspond one to one; it needs an invariant, found by k-induction or IC3.
+- **Proved once.** `Design.optimize` (word level) and `Graph.optimize` (AIG) carry generic theorems; `emit_correct` covers `Graph.optimize` directly. Both are written as *checked* passes: analyses such as liveness and hash tables are hints, every rewrite is justified locally, and a step that cannot be justified returns its input. The proofs only cover the local steps.
+- **Validated per run.** An external optimiser (ABC) returns an AIG. `Validate.select g h cert` adopts `h`'s logic, under `g`'s ports and names, only if `cert` is an LRAT refutation of the miter of `g` and `h`: shared atoms for inputs and latches, the XOR of every next-state and output pair, all ORed together. The CNF is Lean's verified `AIG.toCNF`, the check Lean's verified `LRAT.check`. `emitWith_correct` holds for every `h` and `cert`, so ABC, the SAT solver and the binary-AIGER reader stay outside the trusted base; the compiled checker is trusted the way the compiled emitter is (13.4). Toy16 (40,822 → 25,057 gates): SAT 11 s, verified check 2–8 s, certificates up to ~50 MB.
+
+Combinational validation needs registers to correspond one to one; ABC's combinational scripts keep them.
+
+**Open:** sequential equivalence after retiming or register merging, where registers no longer correspond; it needs an invariant (k-induction or IC3 certificates). Power-up states are arbitrary in HDLean's semantics, so such passes must also be justified relative to each challenge's reset assumptions.
 
 ## 14. Performance
 
@@ -989,7 +1003,7 @@ Remediation milestones:
 - **R5 Consolidate.** *Done:* one pipeline (tree circuits compile to node graphs by the proved `Circuit.toDag`); validator pipeline, export-based checkers, custom comparator, byte certificates and generated statement dumps deleted; proved-parser read-back at every emission. *Done when:* every design is emitted by `emit_correct` and audited from its readable challenge.
 - **R2 Clock domains (F1).** Dual-clock FIFO hardware moved to the domain-indexed multi-domain graph, with the sampling oracle in its semantics and a hardware-level challenge. *Open.*
 
-Scaling milestones, needed before a pipelined RISC-V core. *All four done in v0.4* (3.1): memories, word-level ops, hierarchy and typed records, with the word-level Toy16 (`Toy16Rtl.Challenge`) and RAM (`RAMRtl.Challenge`) proved on them, word SystemVerilog with a proved round trip, and a proved bit-blaster feeding every bit-level backend. Next: a word-level RTLIL printer, verified word-level rewrites (constant folding, dead-cell removal) with `sem` equalities, multiple clock domains in the word IR, and a pipelined core.
+Scaling milestones, needed before a pipelined RISC-V core. *All four done in v0.4* (3.1): memories, word-level ops, hierarchy and typed records, with the word-level Toy16 (`Toy16Rtl.Challenge`) and RAM (`RAMRtl.Challenge`) proved on them, word SystemVerilog with a proved round trip, and a proved bit-blaster feeding every bit-level backend. Next: a word-level RTLIL printer, dead-cell removal in the word IR (renumbering cells, keeping the store layout), multiple clock domains in the word IR, and a pipelined core. Proved optimisation (v0.5): word-level rewriting, AIG optimisation and validated ABC are done (3.1, 13.5); sequential optimisation is deferred.
 
 - **S1 Memory primitive.** One node with a proved read-before-write model, emitted as the pattern synthesis maps to block RAM. Register-array memories cost 4,096 of Toy16's 4,288 state bits and do not scale to kilobytes.
 - **S2 Word-level nodes.** add, sub, compare, shift, mux, slice, concat (later multiply) with `BitVec` semantics, emitted as Verilog operators with explicit widths, so synthesis can use carry chains and DSP blocks. The format parsers must then model Verilog's width rules for a strict subset.

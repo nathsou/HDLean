@@ -68,6 +68,17 @@ implementation limitations as the corresponding features and proofs land. The
 | Expose source registers through proved state observation ports | Native domain modules have no foreign register operations. The wrapper wires registered source pins into explicit first/second-flop primitives; its parser checks all dimensions, state taps and clock/reset connections. The generic parsed meaning preserves every sampling oracle without adding an oracle input pin. |
 | Emit scalar SV logic and storage wires | Very large packed buses caused excessive Icarus elaboration. Scalar names keep sharing explicit; a wire alias preserves the documented packed state observation. Both native printers tie the unused padding bit to zero, without initializing any real register. External transition checks split state aliases before exposing all flip-flop pins. |
 
+## Proved optimisation passes, v0.5 (2026-10-16)
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Order: AIG pass, then validated ABC, then word-level rewriting; sequential passes deferred | Measured headroom: the bit-level designs carried 15–93% dead or duplicate gates, the word-level ones were within ~10% of ABC, and synthesis consumes word SystemVerilog anyway. Sequential passes change the store layout and power-up behaviour. |
+| Checked passes: analyses are hints, steps are justified locally, failure returns the input | Liveness, hash tables and the external optimiser never need proofs. A hash hit is re-checked against the gate or cell it names. The proofs cover only the rewrite steps (`Rw.step_ok`, `step_sound`). |
+| The AIG pass runs inside every backend (`Dag.lowerOpt`) | `emit_correct` covers it, metrics report what is shipped, and every format benefits. |
+| Validate ABC with a miter, Lean's `AIG.toCNF` and `LRAT.check` | Both are proved in Lean's standard library (`toCNF_equisat`, `check_sound`), so the whole chain runs on official-kernel theorems with no `bv_decide` or native axioms. CaDiCaL is the one bundled with Lean. Adopted graphs keep our ports and names (`adopt`). |
+| Binary AIGER reader and writer unproved | ABC reads binary AIGER only. What goes out is a copy of a proved graph; what comes back is validated. |
+| Word-level pass keeps every cell index | Cells are rewritten in place (a merged duplicate becomes `zext` of the earlier cell at the same width), so registers, memory ports, outputs and instance store slots need no renaming, and `optimize_sem` transfers challenges with a two-line proof. Dead-cell removal needs renumbering and is left for later. |
+
 ## Word-level RTL, v0.4 (2026-10-16)
 
 | Decision | Reason and consequence |
