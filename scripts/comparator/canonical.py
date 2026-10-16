@@ -219,4 +219,10 @@ def compare(reference, candidate, roots, protected, implementation=()):
 if __name__ == '__main__':
     import sys
     config = json.loads(Path(sys.argv[2]).read_text())
-    print(json.dumps(read_export(sys.argv[1], **config)))
+    roots = config.pop('audit_roots', None)
+    declarations = read_export(sys.argv[1], **config)
+    if roots is not None:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from independent.replay import audit_export
+        audit_export(sys.argv[1], roots)
+    print(json.dumps(declarations))

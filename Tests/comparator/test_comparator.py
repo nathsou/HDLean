@@ -23,6 +23,7 @@ def fixture(folder, optimized=False, wrong_type=False, hidden_axiom=False, nativ
     folder.mkdir(parents=True, exist_ok=True)
     (folder / 'lean-toolchain').write_text('leanprover/lean4:v4.34.0\n')
     (folder / 'lakefile.toml').write_text('''name = "comparatorfixture"
+moreLeanArgs = ["-j2"]
 [[lean_lib]]
 name = "Spec"
 [[lean_lib]]
@@ -116,6 +117,12 @@ class ComparatorUnitTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(SandboxUnavailable): sandbox.probe(tmp,Path(tmp)/'probe.log')
 
+    def test_resident_memory_budget_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(RuntimeError, 'resident-memory budget'):
+                limited_run([sys.executable,'-c','import time; x=bytearray(64*1048576); time.sleep(10)'],
+                            Path(tmp)/'memory.log',dict(DEFAULT_LIMITS,memory_mb=16))
+
     def test_resource_timeout_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(TimeoutError):
@@ -163,7 +170,7 @@ class ComparatorNamespaceTests(unittest.TestCase):
                         'artifacts':[{'path':'build/out.sv','module':'Impl','bytes':'Block.bytes',
                                       'correctness_root':'Block.artifact_correct',
                                       'generate':['/work/.lake/build/bin/artifact']}],
-                        'limits':dict(DEFAULT_LIMITS,memory_mb=3072,cpu_seconds=90,wall_seconds=150)}
+                        'limits':dict(DEFAULT_LIMITS,memory_mb=6144,cpu_seconds=90,wall_seconds=150)}
         self.receipt_path = self.base/'approval.json'
         self.receipt_path.write_text(json.dumps(self.receipt))
         self.approval = sha(self.receipt_path)
@@ -208,7 +215,7 @@ class ComparatorNamespaceTests(unittest.TestCase):
 
     def test_rejects_native_byte_override(self):
         fixture(self.candidate,native_spoof=True)
-        self.assert_rejected('sandbox command failed')
+        self.assert_rejected('byte-binding-kernel.log')
 
     def test_rejects_valid_olean_with_weakened_specification(self):
         spec = 'namespace Frozen\ndef target (_ _ : Nat) : Prop := True\nend Frozen\n'
@@ -225,7 +232,7 @@ def main : IO Unit := do
   IO.FS.writeFile "/tmp/Spec.lean" {json.dumps(spec)}
   IO.FS.writeFile "/tmp/Impl.lean" {json.dumps(impl)}
   for module in ["Spec", "Impl"] do
-    let result ← IO.Process.output {{cmd := "/toolchain/bin/lean", args := #["-R", "/tmp", "-o", "/work/.lake/build/lib/lean/" ++ module ++ ".olean", "/tmp/" ++ module ++ ".lean"]}}
+    let result ← IO.Process.output {{cmd := "/toolchain/bin/lean", args := #["-j2", "-R", "/tmp", "-o", "/work/.lake/build/lib/lean/" ++ module ++ ".olean", "/tmp/" ++ module ++ ".lean"]}}
     if result.exitCode != 0 then throw (IO.userError (result.stdout ++ result.stderr))
   IO.FS.createDirAll "build"
   IO.FS.writeFile "build/out.sv" Block.bytes

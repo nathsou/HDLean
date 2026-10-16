@@ -22,7 +22,7 @@ except ImportError:
 
 IDENT = re.compile(r'[A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)*\Z')
 EXCLUDED = {'.git', '.lake', 'build', 'work', '__pycache__'}
-DEFAULT_LIMITS = {'memory_mb': 6144, 'cpu_seconds': 600, 'wall_seconds': 900,
+DEFAULT_LIMITS = {'memory_mb': 6144, 'address_mb': 65536, 'cpu_seconds': 600, 'wall_seconds': 900,
                   'file_mb': 1024, 'temp_mb': 512, 'work_mb': 2048, 'source_mb': 256, 'source_files': 20000}
 
 
@@ -110,6 +110,8 @@ def parse_receipt(path, expected):
     for path in receipt['protected_files']: relative(path)
     if set(receipt['limits']) != set(DEFAULT_LIMITS) or not all(type(v) is int and v > 0 for v in receipt['limits'].values()):
         raise ValueError('invalid resource limits')
+    if len({a['path'] for a in receipt['artifacts']}) != len(receipt['artifacts']):
+        raise ValueError('duplicate approved artifact path')
     for artifact in receipt['artifacts']:
         if set(artifact) != {'path', 'module', 'bytes', 'correctness_root', 'generate'}:
             raise ValueError('invalid approved artifact specification')
@@ -177,10 +179,15 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
             certdir = temp / (tag + '-bindings'); certdir.mkdir()
             if tag == 'candidate':
                 src = []
+                artifact_total = 0
                 for k, artifact in enumerate(receipt['artifacts']):
                     file = safe_child(stage, artifact['path'])
                     if file.is_symlink() or not file.is_file(): raise ValueError('artifact is missing or is a link')
-                    data = file.read_bytes()
+                    if file.stat().st_size > min(receipt['limits']['file_mb'], 64) * 1048576:
+                        raise ValueError('artifact exceeds literal-binding size bound')
+                    artifact_total += file.stat().st_size
+                    if artifact_total > 64 * 1048576:
+                        raise ValueError('aggregate artifact bytes exceed literal-binding size bound')
                     artifact_hashes[artifact['path']] = sha(file)
                     src.append('import ' + artifact['module'])
                 # A kernel theorem binds the exact literal bytes. Native evaluation
@@ -193,7 +200,7 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
                     extra_roots.append(root)
                     bindings[root] = (artifact["bytes"], data.decode("ascii"))
                 (certdir / 'HDLeanComparatorBindings.lean').write_text('\n'.join(src) + '\n')
-                sandbox.run(stage, ['/toolchain/bin/lean', '-R', '/out', '-o', '/out/HDLeanComparatorBindings.olean',
+                sandbox.run(stage, ['/toolchain/bin/lean', '-j2', '-R', '/out', '-o', '/out/HDLeanComparatorBindings.olean',
                                     '/out/HDLeanComparatorBindings.lean'], output / 'byte-binding-kernel.log', output=certdir, output_writable=True)
                 extra_modules.append('HDLeanComparatorBindings')
                 bound_roots = extra_roots
@@ -206,9 +213,11 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
             cfg = checker_config('/out/proofs.ndjson'); cfg['export_file_path'] = '/out/proofs.ndjson'
             (certdir / 'nanoda.json').write_text(json.dumps(cfg))
             sandbox.run(stage, ['/tools/checker', '/out/nanoda.json'], output / (tag + '-nanoda.log'), output=certdir)
+            if (output / (tag + '-nanoda.log')).stat().st_size > 1024:
+                raise ValueError('independent checker success output exceeds bound')
             if not re.fullmatch(r'Checked ([1-9][0-9]*) declarations with no errors\n?', (output / (tag + '-nanoda.log')).read_text()):
                 raise ValueError('independent checker did not report success')
-            parse_config = {'max_bytes': receipt['limits']['file_mb'] * 1048576,
+            parse_config = {'audit_roots':receipt['roots'] + extra_roots, 'max_bytes': receipt['limits']['file_mb'] * 1048576,
                             'type_roots':[a['correctness_root'] for a in receipt['artifacts']],
                             'bindings':bindings, 'protect_types':receipt['roots'] if tag == 'reference' else [],
                             'protect_declarations':(receipt['protected_declarations'] + receipt['implementation_declarations']) if tag == 'reference' else [],
@@ -218,8 +227,9 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
             parsed_path = output / (tag + '-declarations.json')
             limited_run([sys.executable, str(HERE / 'canonical.py'), str(export), str(config_path)],
                         parsed_path, receipt['limits'])
+            if parsed_path.stat().st_size > 64 * 1048576:
+                raise ValueError('canonical declaration summary exceeds size bound')
             exports[tag] = json.loads(parsed_path.read_text())
-            audit_export(export, receipt['roots'] + extra_roots)
             for artifact in receipt['artifacts']:
                 if artifact['bytes'] not in exports[tag][artifact['correctness_root']]['type_constants']:
                     raise ValueError('approved artifact theorem does not mention its byte definition')
