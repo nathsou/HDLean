@@ -84,3 +84,26 @@ register Fmax, 12,629 combinational cells and 4,234 mapped flip-flops. See
 
 The [decision log](Decisions.md) records revisions to the proposal's implementation
 choices. The [trust boundary](Trust.md) explains what each acceptance path proves.
+
+## v0.2 implementation checkpoints
+
+The numbered-node `HDLean.Dag` now has generic, kernel-checked lowering,
+well-formedness, and exact gate-count theorems. No semantic validator or native
+computation is needed to instantiate them. SystemVerilog, AIGER, and RTLIL have
+compositional text decoders and generic printer round-trip proofs; `Proved.emit_correct`
+connects their parsed, bounds-checked meaning directly to every source DAG.
+Independent replay accepted the lowering roots (2,645 declarations) and four
+backend roots (7,114 declarations), using only the three baseline axioms.
+Yosys accepted the new RTLIL with zero structural problems; Icarus simulation
+matched Lean on all 32 state/input/reset transitions of the shared test circuit
+for both direct SystemVerilog and RTLIL translated by Yosys.
+
+A local whole-project Lean 4.35.0 diagnostic on checkpoint `cd11686` accepted
+166,949 declarations with the default, paranoid, lean4lean, con-leche, and con-ron
+kernels. Lake's bundled nanoda invocation failed with a worker-thread stack
+overflow: Lake hardcodes four workers, whereas direct serial replay of the same
+pinned nanoda succeeds for the audited roots. This is **not** a successful
+`lake check --paranoid` run. The diagnostic disabled the namespace sandbox
+because nested namespaces are unavailable here; genuine isolated acceptance
+remains a required CI job. Shared CPU migration and the stronger queue and
+clock-crossing milestones are still in progress.
