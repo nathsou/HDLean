@@ -1,0 +1,23 @@
+{
+  "challenge_module": "Verification.Challenge",
+  "solution_module": "Verification.Solution",
+  "theorem_names": [
+    "HDLean.Review.Toy16_Challenge_budget",
+    "HDLean.Review.Toy16_Challenge_correctness",
+    "HDLean.Review.Toy16_Physical_decode_next",
+    "HDLean.Review.Toy16_Physical_decode_output"
+  ],
+  "definition_names": [
+    "HDLean.Toy16.Physical.hardware"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "external_kernels": {
+    "nanoda": [
+      "nanoda-hdlean"
+    ]
+  }
+}

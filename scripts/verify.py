@@ -147,7 +147,9 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     if not args.no_clean:
         run([args.lake, 'clean'], work / 'clean.log')
-    run([args.lake, 'build', 'HDLean', 'Designs', 'Tests', 'hdlean', 'tests'], work / 'build.log')
+    run([args.lake, 'build', 'HDLean', 'Designs', 'Tests', 'Verification.Challenge', 'Verification.Solution', 'hdlean', 'tests'], work / 'build.log')
+    from statement_audit import audit as audit_statements
+    statement_report = audit_statements(args.lake, work / 'statements')
     run([ROOT / '.lake/build/bin/tests'], work / 'simulation.log')
     if args.backends:
         run([sys.executable, ROOT / 'scripts/check_backends.py'], work / 'backends.log')
@@ -216,6 +218,7 @@ def main():
                    'exact_byte_certificates': args.certify_bytes},
         'independent_replay': independent_report,
         'byte_certificates': byte_certificates,
+        'headline_statements': statement_report,
         'headline_axioms': axioms, 'structural_metrics': metrics, 'physical_metrics': None,
         'artifacts_sha256': artifacts,
         'assumptions': ['The clock-domain model assumes two-flop synchronizers resolve metastability.'],

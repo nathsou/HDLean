@@ -2,6 +2,7 @@
 import copy
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -43,6 +44,49 @@ class Workflow(unittest.TestCase):
             path.write_text(json.dumps(manifest))
             with self.assertRaisesRegex(ValueError, 'frozen source mismatch'):
                 check_manifest(path)
+
+    def test_toy16_observation_map_is_protected(self):
+        manifest = json.loads((ROOT / 'verification/frozen.json').read_text())
+        self.assertIn('Designs/Toy16/Interface.lean', manifest['files'])
+        manifest['files']['Designs/Toy16/Interface.lean'] = '0' * 64
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'frozen.json'
+            path.write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError, 'frozen source mismatch'):
+                check_manifest(path)
+
+    def test_every_audited_claim_has_a_frozen_statement_and_comparator(self):
+        claims = json.loads((ROOT / 'verification/claims.json').read_text())
+        self.assertEqual(set(claims), EXPECTED_THEOREMS)
+        configs = list((ROOT / 'Designs').glob('*/comparator.json')) + [ROOT / 'verification/comparator.json']
+        configured = [name for p in configs for name in json.loads(p.read_text())['theorem_names']]
+        self.assertEqual(len(configured), len(set(configured)))
+        self.assertEqual(set(configured), set(claims.values()))
+
+    def test_weakened_actual_theorem_fails_frozen_statement_check(self):
+        lake = os.environ.get('LAKE', 'lake')
+        prefix = Path(subprocess.check_output([lake, 'env', 'lean', '--print-prefix'], cwd=ROOT, text=True).strip())
+        lean = prefix / 'bin/lean'
+        with tempfile.TemporaryDirectory(dir=ROOT / 'work') as tmp:
+            tmp = Path(tmp)
+            (tmp / 'Designs/Counter').mkdir(parents=True)
+            shutil.copytree(ROOT / '.lake/build/lib/lean/Designs', tmp / 'lib/Designs', copy_function=os.symlink)
+            for f in (ROOT / '.lake/build/lib/lean').glob('Designs.olean*'):
+                (tmp / 'lib' / f.name).symlink_to(f)
+            for f in (tmp / 'lib/Designs/Counter').glob('Proof.olean*'):
+                f.unlink()
+            source = (ROOT / 'Designs/Counter/Proof.lean').read_text()
+            source = source[:source.index('theorem reset_schedule')] + 'theorem reset_schedule : True := trivial\nend HDLean.Counter\n'
+            path = tmp / 'Designs/Counter/Proof.lean'
+            path.write_text(source)
+            env = dict(os.environ, LEAN_PATH=os.pathsep.join(map(str, [tmp / 'lib', ROOT / '.lake/build/lib/lean', prefix / 'lib/lean'])))
+            build = subprocess.run([lean, '-R', tmp, '-o', tmp / 'lib/Designs/Counter/Proof.olean', path], env=env, capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
+            check = subprocess.run([lean, ROOT / 'Verification/Challenge.lean'], env=env, capture_output=True, text=True)
+            self.assertNotEqual(check.returncode, 0)
+            self.assertIn('Type mismatch', check.stdout)
+            self.assertIn('Counter.reset_schedule', check.stdout)
+            self.assertNotIn('does not exist', check.stdout)
 
     def test_missing_spec_rejected(self):
         manifest = json.loads((ROOT / 'verification/frozen.json').read_text())

@@ -14,6 +14,13 @@ def sha(path):
 
 def protected_files():
     paths = set(ROOT.glob('HDLean/**/*.lean')) | {ROOT / 'HDLean.lean'}
+    paths.add(ROOT / 'Verification/Challenge.lean')
+    paths.add(ROOT / 'verification/claims.json')
+    paths.add(ROOT / 'verification/declarations.json')
+    paths.add(ROOT / 'scripts/statement_audit.py')
+    paths.update(ROOT.glob('Designs/*/comparator.json'))
+    paths.add(ROOT / 'verification/comparator.json')
+    paths.add(ROOT / 'verification/branch-protection.json')
     for name in ('Spec.lean', 'Interface.lean', 'Challenge.lean'):
         paths.update(ROOT.glob(f'Designs/*/{name}'))
     # These reference models predate the uniform Spec.lean filename convention.
@@ -32,7 +39,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--write', action='store_true', help='replace the candidate manifest')
     args = parser.parse_args()
-    manifest = {'schema': 1, 'approval': 'review-required', 'framework': 'HDLean 0.1.0',
+    manifest = {'schema': 1, 'approval': 'review-required', 'framework': 'HDLean 0.2.0',
                 'files': {str(p.relative_to(ROOT)): sha(p) for p in protected_files()}}
     text = json.dumps(manifest, indent=2, sort_keys=True) + '\n'
     if args.write:

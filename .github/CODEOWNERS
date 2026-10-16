@@ -11,3 +11,6 @@
 /.github/ @nathsou
 /lean-toolchain @nathsou
 /lakefile.toml @nathsou
+
+/Verification/Challenge.lean @nathsou
+/Designs/*/comparator.json @nathsou

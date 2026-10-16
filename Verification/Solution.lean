@@ -1,0 +1,96 @@
+import HDLean
+import Designs
+import Tests.Certificates
+import Tests.Types
+import Tests.Syntax
+import Tests.Invariant
+
+open Lean Elab Command
+/- Copy only actual solution theorem statements. The challenge's literal statements
+are compiled separately, without importing this module. -/
+run_cmd liftTermElabM do
+  for (target, source) in #[
+    (`HDLean.Review.AsyncFifo_Physical_decode_next, `HDLean.AsyncFifo.Physical.decode_next),
+    (`HDLean.Review.AsyncFifo_Physical_hardware_preserves_queue, `HDLean.AsyncFifo.Physical.hardware_preserves_queue),
+    (`HDLean.Review.AsyncFifo_Physical_output_data, `HDLean.AsyncFifo.Physical.output_data),
+    (`HDLean.Review.AsyncFifo_Physical_output_ready, `HDLean.AsyncFifo.Physical.output_ready),
+    (`HDLean.Review.AsyncFifo_Physical_output_valid, `HDLean.AsyncFifo.Physical.output_valid),
+    (`HDLean.Review.AsyncFifo_Physical_storage_bits, `HDLean.AsyncFifo.Physical.storage_bits),
+    (`HDLean.Review.AsyncFifo_reset_establishes_queue, `HDLean.AsyncFifo.reset_establishes_queue),
+    (`HDLean.Review.AsyncFifo_reset_progress, `HDLean.AsyncFifo.reset_progress),
+    (`HDLean.Review.AsyncFifo_step_refines_queue, `HDLean.AsyncFifo.step_refines_queue),
+    (`HDLean.Review.AsyncFifo_ungray_gray, `HDLean.AsyncFifo.ungray_gray),
+    (`HDLean.Review.Backend_Format_correct_of_validated, `HDLean.Backend.Format.correct_of_validated),
+    (`HDLean.Review.Backend_Format_validates_sound, `HDLean.Backend.Format.validates_sound),
+    (`HDLean.Review.Backend_Graph_validateLocal_sound, `HDLean.Backend.Graph.validateLocal_sound),
+    (`HDLean.Review.Backend_Graph_validate_sound, `HDLean.Backend.Graph.validate_sound),
+    (`HDLean.Review.Circuit_network_correct, `HDLean.Circuit.network_correct),
+    (`HDLean.Review.Counter_Challenge_budget, `HDLean.Counter.Challenge.budget),
+    (`HDLean.Review.Counter_Challenge_correctness, `HDLean.Counter.Challenge.correctness),
+    (`HDLean.Review.Counter_reset_schedule, `HDLean.Counter.reset_schedule),
+    (`HDLean.Review.Delay_latency, `HDLean.Delay.latency),
+    (`HDLean.Review.Delay_realizes_pipe, `HDLean.Delay.realizes_pipe),
+    (`HDLean.Review.Delay_retime, `HDLean.Delay.retime),
+    (`HDLean.Review.Fifo_Challenge_budget, `HDLean.Fifo.Challenge.budget),
+    (`HDLean.Review.Fifo_Challenge_correctness, `HDLean.Fifo.Challenge.correctness),
+    (`HDLean.Review.Fifo_Circular_Physical_decode_next, `HDLean.Fifo.Circular.Physical.decode_next),
+    (`HDLean.Review.Fifo_Circular_Physical_decode_output, `HDLean.Fifo.Circular.Physical.decode_output),
+    (`HDLean.Review.Fifo_Circular_Physical_hardware_preserves_queue, `HDLean.Fifo.Circular.Physical.hardware_preserves_queue),
+    (`HDLean.Review.Fifo_Circular_Physical_storage_bits, `HDLean.Fifo.Circular.Physical.storage_bits),
+    (`HDLean.Review.Fifo_Circular_reset_establishes_queue, `HDLean.Fifo.Circular.reset_establishes_queue),
+    (`HDLean.Review.Fifo_Circular_step_refines_queue, `HDLean.Fifo.Circular.step_refines_queue),
+    (`HDLean.Review.Fifo_full_rate, `HDLean.Fifo.full_rate),
+    (`HDLean.Review.Fifo_hardware_reset_schedule, `HDLean.Fifo.hardware_reset_schedule),
+    (`HDLean.Review.Machine_refines_of_simulation, `HDLean.Machine.refines_of_simulation),
+    (`HDLean.Review.MultiClock_Circuit_eventCircuit_correct, `HDLean.MultiClock.Circuit.eventCircuit_correct),
+    (`HDLean.Review.MultiClock_Format_correct_of_validated, `HDLean.MultiClock.Format.correct_of_validated),
+    (`HDLean.Review.MultiClock_Graph_eval_correct, `HDLean.MultiClock.Graph.eval_correct),
+    (`HDLean.Review.Netlist_optimize_correct, `HDLean.Netlist.optimize_correct),
+    (`HDLean.Review.RAMCircuit_decode_output, `HDLean.RAMCircuit.decode_output),
+    (`HDLean.Review.RAMCircuit_hardware_correct, `HDLean.RAMCircuit.hardware_correct),
+    (`HDLean.Review.SkidBuffer_Challenge_budget, `HDLean.SkidBuffer.Challenge.budget),
+    (`HDLean.Review.SkidBuffer_Challenge_correctness, `HDLean.SkidBuffer.Challenge.correctness),
+    (`HDLean.Review.SkidBuffer_pipeline_correct, `HDLean.SkidBuffer.pipeline_correct),
+    (`HDLean.Review.Tests_counter_graph, `HDLean.Tests.counter_graph),
+    (`HDLean.Review.Tests_fifo1_graph, `HDLean.Tests.fifo1_graph),
+    (`HDLean.Review.Tests_fifo8_graph, `HDLean.Tests.fifo8_graph),
+    (`HDLean.Review.Tests_packet_roundtrip, `HDLean.Tests.packet_roundtrip),
+    (`HDLean.Review.Tests_surfaceIncrement_correct, `HDLean.Tests.surfaceIncrement_correct),
+    (`HDLean.Review.Toy16_Challenge_budget, `HDLean.Toy16.Challenge.budget),
+    (`HDLean.Review.Toy16_Challenge_correctness, `HDLean.Toy16.Challenge.correctness),
+    (`HDLean.Review.Toy16_Physical_decode_next, `HDLean.Toy16.Physical.decode_next),
+    (`HDLean.Review.Toy16_Physical_decode_output, `HDLean.Toy16.Physical.decode_output),
+    (`HDLean.Review.Verification_FiniteSystem_check_sound, `HDLean.Verification.FiniteSystem.check_sound),
+    (`HDLean.Review.WordExpr_addWithCarry_correct, `HDLean.WordExpr.addWithCarry_correct),
+    (`HDLean.Review.WordExpr_addWithCarry_overflow, `HDLean.WordExpr.addWithCarry_overflow),
+    (`HDLean.Review.WordExpr_equal_correct, `HDLean.WordExpr.equal_correct),
+    (`HDLean.Review.WordExpr_selectBalanced_correct, `HDLean.WordExpr.selectBalanced_correct),
+    (`HDLean.Review.WordExpr_setWidth_correct, `HDLean.WordExpr.setWidth_correct),
+    (`HDLean.Review.WordExpr_signExtend_correct, `HDLean.WordExpr.signExtend_correct),
+    (`HDLean.Review.WordExpr_sub_correct, `HDLean.WordExpr.sub_correct),
+    (`HDLean.Review.WordExpr_ult_correct, `HDLean.WordExpr.ult_correct),
+    (`HDLean.Review.compose_contracts, `HDLean.compose_contracts),
+    (`HDLean.Review.gray_adjacent, `HDLean.gray_adjacent),
+    (`HDLean.Review.gray_increment_ne, `HDLean.gray_increment_ne),
+    (`HDLean.Review.gray_injective, `HDLean.gray_injective),
+    (`HDLean.Review.gray_one_bit8, `HDLean.gray_one_bit8),
+    (`HDLean.Review.lowerExpr_correct, `HDLean.lowerExpr_correct),
+    (`HDLean.Review.lower_next, `HDLean.lower_next),
+    (`HDLean.Review.lower_output, `HDLean.lower_output),
+    (`HDLean.Review.network_refines, `HDLean.network_refines),
+    (`HDLean.Review.one_bit_mix, `HDLean.one_bit_mix),
+    (`HDLean.Review.one_bit_mix8, `HDLean.one_bit_mix8),
+    (`HDLean.Review.refinesAfterReset_of_simulation, `HDLean.refinesAfterReset_of_simulation),
+    (`HDLean.Review.refinesResetSchedule_of_simulation, `HDLean.refinesResetSchedule_of_simulation),
+    (`HDLean.Review.reset_noninterference, `HDLean.reset_noninterference),
+    (`HDLean.Review.retiresLike_of_simulation, `HDLean.retiresLike_of_simulation),
+    (`HDLean.Review.sample_adjacent, `HDLean.sample_adjacent),
+    (`HDLean.Review.sample_gray_increment, `HDLean.sample_gray_increment),
+    (`HDLean.Review.sync2_stable, `HDLean.sync2_stable)] do
+    let info ← getConstInfo source
+    unless info matches .thmInfo _ do throwError "claim is not a theorem: {source}"
+    addDecl (.thmDecl {
+      name := target
+      levelParams := info.levelParams
+      type := info.type
+      value := .const source (info.levelParams.map Level.param) })

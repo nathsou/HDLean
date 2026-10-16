@@ -1,5 +1,5 @@
 name = "hdlean"
-version = "0.1.0"
+version = "0.2.0"
 defaultTargets = ["HDLean", "Designs", "Tests"]
 
 [[lean_lib]]
@@ -18,3 +18,11 @@ root = "Tests.Main"
 
 [[lean_lib]]
 name = "Tests"
+
+[[lean_lib]]
+name = "Verification"
+roots = ["Verification.Challenge"]
+
+[[lean_lib]]
+name = "Submission"
+roots = ["Verification.Solution"]

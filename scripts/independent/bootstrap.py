@@ -44,7 +44,20 @@ def main():
     for key, name in names.items():
         path = (bindir / name).resolve(strict=True)
         binaries[key] = {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
-    report = {'schema': 2, 'pins': PINS, 'lean_version': lean_version, 'binaries': binaries}
+    # A standalone wrapper remains readable when Lake masks the runner's home.
+    # It authenticates the unchanged bundled kernel before every execution.
+    adapter_source = (HERE / 'nanoda_serial.py').read_text()
+    checker = binaries['checker']
+    adapter = cache / 'bin/nanoda-hdlean'
+    adapter.parent.mkdir(exist_ok=True)
+    adapter.write_text(adapter_source.replace('@HDLEAN_CHECKER@', checker['path'])
+                       .replace('@HDLEAN_CHECKER_SHA256@', checker['sha256']))
+    adapter.chmod(0o755)
+    report = {'schema': 2, 'pins': PINS, 'lean_version': lean_version, 'binaries': binaries,
+              'adapters': {'nanoda_serial': {'path': str(adapter),
+                 'sha256': hashlib.sha256(adapter.read_bytes()).hexdigest(),
+                 'source_sha256': hashlib.sha256((HERE / 'nanoda_serial.py').read_bytes()).hexdigest(),
+                 'kernel_sha256': checker['sha256']}}}
     manifest.write_text(json.dumps(report, indent=2) + '\n')
     print(f'Pinned bundled tools: {manifest}')
 

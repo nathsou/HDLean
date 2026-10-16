@@ -40,3 +40,35 @@ An arbitrary mathematical `Pipe` is a contract, not an automatic synthesis reque
 There are no imported solver services or external invariant results silently
 trusted by the build. Future invariant-search tools must suggest replayable
 relations or certificates; they must not introduce axioms.
+
+## Specification v0.2 trust setup
+
+`Verification/Challenge.lean` contains the literal statements of all audited
+claims. Its proof aliases are checked on every L1 build. The independently built
+`Verification/Solution.lean` copies the actual implementation theorem types;
+per-block `comparator.json` files compare those types and their specification
+closure using `lake comparator`. The common challenge is protected by the frozen
+manifest. Toy16's state and retirement observation maps are in its protected
+`Interface.lean`.
+
+The `approved-specifications` CI check fails unless the repository owner supplies
+`HDLEAN_TRUSTED_MANIFEST_SHA256` as a protected repository variable after reviewing
+the candidate manifest. Development checks remain available without approval.
+The candidate digest printed by `scripts/freeze.py --write` is never approval.
+Apply `verification/branch-protection.json` to the main branch using GitHub's
+branch protection API or equivalent settings. This requires repository admin
+access and must include required code-owner review; committing this JSON alone
+does not enable branch protection.
+
+The statement audit also compares the complete dependency meaning with
+`verification/declarations.json`. This catches changes to helper predicates such
+as `Ghost.Safe` even when a theorem keeps the same syntactic type. Only the safe
+implementation definitions listed in the comparator configurations may change
+body. `scripts/statement_audit.py --record-candidate` prepares new review material;
+it is not approval and cannot update the protected repository variable.
+
+Bootstrap places `nanoda-hdlean` in `work/independent-tools/bin`; add that directory
+to `PATH` before invoking the block comparators. This adapter authenticates the
+unchanged bundled nanoda binary, uses its serial path with a larger OS stack, and
+requires an unqualified success report. Lake 4.35's hardcoded four-thread config
+overflows nanoda 0.4.19's fixed worker stack on the pipeline proof.

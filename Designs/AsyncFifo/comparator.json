@@ -1,0 +1,29 @@
+{
+  "challenge_module": "Verification.Challenge",
+  "solution_module": "Verification.Solution",
+  "theorem_names": [
+    "HDLean.Review.AsyncFifo_Physical_decode_next",
+    "HDLean.Review.AsyncFifo_Physical_hardware_preserves_queue",
+    "HDLean.Review.AsyncFifo_Physical_output_data",
+    "HDLean.Review.AsyncFifo_Physical_output_ready",
+    "HDLean.Review.AsyncFifo_Physical_output_valid",
+    "HDLean.Review.AsyncFifo_Physical_storage_bits",
+    "HDLean.Review.AsyncFifo_reset_establishes_queue",
+    "HDLean.Review.AsyncFifo_reset_progress",
+    "HDLean.Review.AsyncFifo_step_refines_queue",
+    "HDLean.Review.AsyncFifo_ungray_gray"
+  ],
+  "definition_names": [
+    "HDLean.AsyncFifo.Physical.hardware"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "external_kernels": {
+    "nanoda": [
+      "nanoda-hdlean"
+    ]
+  }
+}

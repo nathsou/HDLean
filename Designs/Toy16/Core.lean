@@ -1,11 +1,6 @@
 import Designs.Toy16.Programs
+import Designs.Toy16.Interface
 namespace HDLean.Toy16
-
-/-- A two-stage fetch/execute core. Serialization avoids forwarding and branch-flush hazards. -/
-structure CoreState where
-  arch : ArchState
-  fetched : Word
-  execute : Bool
 
 /-- Reset does not initialize the register file or data memory. -/
 def core (imem : Addr → Word) : PMachine CoreState Bool (Option Retire) where

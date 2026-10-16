@@ -1,0 +1,28 @@
+name: Approved specification anchor
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  approved-specifications:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require the independently approved manifest
+        env:
+          APPROVED_SHA256: ${{ vars.HDLEAN_TRUSTED_MANIFEST_SHA256 }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, os, re
+          from pathlib import Path
+          expected = os.environ.get('APPROVED_SHA256', '')
+          if not re.fullmatch(r'[0-9a-f]{64}', expected):
+              raise SystemExit('A repository owner must configure the protected HDLEAN_TRUSTED_MANIFEST_SHA256 variable after reviewing the frozen specification.')
+          actual = hashlib.sha256(Path('verification/frozen.json').read_bytes()).hexdigest()
+          if actual != expected:
+              raise SystemExit('The candidate manifest differs from the independently approved specification.')
+          print('The approved manifest digest matches.')
+          PY

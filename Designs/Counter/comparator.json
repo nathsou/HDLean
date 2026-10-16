@@ -1,0 +1,22 @@
+{
+  "challenge_module": "Verification.Challenge",
+  "solution_module": "Verification.Solution",
+  "theorem_names": [
+    "HDLean.Review.Counter_Challenge_budget",
+    "HDLean.Review.Counter_Challenge_correctness",
+    "HDLean.Review.Counter_reset_schedule"
+  ],
+  "definition_names": [
+    "HDLean.Counter.hardware"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "external_kernels": {
+    "nanoda": [
+      "nanoda-hdlean"
+    ]
+  }
+}
