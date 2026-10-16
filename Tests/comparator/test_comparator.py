@@ -14,6 +14,7 @@ from comparator.canonical import compare, digest, read_export
 from comparator.compare import (DEFAULT_LIMITS, parse_receipt, run_comparison, safe_child,
                                 snapshot, sha, load_tools)
 from comparator.sandbox import Sandbox, SandboxUnavailable, limited_run
+from independent.replay import checker_config
 
 LAKE = os.environ.get('LAKE', 'lake')
 TOOLS = Path(os.environ.get('HDLEAN_INDEPENDENT_TOOLS', ROOT / 'work/independent-tools/tools.json'))
@@ -113,6 +114,37 @@ class ComparatorUnitTests(unittest.TestCase):
             export.write_text(json.dumps(meta) + '\n' + '{"ie":0,"sort":0,"sort":1}\n')
             with self.assertRaisesRegex(ValueError, 'duplicate JSON'):
                 read_export(export)
+
+    def test_forged_nat_primitive_is_rejected_even_when_nanoda_accepts(self):
+        source = Path(__file__).parent/'fixtures/native_extension.ndjson'
+        reference = read_export(source,foundation_declarations=['Nat.add'])
+        with self.assertRaisesRegex(ValueError, 'primitive foundation'):
+            read_export(source,foundation_declarations=['Nat.add'],implementation_declarations=['Nat.add'])
+        names, records, declarations, replacement = {0:''}, [], [], None
+        for line in source.read_text().splitlines():
+            row = json.loads(line)
+            if 'in' in row:
+                value = row.get('str',row.get('num')); prefix = names[value['pre']]
+                names[row['in']] = prefix + ('.' if prefix else '') + str(value.get('str',value.get('i')))
+            if set(row) & {'def','thm','axiom','inductive','quot','opaque'}:
+                declarations.append(row)
+                if 'def' in row and names[row['def']['name']] == 'Probe.badAdd': replacement = row['def']['value']
+            else: records.append(row)
+        self.assertIsNotNone(replacement)
+        for row in declarations:
+            if 'def' in row and names[row['def']['name']] == 'Nat.add': row['def']['value'] = replacement
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); mutant = root/'mutant.ndjson'
+            mutant.write_text('\n'.join(json.dumps(r) for r in records+declarations)+'\n')
+            candidate = read_export(mutant)
+            with self.assertRaisesRegex(ValueError, 'protected declaration'):
+                compare(reference,candidate,['Probe.arithmetic'],[n for n,d in reference.items() if d['foundation']])
+            if TOOLS.is_file():
+                checker = load_tools(TOOLS)['checker']
+                config = root/'config.json'; config.write_text(json.dumps(checker_config(mutant)))
+                result = subprocess.run([checker,config],capture_output=True,text=True,timeout=30)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                self.assertIn('Checked 28 declarations with no errors',result.stdout)
 
     def test_mandatory_namespace_flags(self):
         sandbox = Sandbox('/bin/false','/tmp','/bin/true','/bin/true',DEFAULT_LIMITS)

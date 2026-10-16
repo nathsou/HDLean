@@ -26,7 +26,7 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, separators=(',', ':'), ensure_ascii=True).encode()).hexdigest()
 
 
-def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, protect_types=(), protect_declarations=(), implementation_declarations=()):
+def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, protect_types=(), protect_declarations=(), implementation_declarations=(), foundation_declarations=()):
     if Path(path).stat().st_size > max_bytes:
         raise ValueError('proof export exceeds approved resource limit')
     names = {0: (digest(['anonymous']), '')}
@@ -169,31 +169,38 @@ def read_export(path, max_bytes=2_000_000_000, type_roots=(), bindings=None, pro
     # Freeze every definition on which an approved statement depends. Following
     # only the statement's immediate constant names would allow Safe (or one of
     # its helpers) to be weakened while retaining an identical theorem type.
-    todo_expr = [declarations[r]['_type_index'] for r in protect_types]
-    todo_name = list(protect_declarations)
-    seen_expr, frozen = set(), set()
-    while todo_expr or todo_name:
-        while todo_name:
-            label = todo_name.pop()
-            if label in frozen: continue
-            if label not in declarations: raise ValueError('missing type dependency: ' + label)
-            frozen.add(label)
-            if label in implementation_declarations:
-                if declarations[label]['kind'] != 'def':
-                    raise ValueError('implementation hole must be a safe definition: ' + label)
-                todo_expr.append(declarations[label]['_type_index'])
-            else:
-                todo_expr.extend(declaration_exprs[label])
-            todo_name.extend(declaration_names[label])
-        while todo_expr:
-            node = todo_expr.pop()
-            if node in seen_expr: continue
-            seen_expr.add(node)
-            todo_expr.extend(references[node])
-            if node in constant_names: todo_name.append(constant_names[node])
+    def closure(todo_expr, todo_name, holes):
+        seen_expr, frozen = set(), set()
+        while todo_expr or todo_name:
+            while todo_name:
+                label = todo_name.pop()
+                if label in frozen: continue
+                if label not in declarations: raise ValueError('missing type dependency: ' + label)
+                frozen.add(label)
+                if label in holes:
+                    if declarations[label]['kind'] != 'def':
+                        raise ValueError('implementation hole must be a safe definition: ' + label)
+                    todo_expr.append(declarations[label]['_type_index'])
+                else:
+                    todo_expr.extend(declaration_exprs[label])
+                todo_name.extend(declaration_names[label])
+            while todo_expr:
+                node = todo_expr.pop()
+                if node in seen_expr: continue
+                seen_expr.add(node)
+                todo_expr.extend(references[node])
+                if node in constant_names: todo_name.append(constant_names[node])
+        return frozen
+    frozen = closure([declarations[r]['_type_index'] for r in protect_types],
+                     list(protect_declarations), implementation_declarations)
+    foundation = closure([], list(foundation_declarations), ())
+    if foundation.intersection(implementation_declarations):
+        raise ValueError('implementation hole overlaps trusted primitive foundation')
+    frozen.update(foundation)
     for label, value in declarations.items():
         value.pop('_type_index')
         value['protected'] = label in frozen
+        value['foundation'] = label in foundation
     return declarations
 
 

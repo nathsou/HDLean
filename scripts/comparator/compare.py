@@ -20,6 +20,19 @@ except ImportError:
     from canonical import read_export, compare, digest
     from sandbox import Sandbox, limited_run
 
+# All names used specially by pinned nanoda's mk_name_cache (util.rs), plus
+# the three permitted axioms. Extension reductions dispatch by name rather
+# than authenticating arithmetic/String bodies; never allow a hole in this
+# foundation or any of its transitive dependencies.
+FOUNDATION = frozenset(ALLOWED_AXIOMS | {
+    'eagerReduce', 'Quot', 'Quot.mk', 'Quot.lift', 'Quot.ind',
+    'String', 'String.ofList', 'Char', 'Char.ofNat', 'List', 'List.nil', 'List.cons',
+    'Bool.true', 'Bool.false', 'Nat', 'Nat.zero', 'Nat.succ',
+    'Nat.add', 'Nat.sub', 'Nat.mul', 'Nat.pow', 'Nat.mod', 'Nat.div',
+    'Nat.beq', 'Nat.ble', 'Nat.gcd', 'Nat.xor', 'Nat.land', 'Nat.lor',
+    'Nat.shiftLeft', 'Nat.shiftRight',
+})
+
 IDENT = re.compile(r'[A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)*\Z')
 EXCLUDED = {'.git', '.lake', 'build', 'work', '__pycache__'}
 DEFAULT_LIMITS = {'memory_mb': 6144, 'address_mb': 65536, 'cpu_seconds': 600, 'wall_seconds': 900,
@@ -103,7 +116,7 @@ def parse_receipt(path, expected):
         if not isinstance(values, list) or not values or len(set(values)) != len(values) or not all(IDENT.fullmatch(x) for x in values):
             raise ValueError('invalid approved ' + field)
     holes = receipt['implementation_declarations']
-    if not isinstance(holes, list) or len(set(holes)) != len(holes) or not all(IDENT.fullmatch(x) for x in holes) or set(holes) & (set(receipt['protected_declarations']) | ALLOWED_AXIOMS):
+    if not isinstance(holes, list) or len(set(holes)) != len(holes) or not all(IDENT.fullmatch(x) for x in holes) or set(holes) & (set(receipt['protected_declarations']) | FOUNDATION):
         raise ValueError('invalid or conflicting approved implementation declarations')
     if not receipt['protected_files'] or not receipt['artifacts']:
         raise ValueError('approval must bind protected source and at least one emitted artifact')
@@ -205,8 +218,8 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
                 extra_modules.append('HDLeanComparatorBindings')
                 bound_roots = extra_roots
             export = output / (tag + '.ndjson')
-            roots = list(dict.fromkeys(receipt['roots'] + receipt['protected_declarations'] + receipt['implementation_declarations'] + sorted(ALLOWED_AXIOMS) + extra_roots))
-            sandbox.run(stage, ['/tools/exporter', *receipt['modules'], *extra_modules, '--', *roots], export, output=certdir)
+            roots = list(dict.fromkeys(receipt['roots'] + receipt['protected_declarations'] + receipt['implementation_declarations'] + sorted(FOUNDATION) + extra_roots))
+            sandbox.run(stage, ['/tools/exporter', *dict.fromkeys(['Init'] + receipt['modules'] + extra_modules), '--', *roots], export, output=certdir)
             # Both levels require independent authentication: native initializers
             # in an adversarial import must not be able to forge exporter output.
             shutil.copyfile(export, certdir / 'proofs.ndjson')
@@ -220,8 +233,9 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
             parse_config = {'audit_roots':receipt['roots'] + extra_roots, 'max_bytes': receipt['limits']['file_mb'] * 1048576,
                             'type_roots':[a['correctness_root'] for a in receipt['artifacts']],
                             'bindings':bindings, 'protect_types':receipt['roots'] if tag == 'reference' else [],
-                            'protect_declarations':(receipt['protected_declarations'] + receipt['implementation_declarations'] + sorted(ALLOWED_AXIOMS)) if tag == 'reference' else [],
-                            'implementation_declarations':receipt['implementation_declarations']}
+                            'protect_declarations':(receipt['protected_declarations'] + receipt['implementation_declarations'] + sorted(FOUNDATION)) if tag == 'reference' else [],
+                            'implementation_declarations':receipt['implementation_declarations'],
+                            'foundation_declarations':sorted(FOUNDATION) if tag == 'reference' else []}
             config_path = output / (tag + '-parse.json')
             config_path.write_text(json.dumps(parse_config))
             parsed_path = output / (tag + '-declarations.json')
@@ -246,6 +260,7 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
               'typed_statements':checked, 'protected_declarations':[n for n in protected_closure if n not in receipt['implementation_declarations']],
               'implementation_declarations':receipt['implementation_declarations'],
               'artifact_sha256':artifact_hashes, 'byte_binding_roots':bound_roots,
+              'foundation_declarations':sorted(n for n,d in exports['reference'].items() if d['foundation']),
               'sandbox':'bubblewrap --unshare-all; read-only checking; no network',
               'fresh_kernel':True, 'nanoda':True, 'native_axioms':[],
               'limits':receipt['limits']}
