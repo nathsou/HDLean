@@ -1,12 +1,12 @@
 # HDLean: a Lean 4–embedded HDL for LLM agents
 
-Design specification v0.3 · Oct 16, 2026 · @Nathan
+Design specification v0.4 · Oct 16, 2026 · @Nathan
 
 This file mirrors the shared design document. Implementation status is tracked in [Status.md](Status.md) and implementation choices in [Decisions.md](Decisions.md).
 
 ## 1. Status, scope and how to read this spec
 
-HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.3. v0.2 revised the design after reviewing the first implementation (nathsou/HDLean PR #1; findings in 15.5). v0.3 records the consolidation that followed: one pipeline, the official Lean kernel only, readable challenge files, and proved-parser read-back instead of byte certificates (sections 12, 13.4 and 16). The project was first drafted as "Proofwire".
+HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.4. v0.2 revised the design after reviewing the first implementation (nathsou/HDLean PR #1; findings in 15.5). v0.3 records the consolidation that followed: one pipeline, the official Lean kernel only, readable challenge files, and proved-parser read-back instead of byte certificates (sections 12, 13.4 and 16). v0.4 adds the word-level RTL: memories, word operators, module hierarchy and typed records, a proved bit-blaster and a generated review document (sections 3.1, 13.3 and 16). The project was first drafted as "Proofwire".
 
 Design statements carry one of three markers:
 
@@ -70,9 +70,9 @@ flowchart LR
 
 The agent's code reaches a netlist only through the verified lowering, and only after comparator has accepted its proofs against the frozen challenge.
 
-### 3.1 Word-level RTL (v0.3)
+### 3.1 Word-level RTL (v0.4)
 
-Since v0.3 designs are written at the word level, and bits appear only after a proved pass. The layers, from what an agent writes to what tools read:
+Since v0.4 designs are written at the word level, and bits appear only after a proved pass. The layers, from what an agent writes to what tools read:
 
 | Layer | What it is | Main definitions | What is proved |
 | --- | --- | --- | --- |
@@ -839,7 +839,7 @@ A format's parser is its formal semantics, so it stays in the trusted base. The 
 
 ### 13.3 Hierarchy
 
-**Decision (v0.3).** Hierarchy and memories live in the word-level IR (3.1). The word SystemVerilog printer emits one module per `Rtl.Module`, instances as module instantiations and memories as arrays with write blocks, which synthesis maps to block RAM. Proofs are modular: a parent uses its children's theorems through `Design.env_lt`. Bit-level formats (AIGER, RTLIL, bit SV) are flattened by `Design.toDag`; the word-level Toy16 keeps its 4,224 memory bits in two RTL memories instead of flip-flop banks.
+**Decision (v0.4).** Hierarchy and memories live in the word-level IR (3.1). The word SystemVerilog printer emits one module per `Rtl.Module`, instances as module instantiations and memories as arrays with write blocks, which synthesis maps to block RAM. Proofs are modular: a parent uses its children's theorems through `Design.env_lt`. Bit-level formats (AIGER, RTLIL, bit SV) are flattened by `Design.toDag`; the word-level Toy16 keeps its 4,224 memory bits in two RTL memories instead of flip-flop banks.
 
 ### 13.4 From theorem to file
 
@@ -989,7 +989,7 @@ Remediation milestones:
 - **R5 Consolidate.** *Done:* one pipeline (tree circuits compile to node graphs by the proved `Circuit.toDag`); validator pipeline, export-based checkers, custom comparator, byte certificates and generated statement dumps deleted; proved-parser read-back at every emission. *Done when:* every design is emitted by `emit_correct` and audited from its readable challenge.
 - **R2 Clock domains (F1).** Dual-clock FIFO hardware moved to the domain-indexed multi-domain graph, with the sampling oracle in its semantics and a hardware-level challenge. *Open.*
 
-Scaling milestones, needed before a pipelined RISC-V core. *All four done in v0.3* (3.1): memories, word-level ops, hierarchy and typed records, with the word-level Toy16 (`Toy16Rtl.Challenge`) and RAM (`RAMRtl.Challenge`) proved on them, word SystemVerilog with a proved round trip, and a proved bit-blaster feeding every bit-level backend. Next: a word-level RTLIL printer, verified word-level rewrites (constant folding, dead-cell removal) with `sem` equalities, multiple clock domains in the word IR, and a pipelined core.
+Scaling milestones, needed before a pipelined RISC-V core. *All four done in v0.4* (3.1): memories, word-level ops, hierarchy and typed records, with the word-level Toy16 (`Toy16Rtl.Challenge`) and RAM (`RAMRtl.Challenge`) proved on them, word SystemVerilog with a proved round trip, and a proved bit-blaster feeding every bit-level backend. Next: a word-level RTLIL printer, verified word-level rewrites (constant folding, dead-cell removal) with `sem` equalities, multiple clock domains in the word IR, and a pipelined core.
 
 - **S1 Memory primitive.** One node with a proved read-before-write model, emitted as the pattern synthesis maps to block RAM. Register-array memories cost 4,096 of Toy16's 4,288 state bits and do not scale to kilobytes.
 - **S2 Word-level nodes.** add, sub, compare, shift, mux, slice, concat (later multiply) with `BitVec` semantics, emitted as Verilog operators with explicit widths, so synthesis can use carry chains and DSP blocks. The format parsers must then model Verilog's width rules for a strict subset.

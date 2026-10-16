@@ -68,7 +68,7 @@ implementation limitations as the corresponding features and proofs land. The
 | Expose source registers through proved state observation ports | Native domain modules have no foreign register operations. The wrapper wires registered source pins into explicit first/second-flop primitives; its parser checks all dimensions, state taps and clock/reset connections. The generic parsed meaning preserves every sampling oracle without adding an oracle input pin. |
 | Emit scalar SV logic and storage wires | Very large packed buses caused excessive Icarus elaboration. Scalar names keep sharing explicit; a wire alias preserves the documented packed state observation. Both native printers tie the unused padding bit to zero, without initializing any real register. External transition checks split state aliases before exposing all flip-flop pins. |
 
-## Word-level RTL, v0.3 (2026-10-16)
+## Word-level RTL, v0.4 (2026-10-16)
 
 | Decision | Reason and consequence |
 | --- | --- |

@@ -11,7 +11,7 @@ Two entry points, one path to bits. New designs are written in the word-level RT
 memories and module instances. They print directly as word-level SystemVerilog
 (proved round trip) and reach the bit-level backends through the proved
 bit-blaster `Design.toDag` (`toDag_nextState`, `toDag_evalOutput`). The bit-level
-path below is unchanged; since v0.3 it lowers with `Dag.lowerTight` (negation free,
+path below is unchanged; since v0.4 it lowers with `Dag.lowerTight` (negation free,
 one gate per AND), which `emit_correct` covers.
 
 Bit-level path. A design is a node graph (`Dag`), either built directly with the
