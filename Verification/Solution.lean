@@ -10,6 +10,20 @@ open Lean Elab Command
 are compiled separately, without importing this module. -/
 run_cmd liftTermElabM do
   for (target, source) in #[
+    (`HDLean.Review.Dag_lower_correct, `HDLean.Dag.lower_correct),
+    (`HDLean.Review.Dag_lower_wellFormed, `HDLean.Dag.lower_wellFormed),
+    (`HDLean.Review.Dag_lower_gate_count, `HDLean.Dag.lower_gate_count),
+    (`HDLean.Review.Backend_Proved_emit_correct, `HDLean.Backend.Proved.emit_correct),
+    (`HDLean.Review.Backend_Proved_Aag_parse_print, `HDLean.Backend.Proved.Aag.parse_print),
+    (`HDLean.Review.Backend_Proved_Aag_parse_systemVerilog, `HDLean.Backend.Proved.Aag.parse_systemVerilog),
+    (`HDLean.Review.Backend_Proved_Aag_parse_rtlil, `HDLean.Backend.Proved.Aag.parse_rtlil),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_lower_correct, `HDLean.MultiClock.Shared.MultiDag.lower_correct),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_first_samples, `HDLean.MultiClock.Shared.MultiDag.first_samples),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_second_samples_first, `HDLean.MultiClock.Shared.MultiDag.second_samples_first),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_sourceSafe_single_bit, `HDLean.MultiClock.Shared.MultiDag.sourceSafe_single_bit),
+    (`HDLean.Review.Fifo_Circular_trace_refines_queue, `HDLean.Fifo.Circular.trace_refines_queue),
+    (`HDLean.Review.Fifo_Circular_Physical_hardware_refines_queue, `HDLean.Fifo.Circular.Physical.hardware_refines_queue),
+
     (`HDLean.Review.AsyncFifo_Physical_decode_next, `HDLean.AsyncFifo.Physical.decode_next),
     (`HDLean.Review.AsyncFifo_Physical_hardware_preserves_queue, `HDLean.AsyncFifo.Physical.hardware_preserves_queue),
     (`HDLean.Review.AsyncFifo_Physical_output_data, `HDLean.AsyncFifo.Physical.output_data),

@@ -1,6 +1,6 @@
-import Designs.Fifo.CircularHardware
+import Designs.Fifo.CircularRefinement
 namespace HDLean.Fifo.Circular.Challenge
-/-- Frozen obligation; trace-level queue refinement is added in milestone R4. -/
+/-- One-step safety remains an independently checked supporting obligation. -/
 theorem correctness :
 ∀ (k w : Nat)
   (s :
@@ -70,4 +70,11 @@ theorem correctness :
                     (@HDLean.Fifo.Circular.State.head w k (@HDLean.Fifo.Circular.Physical.decode k w s)))
                   (history (HDLean.Fifo.Circular.Ghost.read g))))) :=
   @HDLean.Fifo.Circular.Physical.hardware_preserves_queue
+/-- Complete queue refinement, for every payload width and power-of-two depth. -/
+theorem trace_refinement (k w : Nat) :
+    HDLean.RefinesAfterReset
+      ((HDLean.Fifo.Circular.Physical.hardware k w).denote (HDLean.Fifo.Circular.Physical.hardware_moore k w))
+      (HDLean.Fifo.Circular.Physical.queueSpec k w) HDLean.Fifo.Circular.Physical.observe 1 :=
+  HDLean.Fifo.Circular.Physical.hardware_refines_queue k w
+
 end HDLean.Fifo.Circular.Challenge

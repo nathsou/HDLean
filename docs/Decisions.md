@@ -45,3 +45,9 @@ These follow the review of this implementation; [Design.md](Design.md) section 1
 The historical entries above record decisions at the time. Later entries supersede
 implementation limitations as the corresponding features and proofs land. The
 [current coverage](Status.md) and [trust boundary](Trust.md) describe the result.
+
+| v0.2 implementation decision | Reason and consequence |
+| --- | --- |
+| Preserve an oracle primitive in the lowered multi-domain graph | Each domain lowers independently; only an explicitly declared crossing names foreign registered bits. Physical graph execution samples every first flop with the caller's per-bit old/new oracle and samples the old first flop into the second. Generic lowering preserves all choices. Native hierarchical text integration is a separate remaining step. |
+| Keep the per-use temporal crossing obligation explicit | A Gray counter advancing once per **source** edge need not differ in only one bit between **destination** edges when the source is faster. `MultiDag.SourceSafe` states the actual interval condition; a one-bit source satisfies it for every schedule. Multi-bit uses need an interval proof or an explicit rate/advance bound. A Gray type tag does not discharge that condition. |
+| Freeze stronger queue statements as well as supporting invariants | The circular FIFO now refines the full reviewed list machine at every post-reset observation for all widths/depths. Supporting ghost invariants alone are insufficient headline obligations. |

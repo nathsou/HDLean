@@ -8,3 +8,4 @@ import Designs.CircularFifo.Challenge
 import Designs.AsyncFifo.Challenge
 import Tests.Dag
 import Tests.BackendProved
+import Tests.MultiDag

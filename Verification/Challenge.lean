@@ -1944,4 +1944,465 @@ theorem sync2_stable :
   @Eq.{1} Bool (@HDLean.Sync2.second Bool (HDLean.sync2Step (HDLean.sync2Step s Bool.true v v a) Bool.true v v b)) v :=
   @HDLean.sync2_stable
 
+/-- Frozen statement of `HDLean.Dag.lower_correct`. -/
+theorem Dag_lower_correct :
+    ∀ {d : HDLean.Domain} {i r o : Nat} (c : HDLean.Dag d i r o) (xs : Vector.{0} Bool i) (state : Vector.{0} Bool r)
+  (rst : Bool),
+  @Eq.{1} (Prod.{0, 0} (Array.{0} Bool) (Array.{0} Bool))
+    (HDLean.Backend.Graph.eval (@HDLean.Dag.lower d i r o c) (@Array.push.{0} Bool (@Vector.toArray.{0} Bool i xs) rst)
+      (@Vector.toArray.{0} Bool r state))
+    (@Prod.mk.{0, 0} (Array.{0} Bool) (Array.{0} Bool)
+      (@Vector.toArray.{0} Bool r
+        (@Vector.ofFn.{0} r Bool
+          (@HDLean.Dag.nextState d i r o c
+            (fun (k : Fin r) =>
+              @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool r) (Fin r) Bool
+                (fun (xs : Vector.{0} Bool r) (i : Fin r) => @LT.lt.{0} Nat instLTNat (@Fin.val r i) r)
+                (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool r) Bool
+                  (fun (x : Vector.{0} Bool r) (i : Nat) => @LT.lt.{0} Nat instLTNat i r) r
+                  (@Vector.instGetElemNatLt.{0} Bool r))
+                state k
+                (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r) (Nat.decLt (@Fin.val r k) r)
+                  fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r)) =>
+                  @HDLean.Dag.initial_input._proof_1 r k a))
+            (@Prod.mk.{0, 0} (Fin i → Bool) Bool
+              (fun (k : Fin i) =>
+                @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool i) (Fin i) Bool
+                  (fun (xs : Vector.{0} Bool i) (i_1 : Fin i) => @LT.lt.{0} Nat instLTNat (@Fin.val i i_1) i)
+                  (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool i) Bool
+                    (fun (x : Vector.{0} Bool i) (i_1 : Nat) => @LT.lt.{0} Nat instLTNat i_1 i) i
+                    (@Vector.instGetElemNatLt.{0} Bool i))
+                  xs k
+                  (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i) (Nat.decLt (@Fin.val i k) i)
+                    fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i)) =>
+                    @HDLean.Dag.initial_input._proof_1 i k a))
+              rst))))
+      (@Vector.toArray.{0} Bool o
+        (@Vector.ofFn.{0} o Bool
+          (@HDLean.Dag.evalOutput d i r o c
+            (fun (k : Fin r) =>
+              @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool r) (Fin r) Bool
+                (fun (xs : Vector.{0} Bool r) (i : Fin r) => @LT.lt.{0} Nat instLTNat (@Fin.val r i) r)
+                (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool r) Bool
+                  (fun (x : Vector.{0} Bool r) (i : Nat) => @LT.lt.{0} Nat instLTNat i r) r
+                  (@Vector.instGetElemNatLt.{0} Bool r))
+                state k
+                (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r) (Nat.decLt (@Fin.val r k) r)
+                  fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r)) =>
+                  @HDLean.Dag.initial_input._proof_1 r k a))
+            fun (k : Fin i) =>
+            @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool i) (Fin i) Bool
+              (fun (xs : Vector.{0} Bool i) (i_1 : Fin i) => @LT.lt.{0} Nat instLTNat (@Fin.val i i_1) i)
+              (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool i) Bool
+                (fun (x : Vector.{0} Bool i) (i_1 : Nat) => @LT.lt.{0} Nat instLTNat i_1 i) i
+                (@Vector.instGetElemNatLt.{0} Bool i))
+              xs k
+              (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i) (Nat.decLt (@Fin.val i k) i)
+                fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i)) =>
+                @HDLean.Dag.initial_input._proof_1 i k a))))) :=
+  @HDLean.Dag.lower_correct
+
+/-- Frozen statement of `HDLean.Dag.lower_wellFormed`. -/
+theorem Dag_lower_wellFormed :
+    ∀ {d : HDLean.Domain} {i r o : Nat} (c : HDLean.Dag d i r o),
+  @Eq.{1} Bool (HDLean.Backend.Graph.wellFormed (@HDLean.Dag.lower d i r o c)) Bool.true :=
+  @HDLean.Dag.lower_wellFormed
+
+/-- Frozen statement of `HDLean.Dag.lower_gate_count`. -/
+theorem Dag_lower_gate_count :
+    ∀ {d : HDLean.Domain} {i r o : Nat} (c : HDLean.Dag d i r o),
+  @Eq.{1} Nat (@Array.size.{0} HDLean.Backend.Gate (HDLean.Backend.Graph.gates (@HDLean.Dag.lower d i r o c)))
+    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+      (@OfNat.ofNat.{0} Nat (nat_lit 3) (instOfNatNat (nat_lit 3)))
+      (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
+        (@List.length.{0} (HDLean.Dag.Op d i r) (@HDLean.Dag.nodes d i r o c)) r)) :=
+  @HDLean.Dag.lower_gate_count
+
+/-- Frozen statement of `HDLean.Backend.Proved.emit_correct`. -/
+theorem Backend_Proved_emit_correct :
+    ∀ {d : HDLean.Domain} {i r o : Nat} (f : HDLean.Backend.Proved.Format) (c : HDLean.Dag d i r o) (xs : Vector.{0} Bool i)
+  (s : Vector.{0} Bool r) (rst : Bool),
+  @Eq.{1} (Option.{0} (Prod.{0, 0} (Array.{0} Bool) (Array.{0} Bool)))
+    (HDLean.Backend.Proved.Format.meaning f (@HDLean.Backend.Proved.Format.emit d i r o f c)
+      (@Array.push.{0} Bool (@Vector.toArray.{0} Bool i xs) rst) (@Vector.toArray.{0} Bool r s))
+    (@Option.some.{0} (Prod.{0, 0} (Array.{0} Bool) (Array.{0} Bool))
+      (@Prod.mk.{0, 0} (Array.{0} Bool) (Array.{0} Bool)
+        (@Vector.toArray.{0} Bool r
+          (@Vector.ofFn.{0} r Bool
+            (@HDLean.Dag.nextState d i r o c
+              (fun (k : Fin r) =>
+                @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool r) (Fin r) Bool
+                  (fun (xs : Vector.{0} Bool r) (i : Fin r) => @LT.lt.{0} Nat instLTNat (@Fin.val r i) r)
+                  (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool r) Bool
+                    (fun (x : Vector.{0} Bool r) (i : Nat) => @LT.lt.{0} Nat instLTNat i r) r
+                    (@Vector.instGetElemNatLt.{0} Bool r))
+                  s k
+                  (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r) (Nat.decLt (@Fin.val r k) r)
+                    fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r)) =>
+                    @HDLean.Backend.Proved.emit_correct._proof_1 r k a))
+              (@Prod.mk.{0, 0} (Fin i → Bool) Bool
+                (fun (k : Fin i) =>
+                  @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool i) (Fin i) Bool
+                    (fun (xs : Vector.{0} Bool i) (i_1 : Fin i) => @LT.lt.{0} Nat instLTNat (@Fin.val i i_1) i)
+                    (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool i) Bool
+                      (fun (x : Vector.{0} Bool i) (i_1 : Nat) => @LT.lt.{0} Nat instLTNat i_1 i) i
+                      (@Vector.instGetElemNatLt.{0} Bool i))
+                    xs k
+                    (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i) (Nat.decLt (@Fin.val i k) i)
+                      fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i)) =>
+                      @HDLean.Backend.Proved.emit_correct._proof_1 i k a))
+                rst))))
+        (@Vector.toArray.{0} Bool o
+          (@Vector.ofFn.{0} o Bool
+            (@HDLean.Dag.evalOutput d i r o c
+              (fun (k : Fin r) =>
+                @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool r) (Fin r) Bool
+                  (fun (xs : Vector.{0} Bool r) (i : Fin r) => @LT.lt.{0} Nat instLTNat (@Fin.val r i) r)
+                  (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool r) Bool
+                    (fun (x : Vector.{0} Bool r) (i : Nat) => @LT.lt.{0} Nat instLTNat i r) r
+                    (@Vector.instGetElemNatLt.{0} Bool r))
+                  s k
+                  (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r) (Nat.decLt (@Fin.val r k) r)
+                    fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r)) =>
+                    @HDLean.Backend.Proved.emit_correct._proof_1 r k a))
+              fun (k : Fin i) =>
+              @GetElem.getElem.{0, 0, 0} (Vector.{0} Bool i) (Fin i) Bool
+                (fun (xs : Vector.{0} Bool i) (i_1 : Fin i) => @LT.lt.{0} Nat instLTNat (@Fin.val i i_1) i)
+                (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} Bool i) Bool
+                  (fun (x : Vector.{0} Bool i) (i_1 : Nat) => @LT.lt.{0} Nat instLTNat i_1 i) i
+                  (@Vector.instGetElemNatLt.{0} Bool i))
+                xs k
+                (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i) (Nat.decLt (@Fin.val i k) i)
+                  fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val i k) i)) =>
+                  @HDLean.Backend.Proved.emit_correct._proof_1 i k a)))))) :=
+  @HDLean.Backend.Proved.emit_correct
+
+/-- Frozen statement of `HDLean.Backend.Proved.Aag.parse_print`. -/
+theorem Backend_Proved_Aag_parse_print :
+    ∀ (g : HDLean.Backend.Proved.Aag),
+  @Eq.{1} (Option.{0} HDLean.Backend.Proved.Aag) (HDLean.Backend.Proved.Aag.parse (HDLean.Backend.Proved.Aag.print g))
+    (@Option.some.{0} HDLean.Backend.Proved.Aag g) :=
+  @HDLean.Backend.Proved.Aag.parse_print
+
+/-- Frozen statement of `HDLean.Backend.Proved.Aag.parse_systemVerilog`. -/
+theorem Backend_Proved_Aag_parse_systemVerilog :
+    ∀ (g : HDLean.Backend.Proved.Aag),
+  @Eq.{1} (Option.{0} HDLean.Backend.Proved.Aag)
+    (HDLean.Backend.Proved.Aag.parseSystemVerilog (HDLean.Backend.Proved.Aag.systemVerilog g))
+    (@Option.some.{0} HDLean.Backend.Proved.Aag g) :=
+  @HDLean.Backend.Proved.Aag.parse_systemVerilog
+
+/-- Frozen statement of `HDLean.Backend.Proved.Aag.parse_rtlil`. -/
+theorem Backend_Proved_Aag_parse_rtlil :
+    ∀ (g : HDLean.Backend.Proved.Aag),
+  @Eq.{1} (Option.{0} HDLean.Backend.Proved.Aag)
+    (HDLean.Backend.Proved.Aag.parseRTLIL (HDLean.Backend.Proved.Aag.rtlil g))
+    (@Option.some.{0} HDLean.Backend.Proved.Aag g) :=
+  @HDLean.Backend.Proved.Aag.parse_rtlil
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.lower_correct`. -/
+theorem MultiClock_Shared_MultiDag_lower_correct :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd) (s : @HDLean.MultiClock.Shared.MultiDag.State nd c)
+  (e : @HDLean.MultiClock.Shared.MultiDag.Event nd c),
+  @Eq.{1}
+    (Prod.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+      ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool))
+    (@HDLean.MultiClock.Shared.MultiDag.Graph.eval nd c (@HDLean.MultiClock.Shared.MultiDag.lower nd c) s e)
+    (@Prod.mk.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+      ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool)
+      (@HDLean.MultiClock.Shared.MultiDag.next nd c s e) (@HDLean.MultiClock.Shared.MultiDag.output nd c s e)) :=
+  @HDLean.MultiClock.Shared.MultiDag.lower_correct
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.first_samples`. -/
+theorem MultiClock_Shared_MultiDag_first_samples :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd) (s : @HDLean.MultiClock.Shared.MultiDag.State nd c)
+  (e : @HDLean.MultiClock.Shared.MultiDag.Event nd c) (d : Fin nd)
+  (k : Fin (@HDLean.MultiClock.Shared.MultiDag.syncCount nd c d))
+  (bit :
+    Fin
+      (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))),
+  @Eq.{1} Bool (@HDLean.MultiClock.Shared.MultiDag.Event.edge nd c e d) Bool.true →
+    @Eq.{1} Bool (@HDLean.MultiClock.Shared.MultiDag.Event.reset nd c e d) Bool.false →
+      @Eq.{1} Bool
+        (@HDLean.MultiClock.Shared.MultiDag.State.first nd c
+          (@Prod.fst.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+            ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool)
+            (@HDLean.MultiClock.Shared.MultiDag.Graph.eval nd c (@HDLean.MultiClock.Shared.MultiDag.lower nd c) s e))
+          d k bit)
+        (@ite.{1} Bool (@Eq.{1} Bool (@HDLean.MultiClock.Shared.MultiDag.Event.sampleNew nd c e d k bit) Bool.true)
+          (instDecidableEqBool (@HDLean.MultiClock.Shared.MultiDag.Event.sampleNew nd c e d k bit) Bool.true)
+          (@HDLean.MultiClock.Shared.MultiDag.nextLocal nd c s e
+            (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+              (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+            (@GetElem.getElem.{0, 0, 0}
+              (Vector.{0}
+                (Fin
+                  (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                    (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                  (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+              (Fin
+                (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                  (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+              (Fin
+                (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                  (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+              (fun
+                  (xs :
+                    Vector.{0}
+                      (Fin
+                        (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                          (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                            (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                      (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                  (i :
+                    Fin
+                      (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))) =>
+                @LT.lt.{0} Nat instLTNat
+                  (@Fin.val
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                    i)
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+              (@Fin.instGetElemFinVal.{0, 0}
+                (Vector.{0}
+                  (Fin
+                    (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                      (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                (Fin
+                  (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                    (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                (fun
+                    (x :
+                      Vector.{0}
+                        (Fin
+                          (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                            (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                              (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                        (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                          (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                    (i : Nat) =>
+                  @LT.lt.{0} Nat instLTNat i
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                  (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                (@Vector.instGetElemNatLt.{0}
+                  (Fin
+                    (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                      (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+              (@HDLean.MultiClock.Shared.Crossing.bits nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+              bit
+              (@Decidable.byContradiction
+                (@LT.lt.{0} Nat instLTNat
+                  (@Fin.val
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                    bit)
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                (Nat.decLt
+                  (@Fin.val
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                    bit)
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                fun
+                  (a :
+                    Not
+                      (@LT.lt.{0} Nat instLTNat
+                        (@Fin.val
+                          (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                            (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                          bit)
+                        (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                          (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))) =>
+                @HDLean.MultiClock.Shared.MultiDag.next._proof_1 nd c d k bit a)))
+          (@HDLean.MultiClock.Shared.MultiDag.State.registers nd c s
+            (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+              (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+            (@GetElem.getElem.{0, 0, 0}
+              (Vector.{0}
+                (Fin
+                  (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                    (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                  (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+              (Fin
+                (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                  (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+              (Fin
+                (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                  (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+              (fun
+                  (xs :
+                    Vector.{0}
+                      (Fin
+                        (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                          (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                            (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                      (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                  (i :
+                    Fin
+                      (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))) =>
+                @LT.lt.{0} Nat instLTNat
+                  (@Fin.val
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                    i)
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+              (@Fin.instGetElemFinVal.{0, 0}
+                (Vector.{0}
+                  (Fin
+                    (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                      (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                (Fin
+                  (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                    (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                (fun
+                    (x :
+                      Vector.{0}
+                        (Fin
+                          (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                            (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                              (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                        (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                          (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                    (i : Nat) =>
+                  @LT.lt.{0} Nat instLTNat i
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                  (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                (@Vector.instGetElemNatLt.{0}
+                  (Fin
+                    (@HDLean.MultiClock.Shared.MultiDag.regs nd c
+                      (@HDLean.MultiClock.Shared.Crossing.source nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                        (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))))
+              (@HDLean.MultiClock.Shared.Crossing.bits nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+              bit
+              (@Decidable.byContradiction
+                (@LT.lt.{0} Nat instLTNat
+                  (@Fin.val
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                    bit)
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                (Nat.decLt
+                  (@Fin.val
+                    (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                      (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                    bit)
+                  (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                    (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))
+                fun
+                  (a :
+                    Not
+                      (@LT.lt.{0} Nat instLTNat
+                        (@Fin.val
+                          (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                            (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+                          bit)
+                        (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+                          (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)))) =>
+                @HDLean.MultiClock.Shared.MultiDag.next._proof_1 nd c d k bit a)))) :=
+  @HDLean.MultiClock.Shared.MultiDag.first_samples
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.second_samples_first`. -/
+theorem MultiClock_Shared_MultiDag_second_samples_first :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd) (s : @HDLean.MultiClock.Shared.MultiDag.State nd c)
+  (e : @HDLean.MultiClock.Shared.MultiDag.Event nd c) (d : Fin nd)
+  (k : Fin (@HDLean.MultiClock.Shared.MultiDag.syncCount nd c d)),
+  @Eq.{1} Bool (@HDLean.MultiClock.Shared.MultiDag.Event.edge nd c e d) Bool.true →
+    @Eq.{1} Bool (@HDLean.MultiClock.Shared.MultiDag.Event.reset nd c e d) Bool.false →
+      @Eq.{1}
+        (Fin
+            (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+              (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k)) →
+          Bool)
+        (@HDLean.MultiClock.Shared.MultiDag.State.second nd c (@HDLean.MultiClock.Shared.MultiDag.next nd c s e) d k)
+        (@HDLean.MultiClock.Shared.MultiDag.State.first nd c s d k) :=
+  @HDLean.MultiClock.Shared.MultiDag.second_samples_first
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.sourceSafe_single_bit`. -/
+theorem MultiClock_Shared_MultiDag_sourceSafe_single_bit :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd),
+  (∀ (d : Fin nd) (k : Fin (@HDLean.MultiClock.Shared.MultiDag.syncCount nd c d)),
+      @Eq.{1} Nat
+        (@HDLean.MultiClock.Shared.Crossing.width nd (@HDLean.MultiClock.Shared.MultiDag.regs nd c)
+          (@HDLean.MultiClock.Shared.MultiDag.sync nd c d k))
+        (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))) →
+    ∀ (trace : Nat → @HDLean.MultiClock.Shared.MultiDag.State nd c) (edges : Nat → Fin nd → Bool),
+      @HDLean.MultiClock.Shared.MultiDag.SourceSafe nd c trace edges :=
+  @HDLean.MultiClock.Shared.MultiDag.sourceSafe_single_bit
+
+/-- Frozen statement of `HDLean.Fifo.Circular.trace_refines_queue`. -/
+theorem Fifo_Circular_trace_refines_queue :
+    ∀ (w k : Nat),
+  @HDLean.RefinesAfterReset (HDLean.Fifo.Circular.State w k) (HDLean.Fifo.Input (BitVec w))
+    (HDLean.Fifo.Output (BitVec w)) (List.{0} (BitVec w)) (HDLean.Fifo.Output (BitVec w))
+    (HDLean.Fifo.Circular.machine w k)
+    (HDLean.Fifo.spec (BitVec w)
+      (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
+        (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) k))
+    (@id.{1} (HDLean.Fifo.Output (BitVec w))) (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) :=
+  @HDLean.Fifo.Circular.trace_refines_queue
+
+/-- Frozen statement of `HDLean.Fifo.Circular.Physical.hardware_refines_queue`. -/
+theorem Fifo_Circular_Physical_hardware_refines_queue :
+    ∀ (k w : Nat),
+  @HDLean.RefinesAfterReset
+    (Fin
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat) (HDLean.Fifo.Circular.Physical.entries k)
+          (HDLean.Fifo.Circular.Physical.bits k w)) →
+      Bool)
+    (Fin
+        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) w
+          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))) →
+      Bool)
+    (Fin
+        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) w
+          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))) →
+      Bool)
+    (List.{0} (BitVec w)) (HDLean.Fifo.Output (BitVec w))
+    (@HDLean.Circuit.denote (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+      (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) w
+        (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat) (HDLean.Fifo.Circular.Physical.entries k)
+        (HDLean.Fifo.Circular.Physical.bits k w))
+      (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) w
+        (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+      (HDLean.Fifo.Circular.Physical.hardware k w) (HDLean.Fifo.Circular.Physical.hardware_moore k w))
+    (HDLean.Fifo.Circular.Physical.queueSpec k w) (@HDLean.Fifo.Circular.Physical.observe w)
+    (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) :=
+  @HDLean.Fifo.Circular.Physical.hardware_refines_queue
+
 end HDLean.Review

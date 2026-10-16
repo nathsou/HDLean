@@ -7,6 +7,20 @@ import Tests.Invariant
 open Lean in
 run_cmd do
   let names := #[
+    ``HDLean.Dag.lower_correct,
+    ``HDLean.Dag.lower_wellFormed,
+    ``HDLean.Dag.lower_gate_count,
+    ``HDLean.Backend.Proved.emit_correct,
+    ``HDLean.Backend.Proved.Aag.parse_print,
+    ``HDLean.Backend.Proved.Aag.parse_systemVerilog,
+    ``HDLean.Backend.Proved.Aag.parse_rtlil,
+    ``HDLean.MultiClock.Shared.MultiDag.lower_correct,
+    ``HDLean.MultiClock.Shared.MultiDag.first_samples,
+    ``HDLean.MultiClock.Shared.MultiDag.second_samples_first,
+    ``HDLean.MultiClock.Shared.MultiDag.sourceSafe_single_bit,
+    ``HDLean.Fifo.Circular.trace_refines_queue,
+    ``HDLean.Fifo.Circular.Physical.hardware_refines_queue,
+
     ``HDLean.Machine.refines_of_simulation,
     ``HDLean.Delay.latency, ``HDLean.Delay.retime, ``HDLean.Delay.realizes_pipe,
     ``HDLean.Verification.FiniteSystem.check_sound,

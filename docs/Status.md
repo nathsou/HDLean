@@ -107,3 +107,15 @@ pinned nanoda succeeds for the audited roots. This is **not** a successful
 because nested namespaces are unavailable here; genuine isolated acceptance
 remains a required CI job. Shared CPU migration and the stronger queue and
 clock-crossing milestones are still in progress.
+
+The next checkpoint expands the frozen audit to **90 statements**, including all
+new generic backend/lowering obligations. The physical circular FIFO now has
+`hardware_refines_queue`: full trace refinement to the reviewed `Fifo.spec (2^k)`
+from arbitrary power-up after reset, for every depth and width. Independent replay
+accepted both model and physical trace roots (3,367 declarations).
+`MultiClock.Shared.MultiDag` admits foreign registered bits only through named
+crossings. Its physical graph semantics carries the caller's first-flop sampling
+oracle, and generic lowering preserves every choice. Three roots passed independent
+replay (2,523 declarations); focused tests distinguish old/new coincident-edge
+outcomes and verify that the second stage always samples the old first stage.
+Native hierarchical printing and full asynchronous-FIFO integration remain open.

@@ -14,3 +14,4 @@ import Designs.SkidBuffer.Challenge
 import Designs.AsyncFifo.Proof
 import Designs.AsyncFifo.Hardware
 import Designs.Fifo.CircularHardware
+import Designs.Fifo.CircularRefinement
