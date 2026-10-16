@@ -1,0 +1,36 @@
+name: HDLean verification
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: true
+          test: false
+      - name: Install independent RTL checkers
+        run: sudo apt-get update && sudo apt-get install -y iverilog yosys
+      - name: Verify proofs, challenges, artifacts and backends with Lean's kernel
+        env:
+          # Approved manifest digest from a protected repository variable: the
+          # manifest stored in the branch is never its own trust anchor.
+          HDLEAN_TRUSTED_MANIFEST_SHA256: ${{ vars.HDLEAN_TRUSTED_MANIFEST_SHA256 }}
+        run: |
+          if [ -z "$HDLEAN_TRUSTED_MANIFEST_SHA256" ]; then
+            echo "::warning::HDLEAN_TRUSTED_MANIFEST_SHA256 is not set; the frozen manifest is checked only against itself."
+          fi
+          python3 scripts/verify.py --backends
+      - name: Test the verification boundary
+        run: mkdir -p work && python3 Tests/test_workflow.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-report
+          path: build/signoff.json

@@ -1,0 +1,21 @@
+name = "hdlean"
+version = "0.2.0"
+defaultTargets = ["HDLean", "Designs", "Tests"]
+
+[[lean_lib]]
+name = "HDLean"
+
+[[lean_lib]]
+name = "Designs"
+
+[[lean_exe]]
+name = "hdlean"
+root = "Main"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "tests"
+root = "Tests.Main"
+
+[[lean_lib]]
+name = "Tests"

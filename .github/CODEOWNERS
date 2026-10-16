@@ -1,0 +1,16 @@
+# A review boundary; branch protection must require these reviews to enforce it.
+/HDLean/ @nathsou
+/HDLean.lean @nathsou
+/Designs/*/Spec.lean @nathsou
+/Designs/*/Interface.lean @nathsou
+/Designs/*/Challenge.lean @nathsou
+/Designs/AsyncFifo/Model.lean @nathsou
+/Designs/Fifo/Circular.lean @nathsou
+/verification/ @nathsou
+/scripts/verify.py @nathsou
+/scripts/freeze.py @nathsou
+/Tests/Audit.lean @nathsou
+/.github/ @nathsou
+/lean-toolchain @nathsou
+/lakefile.toml @nathsou
+
