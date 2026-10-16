@@ -110,6 +110,6 @@ theorem hardware_correct (w : Nat) :
     exact Fifo.relation_out _ _ (h j)
 
 /-- Flattening adds no hidden state to the three instances. -/
-theorem hardware_budget (w : Nat) : (lower (hardware w)).ffBits = 3 * (2 * w + 2) := rfl
+theorem hardware_budget (w : Nat) : (hardware w).ffBits = 3 * (2 * w + 2) := rfl
 
 end HDLean.SkidBuffer

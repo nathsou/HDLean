@@ -1,91 +1,58 @@
-# Proof and checking boundary
+# Trust boundary
 
-The Lean kernel checks all admitted theorems. `Tests/Axioms.lean` collects the
-transitive axiom dependencies of named headlines from the environment, and
-`scripts/verify.py` compares them with a strict allowlist. The FIFO, counter,
-Toy16, structural lowering, and concrete graph certificates use only `propext`,
-`Classical.choice`, and/or `Quot.sound`. The generic Gray lemmas and every audited headline use only the baseline axioms.
-No native-evaluation axiom is allowed in the headline audit.
+HDLean's guarantees rest on Lean's official kernel and on a small, frozen set of
+reviewer-owned files. There are no other proof checkers in the trusted path.
 
-`leanchecker --fresh Designs` and `--fresh Tests` replay all imported declarations
-into fresh Lean kernel environments. This helps detect environment corruption.
-It does **not** implement an independent kernel, a process sandbox, or an external
-comparator's full submission protocol. In particular, the L1 scripts must not be
-used to execute hostile Lean metaprograms outside a suitable external sandbox.
+## What is trusted
 
-The trusted manifest includes the framework, reference models, observation/input
-maps, challenge files, toolchain, and verifier sources. L1 verifies the manifest's
-file set and all its hashes, and binds the same manifest digest across the entire
-run even when no external approval digest is supplied. A manifest stored with a submission is not its own
-trust anchor: a reviewer or protected CI configuration must supply the independently
-approved SHA-256 through `--manifest-sha256`. Re-freezing sources writes
-`approval: review-required` and is never treated as approval. CODEOWNERS only
-becomes enforced when repository branch rules require those reviews.
+- **Lean's logic and kernel.** `lake build` checks every proof; `leanchecker --fresh`
+  replays the designs into a fresh kernel environment.
+- **The framework** (`HDLean/`): semantics, the node graph, lowering, printers and
+  parsers, generic theorems. Maintainer-owned and frozen by hash.
+- **Each format's parser.** The parser *is* that format's formal semantics:
+  `emit_correct` says what the printed text means by parsing it. The subsets are
+  flat gate lists, so the parsers are small. Yosys and Icarus runs
+  (`scripts/check_backends.py`) cross-check that they match the real languages.
+- **Compiled Lean code for emission.** The bytes are computed by compiled code, not by
+  the kernel. The CLI reads every emitted file back and decodes it with the proved
+  parser, which must return exactly the lowered graph.
+- **One physical assumption:** two-flop synchronizers resolve metastability.
+- **The reviewer-owned files**, as approved: `Spec.lean`, `Interface.lean`,
+  `Challenge.lean` in each design, plus `AsyncFifo/Model.lean` and `Fifo/Circular.lean`.
 
-The audit harness requires every expected theorem exactly once. Missing,
-duplicated, custom-axiom and `sorryAx` reports fail. The implementation and
-interface are checked together against typed challenge declarations. L1 is still
-a development workflow; it is not sufficient against arbitrary adversarial
-checker modifications. Higher levels use the separately installed
-[isolated comparator](Comparator.md), with an externally approved reference and
-receipt. Both levels require nanoda authentication, actual type/body comparison,
-OS isolation, read-only checking and kernel-proved exact byte binding. Approved
-implementation holes permit optimization while specification dependencies remain
-frozen. Genuine namespace acceptance and adversarial rejection tests have passed
-on GitHub Actions; a local skip grants no assurance. See the PR checks for the
-exact tested commit.
+## What a reviewer reads
 
-## What reaches bits
+Each design's `Challenge.lean` states its guarantees in ordinary Lean, with proofs
+that are one-line references to agent theorems. The implementation enters only
+through named **holes** (the hardware and facts about its type), listed in
+`verification/frozen.json`. `scripts/verify.py` enforces that:
 
-`lowerExpr_correct`, `lower_next` and `lower_output` prove the semantic tree IR
-matches the circuit AST. `Graph.validate_sound` and `Graph.validateLocal_sound`
-prove that their executable translation validators accept only shared graphs
-equivalent to the exact circuit, for every state, input and reset value. The local
-validator uses proved gate equations and proof-carrying expression memoization;
-arbitrary cache hints cannot change accepted semantics. Pointer hints and native
-hash-consing remain untrusted optimizations. Kernel replay uses transparent hints.
+1. every frozen file matches its hash, and the manifest matches the approved digest
+   (`HDLEAN_TRUSTED_MANIFEST_SHA256`, a protected repository variable);
+2. frozen specs and interfaces import only frozen modules or Lean itself;
+3. every challenge theorem depends only on `propext`, `Classical.choice` and
+   `Quot.sound`;
+4. every constant in a challenge statement comes from a frozen module, from Lean,
+   or from the list of holes. An agent cannot change what a statement means by
+   editing a helper definition it controls.
 
-Emission uses `checkedCompileLocal` and then `checkedPrint`: strict parsers reject
-unsupported syntax, clocks, drivers, dimensions and initialization; generic
-`Format.validates_sound` and `Format.correct_of_validated` connect accepted text
-semantics to the circuit. The multi-clock equivalents additionally check every
-register's clock domain and positive edge. Native AIGER has a single edge, so
-multi-clock AIGER uses explicit domain-edge inputs and a proved event circuit.
+Because challenge files are frozen, a weakened agent theorem makes the challenge
+fail to type-check rather than silently changing the claim
+(`Tests/test_workflow.py` checks this).
 
-Concrete graph certificates cover counter and one/eight-bit FIFO. Exact artifact
-byte certificates for counter and FIFO8 in all three formats have passed the Lean
-kernel and independent nanoda replay. The generated byte definition is executed
-and compared byte-for-byte with the artifact. Generic parser/validator proofs are
-not a substitute for replaying that concrete certificate. The full CPU's 744 KB
-AIGER certificate exceeded both 6 GiB and 12 GiB managed-allocation attempts
-in a single module. Staged lexical proofs pass, but complete CPU parser/graph
-certification remains unverified. A further graph-only proof, with separately
-checked headers and optimized traversal/indexing, exhausted an 11.5 GiB managed
-limit under a 12 GiB RSS watchdog. See the [resource experiment](reports/cpu-certificate-resources.json)
-and [reproducer](reports/cpu-certificate-reproducer.tar.gz). No CPU byte-certificate
-success is claimed. Runtime validation
-and independently replayed CPU hardware theorems are separate evidence.
+## What is not covered
 
-Independent checks interpret AIGER and compare transitions, simulate SystemVerilog
-with Icarus, and ask Yosys to prove RTLIL/SystemVerilog equivalence. The check exposes matched register
-inputs and next-state outputs, checks the resulting combinational relation, and
-separately audits every original register’s width, clock, and edge polarity. A
-corrupted next-state mutation must fail. The flow is tested with Yosys 0.33 and 0.52. These are useful
-translation checks. Exact-byte kernel certificates, when present, are recorded
-separately from those external checks. The executable `emit` command is a development command, not an
-acceptance gate. Artifacts produced by `verify.py` are hashed along with the source
-snapshot and verification results; a filename alone is never provenance.
+- Hostile Lean metaprograms. The build runs agent code; run it on a machine you do
+  not mind it touching. Lean 4.35's `lake comparator` adds a sandbox if needed.
+- Kernel-checked exact bytes. Replaced by the proved-parser read-back above.
+- Physical timing, power and analog behaviour. Measured, see [Physical.md](Physical.md).
+- The dual-clock FIFO's hardware link: its challenge is model-level until the
+  hardware moves to `MultiClock.Shared.MultiDag` (design milestone R2).
 
-## Physical claims
+## Approval
 
-Two-flop metastability resolution is a named physical assumption of the CDC model.
-The logical model represents arbitrary edge interleavings and old/new sampling,
-not analog behavior or a frequency-ratio guarantee. Memory power-up values are
-arbitrary. Async operation after independent reset assertion/release is not yet
-proved.
-
-AND count, Boolean depth and flip-flop count are structural quantities. Optional
-Liberty mapping uses a real synthesis tool and records the library hash. Physical
-timing and utilization are measured by the pinned FPGA flow described in
-[Physical.md](Physical.md). Reports distinguish actual routed tool/model results
-from structural estimates. No board timing, power or tape-out readiness is claimed.
+`python3 scripts/freeze.py --write` produces a candidate manifest
+(`approval: review-required`). It is never approval. A reviewer compares it with the
+previous version, then sets the protected `HDLEAN_TRUSTED_MANIFEST_SHA256` variable.
+Branch protection with required code-owner review (`verification/branch-protection.json`)
+must be enabled by a repository admin.

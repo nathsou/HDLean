@@ -1,5 +1,6 @@
 import Designs.Fifo.CircularProof
 import Designs.CircularFifo.Interface
+import Designs.Fifo.CircularHardware
 import HDLean.Semantics.Reset
 import Init.Data.List.Range
 
@@ -148,6 +149,12 @@ theorem trace_refines_queue (w k : Nat) :
 
 namespace Physical
 
+/-- Implementation-side queue reference, using this layout's own decoder. -/
+def queueSpec (k w : Nat) : Machine (List (BitVec w)) (Fin (w+2) → Bool) (Output (BitVec w)) where
+  init := []
+  out := (Fifo.spec (BitVec w) (2^k)).out
+  next q i := (Fifo.spec (BitVec w) (2^k)).next q (decodeInput k w i)
+
 /-- Headline refinement names the synthesizable AST and the complete, general-depth queue. -/
 theorem hardware_refines_queue (k w : Nat) :
     RefinesAfterReset ((hardware k w).denote (hardware_moore k w)) (queueSpec k w) observe 1 := by
@@ -165,6 +172,26 @@ theorem hardware_refines_queue (k w : Nat) :
     change observe ((hardware k w).evalOutput s (fun _ => false)) = _
     rw [decode_output]
     exact queue_relation_out h
+
+theorem decodeInput_reference (k w : Nat) : decodeInput k w = Reference.decodeInput w := by
+  funext xs
+  simp only [decodeInput, Reference.decodeInput, Input.mk.injEq, true_and, and_true]
+  apply BitVec.eq_of_getLsbD_eq
+  intro j hj
+  rw [WordExpr.eval_bit _ _ _ j hj, Reference.payload, WordExpr.eval_bit _ _ _ j hj]
+  simp [inputData, WordExpr.inputs, Expr.eval]
+
+theorem observe_reference (w : Nat) : (observe : (Fin (w+2) → Bool) → Output (BitVec w)) = Reference.observe := rfl
+
+theorem queueSpec_reference (k w : Nat) : queueSpec k w = Reference.queueSpec k w := by
+  simp only [queueSpec, Reference.queueSpec, decodeInput_reference]
+
+/-- The headline against the frozen reference interface. -/
+theorem hardware_refines_reference (k w : Nat) :
+    RefinesAfterReset ((hardware k w).denote (hardware_moore k w)) (Reference.queueSpec k w)
+      Reference.observe 1 := by
+  rw [← queueSpec_reference, ← observe_reference]
+  exact hardware_refines_queue k w
 
 end Physical
 

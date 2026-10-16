@@ -8,7 +8,7 @@ theorem correctness (w : Nat) :
       (pipelineWireSpec w) observePipeline 1 := hardware_correct w
 
 /-- Module elaboration must introduce no additional registers. -/
-theorem budget (w : Nat) : (lower (hardware w)).ffBits ≤ 3 * (2 * w + 2) :=
+theorem budget (w : Nat) : (hardware w).ffBits ≤ 3 * (2 * w + 2) :=
   Nat.le_of_eq (hardware_budget w)
 
 end HDLean.SkidBuffer.Challenge

@@ -93,10 +93,11 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     run([EXE, 'trace', design, tracepath, width, 100, 42])
     rows = json.loads(tracepath.read_text())
     check_aag(paths['aiger'], rows)
-    module = {'fifo': f'hd_fifo2_w{width}', 'counter': 'hd_decade',
-              'pipeline': f'hd_pipeline3_w{width}', 'ram': f'hd_ram_16x{width}', 'ring':f'hd_fifo_ring_d16_w{width}', 'toy16':'hd_top'}[design]
+    # The proved emitter writes one module, `hd_top`, with `ins`/`outs` buses and
+    # state registers `s_k`.
+    module = 'hd_top'
     tb = work / f'{name}_tb.sv'
-    tb.write_text(testbench(module, rows, buses=(design == 'toy16')))
+    tb.write_text(testbench(module, rows, buses=True))
     options = ['-B', ivl_base] if ivl_base else []
     binary = work / f'{name}.vvp'
     run([iverilog, *options, '-g2012', '-s', 'tb', '-o', binary, paths['sv'], tb])
@@ -123,8 +124,7 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
         assert len(registers) == nr
         assert all(c['type'] in ('$dff', '$and', '$not') for c in parsed['cells'].values())
         for k in range(nr):
-            q = (parsed['netnames']['state']['bits'][k:k+1] if design == 'toy16' else
-                 parsed['netnames'][f'n{ni + k + 1}']['bits'])
+            q = parsed['netnames']['state']['bits'][k:k+1]
             drivers = [c for c in registers if c['connections']['Q'] == q]
             assert len(drivers) == 1, f'state bit {k} has no unique driver'
             cell = drivers[0]
@@ -136,7 +136,8 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
         # guards against accidentally checking only combinational output aliases.
         mutant = work / f'{name}_mutant.rtlil'
         mutant_text, count = re.subn(
-            r'    connect \\D [^\n]+', lambda _: "    connect \\D 1'0", paths['rtlil'].read_text(), count=1)
+            r'^(\s*)connect \\D [^\n]+', lambda m: m.group(1) + "connect \\D 1'0", paths['rtlil'].read_text(),
+            count=1, flags=re.M)
         assert count == 1
         mutant.write_text(mutant_text)
         mutant_script = script.replace(f'read_rtlil {paths["rtlil"].name}', f'read_rtlil {mutant.name}')

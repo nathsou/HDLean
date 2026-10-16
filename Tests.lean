@@ -1,11 +1,6 @@
-import Tests.Certificates
 import Tests.Types
 import Tests.Syntax
 import Tests.Invariant
-import Verification.Challenge
-import Designs.RAM.Challenge
-import Designs.CircularFifo.Challenge
-import Designs.AsyncFifo.Challenge
 import Tests.Dag
 import Tests.BackendProved
 import Tests.MultiDag

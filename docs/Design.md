@@ -1,12 +1,12 @@
 # HDLean: a Lean 4–embedded HDL for LLM agents
 
-Design specification v0.2 · Oct 16, 2026 · @Nathan
+Design specification v0.3 · Oct 16, 2026 · @Nathan
 
 This file mirrors the shared design document. Implementation status is tracked in [Status.md](Status.md) and implementation choices in [Decisions.md](Decisions.md).
 
 ## 1. Status, scope and how to read this spec
 
-HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.2: it keeps the principles of v0.1 and revises the design after reviewing the first implementation (nathsou/HDLean PR #1). Section 15.5 records what that review found; sections 4.4, 5, 12, 13 and 16 carry the resulting changes. The project was first drafted as "Proofwire".
+HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.3. v0.2 revised the design after reviewing the first implementation (nathsou/HDLean PR #1; findings in 15.5). v0.3 records the consolidation that followed: one pipeline, the official Lean kernel only, readable challenge files, and proved-parser read-back instead of byte certificates (sections 12, 13.4 and 16). The project was first drafted as "Proofwire".
 
 Design statements carry one of three markers:
 
@@ -61,11 +61,11 @@ An agent writes a circuit in do-notation, which elaborates into the core AST. `d
 
 ```mermaid
 flowchart LR
-  spec["Spec + challenge<br/>reviewer-owned, frozen"] --> comp
-  circuit["Circuit<br/>written by the agent"] --> ast["Core graph<br/>typed by width and domain"] --> proofs["Proofs<br/>relate denote to the spec"] --> comp["Comparator<br/>Lean kernel + bundled kernels"]
-  ast --> lower["Verified lowering<br/>runs on the term the theorem names"]
-  comp -. only after acceptance .-> lower
-  lower --> netlist["Netlist IR"] --> printers["Printers<br/>SystemVerilog, AIGER, RTLIL"]
+  spec["Spec + challenge<br/>reviewer-owned, frozen"] --> audit
+  circuit["Circuit<br/>written by the agent"] --> ast["Core graph<br/>typed by width and domain"] --> proofs["Proofs<br/>relate denote to the spec"] --> audit["Lean kernel<br/>+ statement audit"]
+  ast --> lower["Proved lowering<br/>runs on the term the theorem names"]
+  audit -. only after acceptance .-> lower
+  lower --> netlist["Gate graph"] --> printers["Proved printers<br/>SystemVerilog, AIGER, RTLIL<br/>read back by the proved parser"]
 ```
 
 The agent's code reaches a netlist only through the verified lowering, and only after comparator has accepted its proofs against the frozen challenge.
@@ -741,37 +741,37 @@ macro "hw_step" : tactic => `(tactic| (
 
 ## 12. Trust and checking pipeline
 
-A block is accepted only when comparator accepts the submission against the frozen challenge file, the axiom report passes the policy for its assurance level, and the shipped netlist is generated from the proved term.
+A block is accepted when Lean's official kernel accepts its proofs, every theorem in its frozen challenge file passes the statement audit, and the shipped netlist is emitted from the proved term and read back by the proved parser.
 
 ### 12.1 What remains trusted
 
-- Lean's logic. Every proof is replayed by Lean's kernel and, since Lean 4.35.0, by the independent kernels bundled with the toolchain: `lean4lean`, `nanoda`, `con-leche` and `con-ron`, plus `leanchecker-paranoid`. What remains trusted is that no bug affects all of them at once.
+- Lean's logic and its official kernel. `lake build` checks every proof and `leanchecker --fresh` replays the designs into a fresh environment.
 - The framework: semantics, primitive specifications, generic theorems, and each output format's parser, which is that format's formal semantics (13.2).
+- Compiled Lean code for computing emitted bytes, guarded by the proved-parser read-back (13.4).
 - One physical assumption: two-flop synchronizers resolve metastability (4.4).
-- The sandboxes of `lake check` and `lake comparator` and their plumbing.
-- The challenge files and observation maps, as approved by the reviewer.
+- The challenge files, interfaces and implementation-hole list, as approved by the reviewer.
+
+**Decision (revised for v0.3): the official kernel only.** Lean 4.35.0 bundles four independent kernels, but replaying exports with them added tooling, memory blowups and little practical assurance for this project. They remain available (`lake check --paranoid`) for anyone who wants them; the project does not depend on them.
 
 **Decision (revised in v0.2): no native-evaluation axioms at any assurance level.** Since Lean 4.35.0, `native_decide` and `bv_decide` introduce one axiom per native computation, and the external kernels cannot replay them. The first implementation already met this bar for all 77 audited theorems.
 
 ### 12.2 Checks
 
-1. **Frozen spec, pinned by an outside anchor.** Reviewer-owned files are hash-pinned in a manifest. CI reads the approved manifest digest from a protected repository variable, and branch protection requires code-owner review of specs, interfaces, challenges and CI configuration. A manifest stored in the repository is never its own anchor (finding F4).
-2. **Statements, not names.** Every theorem the project claims is stated in a frozen challenge file with the implementation as a hole. The check compares the solution's statement with the challenge's, not just its name and axioms (finding F2).
-3. **`lake comparator`.** Each block ships a `comparator.json` naming its challenge module, solution module, theorems, definition holes and permitted axioms. The tool builds the solution in a `bubblewrap` sandbox with no network, exports it, checks that statements match, and replays the export with the selected kernels.
-4. **`lake check --paranoid`** on the whole project, so that framework lemmas outside any challenge are also replayed by all bundled kernels.
-5. **Notation and instances.** A spec elaborates only with framework notation and instances, so agent code cannot change what a statement means.
-6. **Code generation and byte binding.** The trusted pipeline lowers exactly the term named in the challenge; agents never hand over netlists. Byte binding (13.4) ties the emitted file to that term.
-7. **Continuous re-checking.** Every change re-runs the pipeline; a framework or toolchain bump re-checks every block.
+1. **Frozen spec, pinned by an outside anchor.** Reviewer-owned and framework files are hash-pinned in `verification/frozen.json`. CI reads the approved digest from a protected repository variable, and branch protection requires code-owner review. A manifest stored in the repository is never its own anchor.
+2. **Frozen specs import only frozen modules.** A spec or interface cannot depend on agent code; only challenge files import implementations.
+3. **Statement audit.** Every theorem in a `Challenge.lean` depends only on `propext`, `Classical.choice` and `Quot.sound`, and every constant in its statement comes from a frozen module, from Lean, or from the manifest's list of *implementation holes* (the hardware and facts about its type). Since challenge files are frozen, weakening an agent theorem breaks the challenge instead of changing the claim.
+4. **Notation and instances.** A spec elaborates only with framework notation and instances.
+5. **Emission.** The trusted CLI lowers exactly the term named in the challenge, emits it with the proved emitter and reads the file back with the proved parser.
+6. **Continuous re-checking.** Every change re-runs the pipeline; a framework or toolchain bump re-checks every block.
 
 ### 12.3 Assurance levels
 
-| Level | Used for | Statement check | Kernels | Byte binding |
-| --- | --- | --- | --- | --- |
-| L1 Development | Agent iteration | Names and axioms; frozen-file hashes | Lean kernel (`lake check`) | None |
-| L2 Review | Merged blocks | `lake comparator` against the frozen challenge | Lean kernel and nanoda | Generic emitter theorem; bytes computed by compiled code and cross-checked |
-| L3 Sign-off | Tape-out, critical blocks | `lake comparator --paranoid` | All five bundled kernels | Kernel-checked, in chunks (13.4) |
+| Level | Used for | Manifest | Checks |
+| --- | --- | --- | --- |
+| Development | Agent iteration | Checked against itself | Kernel, statement audit, simulation, emission read-back |
+| Approved | Merged blocks, releases | Matches the reviewer-approved digest | The same, plus Yosys and Icarus cross-checks |
 
-The first implementation built its own comparator, with features `lake comparator` lacks: exact byte binding and authentication of the kernel's built-in primitive definitions (a forged `Nat.add` body that a checker's native arithmetic would not notice). **Decision:** use the bundled tools as the default path and keep those two features as small add-ons, upstreamed where possible. **Open:** whether `lake comparator` already rejects forged primitive definitions; if it does, the add-on can go.
+Not covered: hostile Lean metaprograms in agent code. The build runs that code, so run it on a machine you do not mind it touching; `lake comparator` adds a sandbox when that matters.
 
 ### 12.4 Sign-off report
 
@@ -804,7 +804,7 @@ The netlist IR holds bit-vector operations in SSA form, registers grouped by clo
 | Circuit → gates | Tree lowering proved once; untrusted hash-consing compiler; proved validator run per design | Node-to-gate lowering proved once for every circuit (5.1); no validator |
 | Gates → text | Untrusted printer; text parsed back and compared per design | Generic theorem: parsing what the printer prints gives back the graph |
 | Whole emitter | No theorem; per-design evidence only | `theorem emit_correct : ∀ c, Format.Correct (emit c) c` |
-| These exact bytes | Optional per-design certificate re-running both validators in the kernel | Byte binding only: the file equals `emit c` (13.4) |
+| These exact bytes | Optional per-design certificate re-running both validators in the kernel | Read the file back with the proved parser (13.4) |
 
 A format's parser is its formal semantics, so it stays in the trusted base. The subsets are flat gate lists, which keeps each parser small enough to audit; Yosys and Icarus equivalence runs remain as independent evidence that the parsers match the real languages.
 
@@ -812,14 +812,11 @@ A format's parser is its formal semantics, so it stays in the trusted base. The 
 
 **Decision.** The SystemVerilog and RTLIL printers emit one module per `Dag` and instantiate submodules, with a generic theorem that instantiating correct modules yields a correct whole. A proved generic memory is emitted once and instantiated, instead of being unrolled; in the Toy16 CPU, 4,096 of the 4,288 state bits are one 256-word memory. AIGER has no hierarchy and stays flat.
 
-### 13.4 Byte binding and the CPU roadblock
+### 13.4 From theorem to file
 
-With 13.2 in place, the semantic question for a concrete design is answered by instantiating `emit_correct`, with no evaluation. What is left is whether the file on disk equals `emit c`.
+`emit_correct` fixes what the string `emit c` means, for every design, with no evaluation. What it does not cover is that the file on disk *is* that string: compiled code computes the bytes and writes them. Exact-byte certification would close that gap with a kernel proof, but it removes trust only in Lean's code generator, the runtime's native implementations and the file write, and it does not scale: the CPU's whole-string check exceeded 6 GiB.
 
-- **L2:** compute `emit c` with compiled code and with Lean's interpreter, and compare hashes. The two execution paths share no code generator, and Yosys equivalence against the circuit's simulation is independent evidence.
-- **L3:** the kernel evaluates `emit c` in chunks. A generic lemma states that `emit c` is the concatenation of its chunks, and each chunk equation is its own small declaration, so kernel memory per declaration stays bounded.
-
-**Why this fixes the roadblock.** The first implementation's CPU artifact is 744,329 bytes of AIGER with 40,745 AND gates. Its lexical stage already passed in 705 chunks across 23 modules; the graph and validator stage exceeded 11.5 GiB. Under v0.2 that stage disappears: lowering is linear arithmetic over node indices, printing is linear, and nothing symbolic runs per design. Hierarchy (13.3) shrinks the flat work further. This is a design argument, not yet a measurement; milestone R3 (16) measures it.
+**Decision (v0.3): no exact-byte certificates; proved-parser read-back instead.** After writing a file, the CLI reads it back and decodes it with the proved parser; the decoded graph must equal the lowered graph. By the parse-after-print theorem, that means the file has the proved meaning, assuming only that the compiled parser computes what its definition says. The check is linear and runs at every emission. Yosys and Icarus equivalence runs add evidence from outside Lean.
 
 ### 13.5 Optimization after the trusted point
 
@@ -895,7 +892,7 @@ A change must keep every principle. Prefer moving complexity into the framework,
 | Interfaces | Guarded methods over valid/ready | Raw ports with contracts only | The method layer is hard to verify |
 | Native evaluation | Forbidden at every level | Allowed up to L2 with per-computation axioms | A block needs SAT-scale proofs that kernels cannot replay |
 | Multi-clock model | Domain-indexed logic, `Sync2` only crossing, sampling oracle in hardware semantics (4.4) | Per-domain time with explicit frequency ratios | Throughput proofs need ratios |
-| Checking tools | `lake check` and `lake comparator` (Lean 4.35.0), plus byte-binding and primitive-authentication add-ons | Fully custom comparator | Upstream tools cannot express a needed check |
+| Checking tools | Official kernel only: `lake build`, `leanchecker --fresh`, statement audit | Bundled independent kernels and \`lake comparator\` | Agent code is untrusted, or the stakes call for independent kernels |
 
 ### 15.3 Decision log
 
@@ -903,12 +900,15 @@ Newest first.
 
 | Date | Decision | Change | Reason |
 | --- | --- | --- | --- |
-| 2026-10-16 | Toolchain | Lean 4.34.0 to 4.35.0 | Bundled independent kernels, `lake check` and `lake comparator`; the implementation builds unchanged |
-| 2026-10-16 | Native evaluation | Forbidden at every level | External kernels cannot replay it; the implementation already complied |
-| 2026-10-16 | Translation | Prove lowering and printers once; per design only bind bytes | The per-design validator could not be re-run in the kernel for the CPU (F6) |
+| 2026-10-16 | Checking | Official kernel only; extra kernels, export replay and custom comparator removed | Owner's choice; the extra tooling cost more than it added |
+| 2026-10-16 | Emission | Exact-byte certificates replaced by proved-parser read-back | Byte certificates only remove trust in compiled code and did not scale to the CPU (13.4) |
+| 2026-10-16 | Pipeline | Tree circuits compile to node graphs by the proved `Circuit.toDag`; validator pipeline deleted | One path to bits (R5) |
+| 2026-10-16 | Challenges | Readable challenge files plus a statement audit with implementation holes | The generated statement dump was unreviewable (R5) |
+| 2026-10-16 | Toolchain | Lean 4.34.0 to 4.35.0 | Released 2026-10-12; the implementation builds unchanged |
+| 2026-10-16 | Native evaluation | Forbidden | The audit admits only the three standard axioms |
+| 2026-10-16 | Translation | Prove lowering and printers once | The per-design validator could not be re-run in the kernel for the CPU (F6) |
 | 2026-10-16 | Core representation | Expression trees to an explicitly shared node graph | Trees lose sharing under kernel reduction (F6) |
 | 2026-10-16 | Multi-clock | Domain-indexed logic; sampling oracle in hardware semantics | Raw multi-bit crossings type-checked; metastability was fixed to "always old" (F1) |
-| 2026-10-16 | Statement checks | Every claimed theorem in a frozen challenge; statements compared | Weakened statements passed L1 (F2) |
 | 2026-10-15 | Backends | RTLIL replaces BTOR2 | Owner's request, during implementation |
 | 2026-10-15 | Name | Proofwire renamed HDLean | Owner's request, during implementation |
 | 2026-10-15 | All | Initial decisions of v0.1 | First draft |
@@ -953,13 +953,19 @@ The first implementation delivered all seven v0.1 milestones, with the gaps list
 
 Remediation milestones:
 
-- **R0 Toolchain.** Move to Lean 4.35.0; run `lake check --paranoid` in CI. *Done when:* all five bundled kernels accept the whole project.
+- **R0 Toolchain.** Lean 4.35.0. *Done.* The project builds unchanged; the bundled extra kernels were tried and then dropped (12.1).
+- **R1 Trust surface (F2 to F4).** *Done in R5:* readable challenge files for every claimed block, statement audit with implementation holes, frozen interfaces for the Toy16, general-depth and dual-clock FIFO maps, CI digest from a protected variable. Branch protection still needs a repository admin.
+- **R3 Shared core and proved emitter (F6).** *Done:* node graph, node-allocating `circuit do`, lowering and printer round trips proved once, `emit_correct`. Hierarchical emission is still open (moved to S3).
+- **R4 Queue specs (F5).** *Done:* the general-depth FIFO refines `Fifo.spec (2^k)`; the dual-clock FIFO has a relational queue spec with progress stated from reset.
+- **R5 Consolidate.** *Done:* one pipeline (tree circuits compile to node graphs by the proved `Circuit.toDag`); validator pipeline, export-based checkers, custom comparator, byte certificates and generated statement dumps deleted; proved-parser read-back at every emission. *Done when:* every design is emitted by `emit_correct` and audited from its readable challenge.
+- **R2 Clock domains (F1).** Dual-clock FIFO hardware moved to the domain-indexed multi-domain graph, with the sampling oracle in its semantics and a hardware-level challenge. *Open.*
 
-  Status 2026-10-16: the project builds unchanged on 4.35.0. Over the whole project (166,866 declarations), `leanchecker-paranoid`, `lean4lean`, `con-leche`, `con-ron` and Lean's kernel accept. nanoda was killed at 6 GB on a 7 GB machine, so its whole-project run needs a larger CI runner. On the 77 headline theorems (6,984 declarations), nanoda, con-leche, con-ron and leanchecker-paranoid all accept; nanoda needs a stack above the default 8 MiB.
-- **R1 Trust surface (F2 to F4).** Challenge files and `comparator.json` for every claimed block, including the circular FIFO, RAM and dual-clock FIFO; Toy16 `Interface.lean`; audit by statement; manifest digest from a protected CI variable; branch protection. *Done when:* weakening any claimed statement, or editing an observation map, fails CI.
-- **R3 Shared core and proved emitter (F6).** Node graph and node-allocating `circuit do`; node-to-gate lowering and printer round-trip proved once; hierarchical SystemVerilog and RTLIL. *Done when:* `emit_correct` is proved, and the Toy16 byte binding passes at L3 within 6 GiB.
-- **R2 Clock domains (F1).** Domain-indexed logic, `Sync2` as the only crossing, sampling oracle in the hardware semantics; dual-clock FIFO re-proved. *Done when:* a raw multi-bit crossing is rejected at elaboration, and the dual-clock FIFO's headline quantifies over the sampling oracle.
-- **R4 Queue specs (F5).** General-depth FIFO refines `Fifo.spec (2^k)`; dual-clock FIFO gets a relational queue spec with bounded progress under edge fairness. *Done when:* both headline theorems sit in challenge files.
+Scaling milestones, needed before a pipelined RISC-V core:
+
+- **S1 Memory primitive.** One node with a proved read-before-write model, emitted as the pattern synthesis maps to block RAM. Register-array memories cost 4,096 of Toy16's 4,288 state bits and do not scale to kilobytes.
+- **S2 Word-level nodes.** add, sub, compare, shift, mux, slice, concat (later multiply) with `BitVec` semantics, emitted as Verilog operators with explicit widths, so synthesis can use carry chains and DSP blocks. The format parsers must then model Verilog's width rules for a strict subset.
+- **S3 Hierarchy.** One module per graph, instances, and a generic composition theorem; a repeated block is proved and emitted once.
+- **S4 Typed state.** Registers grouped into records of words instead of flat bit offsets, so proofs about a RISC-V core read like the architecture.
 
 ## 17. Prior art and glossary
 

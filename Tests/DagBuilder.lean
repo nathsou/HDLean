@@ -1,5 +1,4 @@
 import Designs.Toy16.DagRefinement
-import HDLean.Backend.FastCompile
 
 namespace HDLean.Dag.Build.Tests
 
@@ -22,20 +21,24 @@ def main : IO Unit := do
   let some c := Toy16.DagPhysical.hardware? rom | throw (IO.userError "DAG CPU construction failed")
   let graph := c.lower
   unless graph.wellFormed do throw (IO.userError "malformed DAG CPU graph")
-  let reference := Backend.compileCandidate (Toy16.Physical.hardware rom)
+  let tree := Toy16.Physical.hardware rom
+  -- Reference: the tree circuit's own semantics, evaluated directly.
+  let reference (rst : Bool) (st : Array Bool) : Array Bool × Array Bool :=
+    let s : Fin (268*16) → Bool := fun k => st[k.val]!
+    ((Vector.ofFn (tree.next s (Fin.elim0, rst))).toArray, (Vector.ofFn (tree.evalOutput s Fin.elim0)).toArray)
   for opcode in List.range 16 do
     let instruction : BitVec 16 := BitVec.ofNat 16 (opcode*4096+3*512+2*64+8+5)
     let state := (Vector.ofFn fun j : Fin (268*16) =>
       if 48 ≤ j.val ∧ j.val < 64 then instruction.getLsbD (j.val-48)
       else decide ((j.val*7919+opcode*104729)%13 < 6)).toArray
     for rst in [false,true] do
-      unless graph.eval #[rst] state == reference.eval #[rst] state do
+      unless graph.eval #[rst] state == reference rst state do
         throw (IO.userError s!"DAG CPU mismatch: opcode {opcode}, reset {rst}")
   let mut state := (Vector.ofFn fun j : Fin (268*16) => decide (j.val%7 < 3)).toArray
   for cycle in List.range 64 do
     let rst := cycle == 0 || cycle == 39
     let actual := graph.eval #[rst] state
-    unless actual == reference.eval #[rst] state do
+    unless actual == reference rst state do
       throw (IO.userError s!"DAG CPU trace mismatch at cycle {cycle}")
     state := actual.1
   IO.println s!"DAG CPU: {c.nodes.length} nodes, {graph.gates.size} gates, 32 opcode/reset cases and 64 trace steps passed"

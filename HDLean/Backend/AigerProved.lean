@@ -1,5 +1,5 @@
 import HDLean.Backend.TextCodec
-import HDLean.Backend.Parse
+import HDLean.Backend.Graph
 
 set_option backward.isDefEq.respectTransparency false
 namespace HDLean.Backend.Proved

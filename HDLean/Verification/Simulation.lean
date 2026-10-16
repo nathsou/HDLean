@@ -1,4 +1,5 @@
-import HDLean.Backend.FastCompile
+import HDLean.Core.TreeToDag
+import HDLean.Netlist.DagLower
 namespace HDLean.Verification
 
 /-- Reproducible PRNG, independent of platform random-number implementations. -/
@@ -17,10 +18,13 @@ def bitsToNat (bits : Array Bool) : Nat :=
 
 def natToBits (n value : Nat) : Array Bool := (List.range n).toArray.map (fun k => value / 2 ^ k % 2 == 1)
 
-/-- Compare the executable AST with the shared IR on arbitrary state, including during reset. -/
-def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit := do
-  let graph := Backend.compileCandidate c
-  unless graph.wellFormed do throw "malformed shared graph"
+/-- Compare a reference step function with a gate graph on arbitrary state,
+including during reset. The proofs already cover this for every circuit; the check
+guards the compiled code that computes and evaluates the graph. -/
+def checkStep (graph : Backend.Graph) (i r o : Nat)
+    (step : (Fin r → Bool) → (Fin i → Bool) → Bool → Array Bool × Array Bool)
+    (cycles seed : Nat) : Except String Unit := do
+  unless graph.wellFormed do throw "malformed gate graph"
   let (initial, seed) := randomBits r seed
   let mut state := initial
   let mut seed := seed
@@ -28,10 +32,7 @@ def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit 
     let (input, seed') := randomBits i seed
     seed := seed'
     let rst := t == 0 || t % 19 == 0
-    let s : Fin r → Bool := fun k => state[k.val]!
-    let xs : Fin i → Bool := fun k => input[k.val]!
-    let next := (Vector.ofFn (c.next s (xs, rst))).toArray
-    let out := (Vector.ofFn (c.evalOutput s xs)).toArray
+    let (next, out) := step (fun k => state[k.val]!) (fun k => input[k.val]!) rst
     let actual := graph.eval (input.push rst) state
     if actual != (next, out) then
       let mut signals := #[]
@@ -41,8 +42,18 @@ def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit 
       for k in [:o] do
         if out[k]! != actual.2[k]! then
           signals := signals.push s!"output {graph.outputNames[k]!}: expected {out[k]!}, actual {actual.2[k]!}"
-      throw s!"cycle {t}: AST/graph mismatch; {String.intercalate "; " signals.toList}; input={input}, state={state}"
+      throw s!"cycle {t}: reference/graph mismatch; {String.intercalate "; " signals.toList}; input={input}, state={state}"
     state := next
+
+/-- A tree circuit against its emitted gate graph. -/
+def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit :=
+  checkStep c.toDag.lower i r o (fun s xs rst =>
+    ((Vector.ofFn (c.next s (xs, rst))).toArray, (Vector.ofFn (c.evalOutput s xs)).toArray)) cycles seed
+
+/-- A node graph against its emitted gate graph. -/
+def checkDag (c : Dag d i r o) (cycles seed : Nat) : Except String Unit :=
+  checkStep c.lower i r o (fun s xs rst =>
+    ((Vector.ofFn (c.nextState s (xs, rst))).toArray, (Vector.ofFn (c.evalOutput s xs)).toArray)) cycles seed
 
 /-- A trace row exposes pre-edge outputs and post-edge state, avoiding cycle ambiguity. -/
 structure TraceRow where

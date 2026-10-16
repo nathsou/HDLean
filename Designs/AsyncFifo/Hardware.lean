@@ -287,7 +287,7 @@ theorem output_data (k w : Nat) (s xs) (j : Fin w) :
 
 /-- Exact storage budget for the current padded word-bank implementation. -/
 theorem storage_bits (k w : Nat) :
-    (lower (hardware k w).combinational).ffBits = (6+2^k) * max (k+1) w := rfl
+    (hardware k w).combinational.ffBits = (6+2^k) * max (k+1) w := rfl
 
 /-- Full queue simulation inherited by the emitted network after reset startup. -/
 theorem hardware_preserves_queue (k w : Nat) (s xs rst edge) (g : Ghost) (history)

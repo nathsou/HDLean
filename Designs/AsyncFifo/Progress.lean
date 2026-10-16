@@ -263,4 +263,54 @@ theorem read_progress_queue {q : List (BitVec w)} (hqueue : QueueRelation s q)
   simp only [queue_length] at hlen
   omega
 
+/-- The queue relation holds at every step after startup. -/
+theorem trace_relation (s : State k w) (xs : Nat → Input k w) (release : Nat)
+    (hstart : Startup xs release)
+    (htraffic : ∀ t, release ≤ t → (xs t).writeReset = false ∧ (xs t).readReset = false) (t : Nat) :
+    QueueRelation (stateFrom s xs (release+t))
+      (QueueSpec.run (fun u => queueInput (xs (release+u)))
+        (fun u => observe (stateFrom s xs (release+u))) t) := by
+  have hzero : QueueRelation (stateFrom s xs release) [] := by
+    apply queue_relation_reset
+    have hp := reset_prefix s xs release hstart.1
+    simpa only [hstart.2.1,hstart.2.2] using hp
+  induction t with
+  | zero => simpa [QueueSpec.run] using hzero
+  | succ t ih =>
+    have hp := htraffic (release+t) (by omega)
+    exact queue_relation_step ih hp.1 hp.2
+
+/-- Write progress from reset: at any point after startup, with credit in the
+reference queue, a continuously offered write completes within three fair
+write-clock windows. -/
+theorem write_progress_after_startup (s : State k w) (xs : Nat → Input k w) (release t gap : Nat)
+    (hstart : Startup xs release)
+    (htraffic : ∀ u, release ≤ u → (xs u).writeReset = false ∧ (xs u).readReset = false)
+    (hf : QueueSpec.EdgeFair gap (fun u => (xs (release+t+u)).writeEdge))
+    (hcredit : (QueueSpec.run (fun u => queueInput (xs (release+u)))
+        (fun u => observe (stateFrom s xs (release+u))) t).length < 2^k)
+    (hoffer : ∀ u, u < 3*gap → (xs (release+t+u)).valid = true) :
+    ∃ u, u < 3*gap ∧ push (stateFrom s xs (release+t+u)) (xs (release+t+u)) = true := by
+  obtain ⟨u,hu,hp⟩ := write_progress_queue (trace_relation s xs release hstart htraffic t)
+    (fun n => xs (release+t+n)) (fun n => htraffic _ (by omega)) hf hcredit hoffer
+  refine ⟨u,hu,?_⟩
+  rw [stateFrom_shift] at hp
+  exact hp
+
+/-- Read progress from reset: at any point after startup, a nonempty reference
+queue is drained within three fair read-clock windows by a continuously ready consumer. -/
+theorem read_progress_after_startup (s : State k w) (xs : Nat → Input k w) (release t gap : Nat)
+    (hstart : Startup xs release)
+    (htraffic : ∀ u, release ≤ u → (xs u).writeReset = false ∧ (xs u).readReset = false)
+    (hf : QueueSpec.EdgeFair gap (fun u => (xs (release+t+u)).readEdge))
+    (hdata : QueueSpec.run (fun u => queueInput (xs (release+u)))
+        (fun u => observe (stateFrom s xs (release+u))) t ≠ [])
+    (hoffer : ∀ u, u < 3*gap → (xs (release+t+u)).ready = true) :
+    ∃ u, u < 3*gap ∧ pop (stateFrom s xs (release+t+u)) (xs (release+t+u)) = true := by
+  obtain ⟨u,hu,hp⟩ := read_progress_queue (trace_relation s xs release hstart htraffic t)
+    (fun n => xs (release+t+n)) (fun n => htraffic _ (by omega)) hf hdata hoffer
+  refine ⟨u,hu,?_⟩
+  rw [stateFrom_shift] at hp
+  exact hp
+
 end HDLean.AsyncFifo

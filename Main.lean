@@ -5,7 +5,7 @@ open HDLean HDLean.Backend HDLean.Verification
 
 private def usage : String := "HDLean 0.2.0\n\
   hdlean emit <fifo|counter|pipeline|ram|ring|toy16> <sv|aiger|rtlil> <path> [width=8]\n\
-  hdlean emit-async <sv|rtlil|aiger> <path> [width=8] [log2depth=4]\n\
+  hdlean emit-async <sv|rtlil|aiger> <path> [width=8] [log2depth=4]   (clock edges as inputs)\n\
   hdlean metrics <fifo|counter|pipeline|ram|ring|toy16> [width=8]\n\
   hdlean trace <fifo|counter|pipeline|ram|ring|toy16> <path.json> [width=8] [cycles=60] [seed=1]\n\
   hdlean check <fifo|counter|pipeline|ram|ring|toy16> [width=8] [cycles=200] [seed=1]\n\
@@ -18,16 +18,25 @@ private def number (s : String) (max : Nat := 1000000) : Except String Nat := do
   if n > max then throw s!"value exceeds limit {max}: {n}"
   return n
 
+/-- Every design reaches the emitter as a node graph: tree circuits through the
+proved `Circuit.toDag`, the CPU directly. -/
 private def withDesign (name : String) (width : Nat)
-    (f : {i r o : Nat} → Circuit 0 i r o → IO Unit) : IO Unit := do
+    (f : {i r o : Nat} → Dag 0 i r o → IO Unit) : IO Unit := do
   match name with
-  | "fifo" => f (Fifo.hardware width)
-  | "counter" => f Counter.hardware
-  | "pipeline" => f (SkidBuffer.hardware width)
-  | "ring" => f (Fifo.Circular.Physical.hardware 4 width)
-  | "ram" => f (RAMCircuit.hardware 4 width)
-  | "toy16" => f (Toy16.Physical.hardware Toy16.sumProgram)
+  | "fifo" => f (Fifo.hardware width).toDag
+  | "counter" => f Counter.hardware.toDag
+  | "pipeline" => f (SkidBuffer.hardware width).toDag
+  | "ring" => f (Fifo.Circular.Physical.hardware 4 width).toDag
+  | "ram" => f (RAMCircuit.hardware 4 width).toDag
+  | "toy16" => f (Toy16.DagPhysical.hardware Toy16.sumProgram)
   | _ => throw (IO.userError s!"unknown design: {name}")
+
+private def parseFormat (format : String) : IO Proved.Format :=
+  match format with
+  | "sv" => pure .systemVerilog
+  | "aiger" => pure .aiger
+  | "rtlil" => pure .rtlil
+  | _ => throw (IO.userError s!"unknown format: {format}; expected sv, aiger, rtlil")
 
 private def parseNum (s : String) (max : Nat := 1000000) : IO Nat :=
   match number s max with | .ok n => pure n | .error e => throw (IO.userError e)
@@ -46,6 +55,18 @@ private def writeFile (path : String) (content : String) : IO Unit := do
   if let some parent := path.parent then IO.FS.createDirAll parent
   IO.FS.writeFile path content
 
+/-- Write `emit c`, read the file back and decode it with the proved parser. The
+generic theorem `Proved.emit_correct` says what `emit c` means; the read-back
+guards the compiled code and the file write that produced these bytes. -/
+private def emitChecked (f : Proved.Format) (c : Dag d i r o) (path : String) : IO Unit := do
+  writeFile path (f.emit c)
+  let bytes ← IO.FS.readFile (System.FilePath.mk path)
+  match f.parse bytes with
+  | some g =>
+    unless g.graph.logic == c.lower.logic do
+      throw (IO.userError s!"{path}: read-back graph differs from the circuit's lowering")
+  | none => throw (IO.userError s!"{path}: the proved parser rejected the written file")
+
 private def execute (args : List String) : IO Unit := do
   match args with
   | ["--help"] | ["help"] | [] => IO.println usage
@@ -54,52 +75,23 @@ private def execute (args : List String) : IO Unit := do
     if rest.length > 2 then throw (IO.userError usage)
     let width ← parseNum (rest[0]?.getD "8") 64
     let k ← parseNum (rest[1]?.getD "4") 8
-    let c := AsyncFifo.Physical.hardware k width
-    if format == "aiger" then
-      let artifact ← match Backend.checkedPrint .aiger c.eventCircuit with
-        | .ok a => pure a | .error e => throw (IO.userError e)
-      writeFile path artifact.text
-      IO.println s!"Wrote event-encoded {path}; independent edge inputs represent both physical clocks."
-    else
-      let f ← match format with
-        | "sv" => pure MultiClock.Format.systemVerilog
-        | "rtlil" => pure MultiClock.Format.rtlil
-        | _ => throw (IO.userError "expected sv, rtlil, or aiger")
-      let artifact ← match MultiClock.checkedPrint f c with
-        | .ok a => pure a | .error e => throw (IO.userError e)
-      writeFile path artifact.text
-      IO.println s!"Wrote {path} with native clk_0 and clk_1 ports."
-  | "emit" :: "toy16" :: format :: path :: rest =>
-    if rest.length > 1 then throw (IO.userError usage)
-    let _ ← parseNum (rest.headD "8") 64
-    let f ← match format with
-      | "sv" => pure Proved.Format.systemVerilog
-      | "aiger" => pure Proved.Format.aiger
-      | "rtlil" => pure Proved.Format.rtlil
-      | _ => throw (IO.userError s!"unknown format: {format}; expected sv, aiger, rtlil")
-    let c := Toy16.DagPhysical.hardware Toy16.sumProgram
-    writeFile path (f.emit c)
-    IO.println s!"Wrote {path} ({c.lower.latches} flip-flops, {c.lower.gates.size} AND gates; generic proved emitter)."
+    let f ← parseFormat format
+    let c := (AsyncFifo.Physical.hardware k width).eventCircuit.toDag
+    emitChecked f c path
+    IO.println s!"Wrote {path}: event-encoded, the two clock edges are inputs after the payload and reset."
   | "emit" :: design :: format :: path :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
+    let f ← parseFormat format
     withDesign design width fun c => do
-      let format ← match format with
-        | "sv" => pure Format.systemVerilog
-        | "aiger" => pure Format.aiger
-        | "rtlil" => pure Format.rtlil
-        | _ => throw (IO.userError s!"unknown format: {format}; expected sv, aiger, rtlil")
-      let artifact ← match checkedPrint format c with
-        | .ok a => pure a
-        | .error e => throw (IO.userError e)
-      let graph := compileCandidate c
-      writeFile path artifact.text
-      IO.println s!"Wrote {path} ({graph.ffBits} flip-flops, {graph.andCount} AND gates)."
+      emitChecked f c path
+      let g := c.lower
+      IO.println s!"Wrote {path} ({g.ffBits} flip-flops, {g.andCount} AND gates; proved emitter, read back)."
   | "metrics" :: design :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
     withDesign design width fun c => do
-      let g := compileCandidate c
+      let g := c.lower
       IO.println (Lean.Json.mkObj [("design", .str g.name), ("ff_bits", Lean.toJson g.ffBits),
         ("memory_bits", Lean.toJson (0 : Nat)), ("and_gates", Lean.toJson g.andCount),
         ("logic_depth", Lean.toJson g.depth), ("physical_metrics", .null)]).pretty
@@ -109,14 +101,14 @@ private def execute (args : List String) : IO Unit := do
     let cycles ← parseNum (rest[1]?.getD "60") 10000
     let seed ← parseNum (rest[2]?.getD "1") 4294967295
     withDesign design width fun c => do
-      let g := compileCandidate c
+      let g := c.lower
       writeFile path (traceJson g (trace g cycles seed)).pretty
   | "check" :: design :: rest =>
     if rest.length > 3 then throw (IO.userError usage)
     let width ← parseNum (rest[0]?.getD "8") 64
     let cycles ← parseNum (rest[1]?.getD "200") 10000
     let seed ← parseNum (rest[2]?.getD "1") 4294967295
-    withDesign design width fun c => match checkCircuit c cycles seed with
+    withDesign design width fun c => match checkDag c cycles seed with
       | .ok _ => IO.println s!"PASS: {cycles} cycles, seed {seed}"
       | .error e => throw (IO.userError e)
   | "toy16" :: rest =>

@@ -229,6 +229,6 @@ theorem hardware_state (k w : Nat) (s₀) (xs : Nat → (Fin (w+2) → Bool) × 
     change decode ((hardware k w).next _ (xs t)) = _
     rw [decode_next,ih]
 
-theorem storage_bits (k w : Nat) : (lower (hardware k w)).ffBits = (2+2^k)*max (k+1) w := rfl
+theorem storage_bits (k w : Nat) : (hardware k w).ffBits = (2+2^k)*max (k+1) w := rfl
 
 end HDLean.Fifo.Circular.Physical

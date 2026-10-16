@@ -1,8 +1,17 @@
-import HDLean.Backend.Validate
+import HDLean.Core.Circuit
 import HDLean.Semantics.Clock
 import HDLean.Core.WordBank
 
 namespace HDLean.MultiClock
+
+/-!
+Legacy multi-clock circuits: a single-domain tree circuit with a clock label per
+register. Logic may read any register, and coincident edges always sample the old
+value, so this model cannot express metastability. New multi-clock designs use
+`MultiClock.Shared.MultiDag`, whose only cross-domain edges are synchronizers and
+whose semantics carries the sampling oracle. The dual-clock FIFO hardware still
+uses this model until it is migrated (milestone R2).
+-/
 
 /-- Each state bit is physically clocked by a bounded, static domain identity.
 Edges are semantic events, never synthesized data enables. -/
@@ -17,54 +26,6 @@ def Circuit.next (c : Circuit nd i r o) (s : Fin r → Bool)
 
 def Circuit.output (c : Circuit nd i r o) (s : Fin r → Bool) (xs : Fin i → Bool) : Fin o → Bool :=
   c.combinational.evalOutput s xs
-
-/-- The physical graph carries an explicit clock for every latch. -/
-structure Graph where
-  logic : Backend.Graph
-  domainCount : Nat
-  clock : Array Nat
-  deriving Repr
-
-def Graph.wellFormed (g : Graph) : Bool :=
-  g.logic.wellFormed && g.clock.size == g.logic.latches && g.clock.all (· < g.domainCount)
-
-/-- Event semantics, including coincident independent edges and no-edge stuttering. -/
-def Graph.eval (g : Graph) (edge : Nat → Bool) (inputs state : Array Bool) : Array Bool × Array Bool :=
-  let result := g.logic.eval inputs state
-  ((Array.range g.logic.latches).map fun k =>
-    if edge (g.clock[k]?.getD 0) then result.1[k]?.getD false else state[k]?.getD false,
-   result.2)
-
-/-- Only the existing combinational translator is reused; clock identities are preserved. -/
-def compile (c : Circuit nd i r o) : Graph :=
-  ⟨Backend.compile (lower c.combinational), nd,
-    (Vector.ofFn fun k => (c.clock k).val).toArray⟩
-
-/-- A graph certificate covers ordinary logic and every physical clock binding. -/
-def Graph.Equivalent (g : Graph) (c : Circuit nd i r o) : Prop :=
-  g.logic.Equivalent c.combinational ∧ g.domainCount = nd ∧
-    g.clock = (Vector.ofFn fun k => (c.clock k).val).toArray
-
-variable {g : Graph} {c : Circuit nd i r o}
-
-/-- Compositional translation: the existing all-state graph proof lifts to every edge set. -/
-theorem Graph.eval_correct (h : g.Equivalent c)
-    (xs : Vector Bool i) (s : Vector Bool r) (rst : Bool) (edge : Nat → Bool) :
-    g.eval edge (xs.toArray.push rst) s.toArray =
-      ((Vector.ofFn (c.next (fun k => s[k]) ((fun k => xs[k]), rst)
-        (fun d => edge d.val))).toArray,
-       (Vector.ofFn (c.output (fun k => s[k]) (fun k => xs[k]))).toArray) := by
-  rcases h with ⟨hlogic, hdomainCount, hclock⟩
-  have hr : g.logic.latches = r := hlogic.2.2.1
-  unfold Graph.eval
-  rw [hlogic.2.2.2.2 xs s rst, hr, hclock]
-  apply Prod.ext
-  · apply Array.ext
-    · simp
-    · intro j hj hk
-      simp only [Array.size_map, Array.size_range] at hj
-      simp [Circuit.next, hj]
-  · rfl
 
 /-- The only direct domain-crossing constructor is explicitly named and typed. -/
 structure Synchronizer (source target : Fin nd) (width : Nat) where
@@ -82,8 +43,8 @@ def Synchronizer.step (s : Synchronizer source target width)
 theorem Synchronizer.second_samples_first (s : Synchronizer source target width) (old new mask) :
     (s.step old new mask true false).second = s.first := rfl
 
-/-- Event-encoded AIGER is an explicit verification representation. Each domain
-edge is an independent input; native SV/RTLIL retain physical clock ports. -/
+/-- Event encoding: each domain edge becomes an ordinary input, so the circuit can
+be emitted through the single-clock proved emitter. -/
 def Circuit.eventCircuit (c : Circuit nd i r o) : HDLean.Circuit 0 (i+1+nd) r o :=
   let wire : Fin i → Expr 0 (i+1+nd) r := fun k => .input ⟨k.val, by omega⟩
   let rst : Expr 0 (i+1+nd) r := .input ⟨i, by omega⟩

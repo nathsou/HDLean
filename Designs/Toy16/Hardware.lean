@@ -2,7 +2,6 @@ import Designs.Toy16.Core
 import Designs.Toy16.Interface
 import HDLean.Core.WordBank
 import HDLean.Lib.Select
-import HDLean.Netlist.Lower
 
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 8192
@@ -371,6 +370,6 @@ theorem hardware_correct (imem : Addr → Word) (s₀) (rst : Nat → Bool)
 
 /-- All storage is explicit. Narrow controls deliberately retain 30 unused bits;
 this count is a measured implementation budget rather than an ISA requirement. -/
-theorem ffBits (imem : Addr → Word) : (lower (hardware imem)).ffBits = 4288 := rfl
+theorem ffBits (imem : Addr → Word) : (hardware imem).ffBits = 4288 := rfl
 
 end HDLean.Toy16.Physical

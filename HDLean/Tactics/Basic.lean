@@ -1,11 +1,11 @@
 import HDLean.Tactics.Attr
 import HDLean.Semantics.Composition
-import HDLean.Netlist.Lower
+import HDLean.Core.Circuit
 import Std.Tactic.BVDecide
 
 attribute [circuit_simp] HDLean.Expr.eval HDLean.Expr.eval_or
   HDLean.PMachine.stateFrom_zero HDLean.PMachine.stateFrom_succ
-  HDLean.Machine.stateAt_zero HDLean.Machine.stateAt_succ HDLean.lowerExpr_correct
+  HDLean.Machine.stateAt_zero HDLean.Machine.stateAt_succ
 
 /-- Kernel-only automation never invokes native bit-blasting. -/
 macro "hw_step_kernel" : tactic => `(tactic|

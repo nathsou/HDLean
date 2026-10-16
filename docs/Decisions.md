@@ -42,6 +42,17 @@ These follow the review of this implementation; [Design.md](Design.md) section 1
 | Planned: domain-indexed multi-clock logic with the sampling oracle in hardware semantics | Raw multi-bit crossings type-checked and metastability was fixed to "always old" in the hardware link (finding F1). |
 | Planned: every claimed theorem in a frozen challenge, compared by statement | A theorem weakened to `True` passed L1 (finding F2). |
 
+## Consolidation, milestone R5 (2026-10-16)
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Official Lean kernel only | Owner's choice. `lake build` and `leanchecker --fresh` check everything; the export-based replay with nanoda, con-leche, con-ron and lean4lean, the custom comparator and the bundled-kernel scripts are removed. |
+| One pipeline: tree circuits compile to node graphs by the proved `Circuit.toDag` | The validator-based tree pipeline (graph validators, fast compiler, old printers and parsers, tree netlist) is deleted. Every design is emitted by the generic proved emitter. |
+| Drop exact-byte certificates; read every emitted file back with the proved parser | `emit_correct` already fixes what `emit c` means. Read-back guards the compiled code and the file write at negligible cost; byte certificates did not scale to the CPU. |
+| Readable challenges, enforced by statement constants | The generated 2,928-line statement dump, the claims and declaration-fingerprint files and per-design comparator configs are replaced by hand-written `Challenge.lean` files. The audit requires every statement constant to come from a frozen module, Lean, or a declared implementation hole. |
+| Frozen interfaces for the general-depth and dual-clock FIFOs | Their observation and input maps were agent-defined. Progress for the dual-clock FIFO is now stated from reset, not from an agent-defined relation. |
+| Dual-clock FIFO hardware emitted event-encoded | Its native multi-clock printer used the deleted validators. Clock edges become inputs and the single-clock proved emitter applies; native emission returns with milestone R2. |
+
 The historical entries above record decisions at the time. Later entries supersede
 implementation limitations as the corresponding features and proofs land. The
 [current coverage](Status.md) and [trust boundary](Trust.md) describe the result.
