@@ -31,9 +31,10 @@ private def rtlDesign (name : String) : IO Rtl.Design :=
   | "rtl-toy16" => pure Toy16.Word.design
   | _ => throw (IO.userError s!"unknown word-level design: {name}")
 
-/-- Bit-blast a word-level design with the proved `Design.toDag`. -/
+/-- Bit-blast a word-level design with the proved `Design.toDag`, after the proved
+word-level pass (`Design.optimized_step`/`optimized_output`: same cycle semantics). -/
 private def withRtl (d : Rtl.Design) (f : {i r o : Nat} → Dag 0 i r o → IO Unit) : IO Unit :=
-  match d.toDag with
+  match d.optimized.toDag with
   | some g => f g
   | none => throw (IO.userError "bit-blasting failed: the design does not pass the blaster's width checks")
 
@@ -253,14 +254,18 @@ private def execute (args : List String) : IO Unit := do
       s := m.next s false
     IO.println s!"halted={s.arch.halted}, memory[0]={s.arch.dmem 0}"
   | ["rtl-emit", design, path] =>
-    let d ← rtlDesign design
-    unless d.check do throw (IO.userError s!"{design} does not pass Design.check")
+    let d0 ← rtlDesign design
+    unless d0.check do throw (IO.userError s!"{design} does not pass Design.check")
+    -- The proved word-level pass: same `step` and `output` as the design.
+    let d := d0.optimized
     writeFile path d.systemVerilog
     let bytes ← IO.FS.readFile (System.FilePath.mk path)
     unless Rtl.Design.parseSystemVerilog bytes == some d do
       throw (IO.userError s!"{path}: the proved parser did not read back the design")
     let cells := d.modules.toList.foldl (fun n m => n + m.cells.size) 0
-    IO.println s!"Wrote {path} ({d.modules.size} modules, {cells} cells; proved round trip, read back)."
+    let rewritten := (d0.modules.zip d.modules).toList.foldl (fun n (a, b) =>
+      n + ((a.cells.zip b.cells).toList.filter fun (x, y) => x != y).length) 0
+    IO.println s!"Wrote {path} ({d.modules.size} modules, {cells} cells, {rewritten} rewritten by the proved word-level pass; proved round trip, read back)."
   | "rtl-trace" :: design :: path :: rest =>
     if rest.length > 2 then throw (IO.userError usage)
     let cycles ← parseNum (rest[0]?.getD "100") 100000
@@ -281,7 +286,9 @@ private def execute (args : List String) : IO Unit := do
     withRtl d fun g => do
       let lg := Dag.lowerOpt g
       IO.println (Lean.Json.mkObj [("design", .str design), ("modules", Lean.toJson d.modules.size),
-        ("cells", Lean.toJson cells), ("register_bits", Lean.toJson regBits), ("memory_bits", Lean.toJson memBits),
+        ("cells", Lean.toJson cells), ("cells_rewritten", Lean.toJson ((d.modules.zip d.optimized.modules).toList.foldl
+          (fun n (a, b) => n + ((a.cells.zip b.cells).toList.filter fun (x, y) => x != y).length) 0)),
+        ("register_bits", Lean.toJson regBits), ("memory_bits", Lean.toJson memBits),
         ("blasted_state_bits", Lean.toJson lg.ffBits), ("blasted_and_gates", Lean.toJson lg.andCount),
         ("blasted_logic_depth", Lean.toJson lg.depth)]).pretty
   | _ => throw (IO.userError usage)

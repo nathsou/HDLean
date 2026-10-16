@@ -29,3 +29,4 @@ import HDLean.Rtl.Instance
 import HDLean.Rtl.SystemVerilog
 import HDLean.Rtl.Memory
 import HDLean.Rtl.Blast.Top
+import HDLean.Rtl.Optimize

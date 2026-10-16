@@ -84,6 +84,8 @@ private def checkRAM (a width cycles seed : Nat) : IO Unit := do
 def main : IO Unit := do
   HDLean.Tests.checkBackendTexts
   IO.println "PASS: emitted SV/AIGER/RTLIL decode back to the lowered graph; changed files rejected."
+  HDLean.Tests.checkWordPass
+  IO.println "PASS: the word-level pass rewrites a redundant module, which still checks and computes the same."
   for k in [0,1,2,3,4] do
     for w in [0,1,8,16] do
       for seed in [1,42,999] do checkRing k w 150 seed
