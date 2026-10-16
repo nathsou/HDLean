@@ -14,6 +14,8 @@ open Std.Sat Std.Sat.AIG Std.Tactic.BVDecide
 
 abbrev Bits := Array Fanin
 
+@[simp] theorem bv_ofNat_toNat (x : BitVec w) : bv w x.toNat = x := by simp [bv]
+
 /-- `bits` denote `x`. -/
 def Denotes (aig : AIG Nat) (assign : Nat → Bool) (bits : Bits) (x : BitVec w) : Prop :=
   ∃ rv : RefVec aig w, rv.refs.toArray = bits ∧ ∀ idx (hidx : idx < w), ⟦aig, rv.get idx hidx, assign⟧ = x.getLsbD idx
