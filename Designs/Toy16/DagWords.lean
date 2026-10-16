@@ -1,11 +1,11 @@
-import HDLean.Core.DagBuilder
+import HDLean.Core.DagBuilderBlock
 
 namespace HDLean.Dag.Build.Word
 
-def literal (v : BitVec w) : M d i r (Word w) := tabulate fun k => Build.literal (v.getLsbD k.val)
+def literal (v : BitVec w) : M d i r (Word w) := emitWord fun k => .lit (v.getLsbD k.val)
 def registers (off : Nat) (h : off+w ≤ r) : M d i r (Word w) :=
-  tabulate fun k => reg ⟨off+k.val,by omega⟩
-def mux (c : Ref) (a b : Word w) : M d i r (Word w) := tabulate fun k => Build.mux c a[k] b[k]
+  emitWord fun k => .reg ⟨off+k.val,by omega⟩
+def mux (c : Ref) (a b : Word w) : M d i r (Word w) := emitWord fun k => .mux c a[k] b[k]
 def bitAnd (a b : Word w) : M d i r (Word w) := tabulate fun k => Build.and a[k] b[k]
 def bitOr (a b : Word w) : M d i r (Word w) := tabulate fun k => Build.or a[k] b[k]
 def bitXor (a b : Word w) : M d i r (Word w) := tabulate fun k => Build.xor a[k] b[k]

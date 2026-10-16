@@ -6,27 +6,25 @@ namespace HDLean.Dag.Build.Word
 
 theorem literal_ensures (s : State d i r) (v : BitVec w) :
     Ensures s (literal v) (fun js t => WordRefines t js (WordExpr.literal v)) := by
-  simp only [literal, WordRefines, Fin.getElem_fin, WordExpr.literal, Vector.getElem_ofFn, Vector.getElem_zipWith, Vector.getElem_map]
-  apply tabulate_ensures _ (fun k j t => Refines t j (.lit (v.getLsbD k.val)))
-    (fun _ _ _ _ he h => h.mono he) s
-  intro t _ k
-  exact Build.literal_ensures t _
+  simpa only [literal, WordRefines, WordExpr.literal, Fin.getElem_fin,
+    Vector.getElem_ofFn, opExpression] using
+    emitWord_ensures s (fun k => .lit (v.getLsbD k.val)) (fun _ => trivial)
 
 theorem registers_ensures (s : State d i r) (off : Nat) (h : off+w ≤ r) :
     Ensures s (registers off h) (fun js t => WordRefines t js (WordExpr.registers off h)) := by
-  simp only [registers, WordRefines, Fin.getElem_fin, WordExpr.registers, Vector.getElem_ofFn, Vector.getElem_zipWith, Vector.getElem_map]
-  apply tabulate_ensures _ (fun k j t => Refines t j (.reg ⟨off+k.val,by omega⟩))
-    (fun _ _ _ _ he h => h.mono he) s
-  intro t _ k
-  exact Build.reg_ensures t _
+  simpa only [registers, WordRefines, WordExpr.registers, Fin.getElem_fin,
+    Vector.getElem_ofFn, opExpression] using
+    emitWord_ensures s (fun k : Fin w => .reg ⟨off+k.val,by omega⟩) (fun _ => trivial)
 
 theorem mux_ensures (hc : Refines s c ec) (ha : WordRefines s a ea) (hb : WordRefines s b eb) :
     Ensures s (mux c a b) (fun js t => WordRefines t js (WordExpr.mux ec ea eb)) := by
-  simp only [mux, WordRefines, Fin.getElem_fin, WordExpr.mux, Vector.getElem_ofFn, Vector.getElem_zipWith, Vector.getElem_map]
-  apply tabulate_ensures _ (fun k j t => Refines t j (.mux ec ea[k] eb[k]))
-    (fun _ _ _ _ he h => h.mono he) s
-  intro t he k
-  exact Build.mux_ensures (hc.mono he) ((ha k).mono he) ((hb k).mono he)
+  apply ensures_weaken (emitWord_ensures s (fun k => .mux c a[k] b[k])
+    (fun k => ⟨hc.1,(ha k).1,(hb k).1⟩))
+  intro refs t h k
+  have hka : s.expression a[k.val] = ea[k.val] := (ha k).2
+  have hkb : s.expression b[k.val] = eb[k.val] := (hb k).2
+  simpa only [opExpression, WordExpr.mux, Fin.getElem_fin,
+    Vector.getElem_ofFn, Vector.getElem_zipWith, Vector.getElem_map, hc.2, hka, hkb] using h k
 
 theorem bitAnd_ensures (ha : WordRefines s a ea) (hb : WordRefines s b eb) :
     Ensures s (bitAnd a b) (fun js t => WordRefines t js (WordExpr.bitAnd ea eb)) := by

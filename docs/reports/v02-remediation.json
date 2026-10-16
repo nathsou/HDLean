@@ -1,0 +1,304 @@
+{
+  "schema": 1,
+  "date": "2026-10-16",
+  "complete": false,
+  "assurance": "development evidence; no L2/L3 sign-off",
+  "frozen_headlines": 104,
+  "whole_export_probe": {
+    "project_checkpoint": "98-headline staged-cpu snapshot based on e462517 plus CPU/allocation additions",
+    "export_sha256": "54b9a639d618feb3a2de352b0ae27c9e10775bc843084cc987cc1bb83e972199",
+    "export_bytes": 779043888,
+    "checker_sha256": "cbf13950fc4a48f635a0beceeb5ed32dd82568b870cfd081b6391c1f2cf02ba5",
+    "isolated": false,
+    "passed": false,
+    "process_tree_measurement": "ps RSS sampled every 50ms; group killed on cap",
+    "attempts": [
+      {
+        "returncode": -9,
+        "peak_rss_bytes": 11582222336,
+        "limit_rss_bytes": 11534336000,
+        "seconds": 239.25503286300227,
+        "stopped": "resident-memory cap"
+      },
+      {
+        "returncode": -9,
+        "peak_rss_bytes": 14684631040,
+        "limit_rss_bytes": 14680064000,
+        "seconds": 278.35799796300125,
+        "stopped": "resident-memory cap"
+      }
+    ]
+  },
+  "cpu_exact_aiger_probe": {
+    "passed": false,
+    "artifact_bytes": 1909434,
+    "artifact_sha256": "4bf2968ddf5c8febc4caa4692cdf8e0b0c9dea9a6fced98da2079e889f8771d1",
+    "source_sha256": "b0ada4b0b9dea3792ca31146cac33afa7a2b3f28e608b27e092d73a2d69385d4",
+    "claim": "Proved.Format.aiger.emit (DagPhysical.hardware sumProgram) = expected",
+    "operation": "Lean kernel decide; no native proof axiom or concrete semantic validator",
+    "budget": {
+      "returncode": -9,
+      "peak_rss_bytes": 6451212288,
+      "limit_rss_bytes": 6442450944,
+      "seconds": 19.261624687998847,
+      "stopped": "resident-memory cap"
+    }
+  },
+  "native_eda": {
+    "passed": true,
+    "formats": [
+      "SystemVerilog",
+      "RTLIL"
+    ],
+    "events": 240,
+    "wrong_clock_rejected": true,
+    "note": "Native two-domain framework fixture; does not establish the new physical asynchronous-FIFO refinement."
+  },
+  "remaining": [
+    "Exact CPU byte certificate at L3 within 6GiB",
+    "Full bundled whole-project acceptance with genuine namespace isolation",
+    "Reusable hierarchical memory/CPU emission and new event-AIGER flattening",
+    "Physical asynchronous-FIFO integration with the typed native sampling primitives",
+    "External approval of the final frozen manifest and activation of branch protection"
+  ],
+  "historical_cpu_replay": {
+    "passed": true,
+    "roots": [
+      "HDLean.Dag.Build.emitWord_ensures",
+      "HDLean.Toy16.DagPhysical.decode_next",
+      "HDLean.Toy16.DagPhysical.decode_output",
+      "HDLean.Toy16.DagPhysical.emit_correct",
+      "HDLean.Toy16.DagPhysical.hardware_correct"
+    ],
+    "checked_declarations": 8453,
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "export_sha256": "31b7d9e065946e08f857380c3ebffde4b21361dc39aa60f3421fe1298c564fbf",
+    "extra_checkers": {
+      "con-leche": {
+        "passed": true,
+        "sha256": "23a32522ea2c79f4ec8b48916272b37a423bda171e57cd83cfcf142eec50e621"
+      },
+      "con-ron": {
+        "passed": true,
+        "sha256": "60f4ca9fb9436c323789fa49aae33af6dcd1b9b54b43a66b461779ce79fd8eec"
+      },
+      "leanchecker-paranoid": {
+        "passed": true,
+        "sha256": "ca74d1e9a856149ed05acb600d8931a574dd9f465745beeaf93e3de7b7cbe274"
+      }
+    }
+  },
+  "historical_native_framework_replay": {
+    "passed": true,
+    "roots": [
+      "HDLean.Backend.Graph.withStatePorts_eval",
+      "HDLean.Backend.Graph.withStatePorts_wellFormed",
+      "HDLean.Dag.Build.emitWord_ensures",
+      "HDLean.MultiClock.Shared.MultiDag.decode_emitNative",
+      "HDLean.MultiClock.Shared.MultiDag.emitNative_correct",
+      "HDLean.MultiClock.Shared.MultiDag.nativeLower_correct"
+    ],
+    "checked_declarations": 7565,
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "export_sha256": "81a1dbcc1bd91192ea4386caf91ecc8063a1098b8e6f7fbabf99f46ae75dcfd4",
+    "extra_checkers": {
+      "con-leche": {
+        "passed": true,
+        "sha256": "23a32522ea2c79f4ec8b48916272b37a423bda171e57cd83cfcf142eec50e621"
+      },
+      "con-ron": {
+        "passed": true,
+        "sha256": "60f4ca9fb9436c323789fa49aae33af6dcd1b9b54b43a66b461779ce79fd8eec"
+      },
+      "leanchecker-paranoid": {
+        "passed": true,
+        "sha256": "ca74d1e9a856149ed05acb600d8931a574dd9f465745beeaf93e3de7b7cbe274"
+      }
+    }
+  },
+  "headline_replay": {
+    "passed": true,
+    "roots": [
+      "HDLean.AsyncFifo.Physical.decode_next",
+      "HDLean.AsyncFifo.Physical.hardware_preserves_queue",
+      "HDLean.AsyncFifo.Physical.output_data",
+      "HDLean.AsyncFifo.Physical.output_ready",
+      "HDLean.AsyncFifo.Physical.output_valid",
+      "HDLean.AsyncFifo.Physical.storage_bits",
+      "HDLean.AsyncFifo.read_progress_queue",
+      "HDLean.AsyncFifo.reset_establishes_queue",
+      "HDLean.AsyncFifo.reset_progress",
+      "HDLean.AsyncFifo.step_refines_queue",
+      "HDLean.AsyncFifo.trace_refines_queue",
+      "HDLean.AsyncFifo.ungray_gray",
+      "HDLean.AsyncFifo.write_progress_queue",
+      "HDLean.Backend.Format.correct_of_validated",
+      "HDLean.Backend.Format.validates_sound",
+      "HDLean.Backend.Graph.validateLocal_sound",
+      "HDLean.Backend.Graph.validate_sound",
+      "HDLean.Backend.Graph.withStatePorts_eval",
+      "HDLean.Backend.Graph.withStatePorts_wellFormed",
+      "HDLean.Backend.Proved.Aag.parse_print",
+      "HDLean.Backend.Proved.Aag.parse_rtlil",
+      "HDLean.Backend.Proved.Aag.parse_systemVerilog",
+      "HDLean.Backend.Proved.emit_correct",
+      "HDLean.Circuit.network_correct",
+      "HDLean.Counter.Challenge.budget",
+      "HDLean.Counter.Challenge.correctness",
+      "HDLean.Counter.reset_schedule",
+      "HDLean.Dag.Build.emitWord_ensures",
+      "HDLean.Dag.Build.run_implements",
+      "HDLean.Dag.lower_correct",
+      "HDLean.Dag.lower_gate_count",
+      "HDLean.Dag.lower_wellFormed",
+      "HDLean.Delay.latency",
+      "HDLean.Delay.realizes_pipe",
+      "HDLean.Delay.retime",
+      "HDLean.Fifo.Challenge.budget",
+      "HDLean.Fifo.Challenge.correctness",
+      "HDLean.Fifo.Circular.Physical.decode_next",
+      "HDLean.Fifo.Circular.Physical.decode_output",
+      "HDLean.Fifo.Circular.Physical.hardware_preserves_queue",
+      "HDLean.Fifo.Circular.Physical.hardware_refines_queue",
+      "HDLean.Fifo.Circular.Physical.storage_bits",
+      "HDLean.Fifo.Circular.reset_establishes_queue",
+      "HDLean.Fifo.Circular.step_refines_queue",
+      "HDLean.Fifo.Circular.trace_refines_queue",
+      "HDLean.Fifo.full_rate",
+      "HDLean.Fifo.hardware_reset_schedule",
+      "HDLean.Machine.refines_of_simulation",
+      "HDLean.MultiClock.Circuit.eventCircuit_correct",
+      "HDLean.MultiClock.Format.correct_of_validated",
+      "HDLean.MultiClock.Graph.eval_correct",
+      "HDLean.MultiClock.Shared.MultiDag.decode_emitNative",
+      "HDLean.MultiClock.Shared.MultiDag.emitNative_correct",
+      "HDLean.MultiClock.Shared.MultiDag.first_samples",
+      "HDLean.MultiClock.Shared.MultiDag.lower_correct",
+      "HDLean.MultiClock.Shared.MultiDag.nativeLower_correct",
+      "HDLean.MultiClock.Shared.MultiDag.second_samples_first",
+      "HDLean.MultiClock.Shared.MultiDag.sourceSafe_single_bit",
+      "HDLean.Netlist.optimize_correct",
+      "HDLean.RAMCircuit.decode_output",
+      "HDLean.RAMCircuit.hardware_correct",
+      "HDLean.SkidBuffer.Challenge.budget",
+      "HDLean.SkidBuffer.Challenge.correctness",
+      "HDLean.SkidBuffer.pipeline_correct",
+      "HDLean.Tests.counter_graph",
+      "HDLean.Tests.fifo1_graph",
+      "HDLean.Tests.fifo8_graph",
+      "HDLean.Tests.packet_roundtrip",
+      "HDLean.Tests.surfaceIncrement_correct",
+      "HDLean.Toy16.Challenge.budget",
+      "HDLean.Toy16.Challenge.correctness",
+      "HDLean.Toy16.DagPhysical.decode_next",
+      "HDLean.Toy16.DagPhysical.decode_output",
+      "HDLean.Toy16.DagPhysical.emit_correct",
+      "HDLean.Toy16.DagPhysical.hardware_correct",
+      "HDLean.Toy16.Physical.decode_next",
+      "HDLean.Toy16.Physical.decode_output",
+      "HDLean.Verification.FiniteSystem.check_sound",
+      "HDLean.WordExpr.addWithCarry_correct",
+      "HDLean.WordExpr.addWithCarry_overflow",
+      "HDLean.WordExpr.equal_correct",
+      "HDLean.WordExpr.selectBalanced_correct",
+      "HDLean.WordExpr.setWidth_correct",
+      "HDLean.WordExpr.signExtend_correct",
+      "HDLean.WordExpr.sub_correct",
+      "HDLean.WordExpr.ult_correct",
+      "HDLean.compose_contracts",
+      "HDLean.gray_adjacent",
+      "HDLean.gray_increment_ne",
+      "HDLean.gray_injective",
+      "HDLean.gray_one_bit8",
+      "HDLean.lowerExpr_correct",
+      "HDLean.lower_next",
+      "HDLean.lower_output",
+      "HDLean.network_refines",
+      "HDLean.one_bit_mix",
+      "HDLean.one_bit_mix8",
+      "HDLean.refinesAfterReset_of_simulation",
+      "HDLean.refinesResetSchedule_of_simulation",
+      "HDLean.reset_noninterference",
+      "HDLean.retiresLike_of_simulation",
+      "HDLean.sample_adjacent",
+      "HDLean.sample_gray_increment",
+      "HDLean.sync2_stable"
+    ],
+    "checked_declarations": 11718,
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "export_sha256": "9bb0ec6b5104ec345fad93a1c18e5b79a2082c32ab39cc3eb38d38c2c1762a1d",
+    "extra_checkers": {
+      "con-leche": {
+        "passed": true,
+        "sha256": "23a32522ea2c79f4ec8b48916272b37a423bda171e57cd83cfcf142eec50e621"
+      },
+      "con-ron": {
+        "passed": true,
+        "sha256": "60f4ca9fb9436c323789fa49aae33af6dcd1b9b54b43a66b461779ce79fd8eec"
+      },
+      "leanchecker-paranoid": {
+        "passed": true,
+        "sha256": "ca74d1e9a856149ed05acb600d8931a574dd9f465745beeaf93e3de7b7cbe274"
+      }
+    }
+  },
+  "source_manifest_sha256": "ee1c77c2543cf9c5cc0160dc85aeafce8da737f0396d0522481236a2d6fa9323",
+  "development_verification": {
+    "status": "development-checks-passed",
+    "assurance_level": "L1",
+    "manifest_sha256": "ee1c77c2543cf9c5cc0160dc85aeafce8da737f0396d0522481236a2d6fa9323",
+    "manifest_independently_pinned": false,
+    "spec_approval": "review-required",
+    "source_digest": "64851d162476af55d027adc9c10e4210b0b42e3649e763da73d6f20d9c299625"
+  },
+  "regressions": {
+    "workflow_tests": 14,
+    "workflow_passed": true,
+    "independent_checker_tests": 19,
+    "independent_checker_passed": true,
+    "native_tool_test_rerun_after_initial_skip": true
+  },
+  "cpu_external_eda": {
+    "passed": true,
+    "checks": [
+      "independent AIGER interpretation",
+      "100 Icarus transitions",
+      "all-state SV/RTLIL transition equivalence",
+      "all FF D/Q/clock and polarity audits"
+    ],
+    "resources": {
+      "returncode": 0,
+      "peak_rss_bytes": 4864458752,
+      "limit_rss_bytes": 5242880000,
+      "seconds": 1013.7194029969978,
+      "stopped": null
+    },
+    "artifacts": {
+      "sv": {
+        "bytes": 9951813,
+        "sha256": "a2a69bd4d55070ea10f98015ca12da36f619fbb0754e61677732b5b8cb80599b"
+      },
+      "rtlil": {
+        "bytes": 42444671,
+        "sha256": "f1f05a9d17bf6d4ab145cec4320b3e4d91512caaccbebf6852393649c942f5f1"
+      },
+      "aiger": {
+        "bytes": 1909434,
+        "sha256": "4bf2968ddf5c8febc4caa4692cdf8e0b0c9dea9a6fced98da2079e889f8771d1"
+      }
+    },
+    "binding": "Current native executable output compared byte-for-byte with tested SV/RTLIL artifacts. The kernel CPU byte certificate remains rejected."
+  }
+}

@@ -12,48 +12,52 @@ private def svPortsRow (moduleName : Word) : Row (Nat × Nat) :=
 private def svPorts (moduleName : Word) : Block (Nat × Nat) := line (svPortsRow moduleName) (by intro a; simp [svPortsRow, before, after, pair, Grammar.map, fixed, natural])
 
 private def svRegsRow : Row (Nat) :=
-  before [⟨"reg", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (after natural [⟨":", by decide, by decide⟩, ⟨"0", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"state", by decide, by decide⟩, ⟨";", by decide, by decide⟩])
+  before [⟨"wire", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (after natural [⟨":", by decide, by decide⟩, ⟨"0", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"state", by decide, by decide⟩, ⟨";", by decide, by decide⟩])
 
 private def svRegs : Block (Nat) := line svRegsRow (by intro a; simp [svRegsRow, before, after, pair, Grammar.map, fixed, natural])
 
-private def svGatesRow : Row (Nat) :=
-  before [⟨"wire", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (after natural [⟨":", by decide, by decide⟩, ⟨"0", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"gates", by decide, by decide⟩, ⟨";", by decide, by decide⟩])
+macro "svw!" s:str : term => `((⟨$s,by decide,by decide⟩ : HDLean.Backend.Text.Word))
 
-private def svGates : Block (Nat) := line svGatesRow (by intro a; simp [svGatesRow, before, after, pair, Grammar.map, fixed, natural])
+private def net (k : Nat) : Word := prefixed (svw!"n_") k
+private def stateNet (k : Nat) : Word := prefixed (svw!"s_") k
+private def gateNet (k : Nat) : Word := prefixed (svw!"g_") k
+private def literalRef : Row Nat := numbered (svw!"n_")
 
-private def svInvRow (k : Nat) : Row (Unit) :=
-  fixed [⟨"assign", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral ((2*k+1)), ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"~", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral ((2*k)), ⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩]
+private def svGatesRow : Row Nat :=
+  before [svw!"localparam",svw!"HD_GATES",svw!"="] (after natural [svw!";"])
+private def svGates : Block Nat := line svGatesRow (by intro a; simp [svGatesRow,before,after,pair,Grammar.map,fixed,natural])
 
-private def svInv (k : Nat) : Block (Unit) := line (svInvRow k) (by intro a; simp [svInvRow, fixed])
+private def svInvRow (k : Nat) : Row Unit :=
+  fixed [svw!"wire",net (2*k+1),svw!"=",svw!"~",net (2*k),svw!";"]
+private def svInv (k : Nat) : Block Unit := line (svInvRow k) (by intro a; simp [svInvRow,fixed])
 
-private def svInputRow (k : Nat) : Row (Unit) :=
-  fixed [⟨"assign", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral ((2*(k+1))), ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"ins", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (k), ⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩]
+private def svInputRow (k : Nat) : Row Unit :=
+  fixed [svw!"wire",net (2*(k+1)),svw!"=",svw!"ins",svw!"[",numeral k,svw!"]",svw!";"]
+private def svInput (k : Nat) : Block Unit := line (svInputRow k) (by intro a; simp [svInputRow,fixed])
 
-private def svInput (k : Nat) : Block (Unit) := line (svInputRow k) (by intro a; simp [svInputRow, fixed])
+private def svState (i k : Nat) : Block Unit := fixed [
+  ⟨[svw!"reg",stateNet k,svw!";"],by simp⟩,
+  ⟨[svw!"wire",net (2*(i+k+1)),svw!"=",stateNet k,svw!";"],by simp⟩,
+  ⟨[svw!"assign",svw!"state",svw!"[",numeral k,svw!"]",svw!"=",stateNet k,svw!";"],by simp⟩]
 
-private def svStateRow (i k : Nat) : Row (Unit) :=
-  fixed [⟨"assign", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral ((2*(i+k+1))), ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"state", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (k), ⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩]
+private def svNextRow (k : Nat) : Row Nat :=
+  before [svw!"always",svw!"@",svw!"(",svw!"posedge",svw!"clk",svw!")",stateNet k,svw!"<="]
+    (after literalRef [svw!";"])
+private def svNext (k : Nat) : Block Nat := line (svNextRow k) (by intro a; simp [svNextRow,before,after,pair,Grammar.map,fixed])
 
-private def svState (i k : Nat) : Block (Unit) := line (svStateRow i k) (by intro a; simp [svStateRow, fixed])
-
-private def svNextRow (k : Nat) : Row (Nat) :=
-  before [⟨"always", by decide, by decide⟩, ⟨"@", by decide, by decide⟩, ⟨"(", by decide, by decide⟩, ⟨"posedge", by decide, by decide⟩, ⟨"clk", by decide, by decide⟩, ⟨")", by decide, by decide⟩, ⟨"state", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (k), ⟨"]", by decide, by decide⟩, ⟨"<=", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (after natural [⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩])
-
-private def svNext (k : Nat) : Block (Nat) := line (svNextRow k) (by intro a; simp [svNextRow, before, after, pair, Grammar.map, fixed, natural])
-
-private def svOutputRow (k : Nat) : Row (Nat) :=
-  before [⟨"assign", by decide, by decide⟩, ⟨"outs", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (k), ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (after natural [⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩])
-
-private def svOutput (k : Nat) : Block (Nat) := line (svOutputRow k) (by intro a; simp [svOutputRow, before, after, pair, Grammar.map, fixed, natural])
+private def svOutputRow (k : Nat) : Row Nat :=
+  before [svw!"assign",svw!"outs",svw!"[",numeral k,svw!"]",svw!"="] (after literalRef [svw!";"])
+private def svOutput (k : Nat) : Block Nat := line (svOutputRow k) (by intro a; simp [svOutputRow,before,after,pair,Grammar.map,fixed])
 
 private def svGateRow (k : Nat) : Row (Nat × Nat) :=
-  before [⟨"assign", by decide, by decide⟩, ⟨"gates", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (k), ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (pair (after natural [⟨"]", by decide, by decide⟩, ⟨"&", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩]) (before [] (after natural [⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩])))
+  before [svw!"wire",gateNet k,svw!"="]
+    (pair (after literalRef [svw!"&"]) (after literalRef [svw!";"]))
 private def svGateTargetRow (k : Nat) : Row Nat :=
-  before [⟨"assign", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩] (after natural [⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"gates", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (k), ⟨"]", by decide, by decide⟩, ⟨";", by decide, by decide⟩])
+  before [svw!"wire"] (after literalRef [svw!"=",gateNet k,svw!";"])
 private def svGate (k : Nat) : Block Gate :=
-  ((pair (line (svGateRow k) (by intro a; simp [svGateRow, before, after, pair, Grammar.map, fixed, natural]))
-    (line (svGateTargetRow k) (by intro a; simp [svGateTargetRow, before, after, pair, Grammar.map, fixed, natural]))).map
-    (fun p => ⟨p.2 / 2, p.1.1, p.1.2⟩) (fun g => ((g.a,g.b),2*g.lhs))
+  ((pair (line (svGateRow k) (by intro a; simp [svGateRow,before,after,pair,Grammar.map,fixed]))
+    (line (svGateTargetRow k) (by intro a; simp [svGateTargetRow,before,after,pair,Grammar.map,fixed]))).checkedMap
+    (fun p => ⟨p.2 / 2,p.1.1,p.1.2⟩) (fun g => ((g.a,g.b),2*g.lhs))
     (by intro g; cases g; simp))
 
 private def svHeader (moduleName : Word) : Block Header :=
@@ -62,14 +66,16 @@ private def svHeader (moduleName : Word) : Block Header :=
     (fun h => ((h.inputs,h.outputs),(h.latches,h.gates))) (by intro h; cases h; rfl)
 
 private def svConstants (h : Header) : Block Unit := fixed [
-  ⟨[⟨"wire", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral ((2*(h.inputs+h.latches+h.gates)+1)), ⟨":", by decide, by decide⟩, ⟨"0", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨";", by decide, by decide⟩], by simp⟩,
-  ⟨[⟨"assign", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, ⟨"0", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"1'b0", by decide, by decide⟩, ⟨";", by decide, by decide⟩], by simp⟩,
-  ⟨[⟨"assign", by decide, by decide⟩, ⟨"n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, ⟨"1", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"1'b1", by decide, by decide⟩, ⟨";", by decide, by decide⟩], by simp⟩,
-  ⟨[⟨"assign", by decide, by decide⟩, ⟨"outs", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (h.outputs), ⟨"]", by decide, by decide⟩, ⟨"=", by decide, by decide⟩, ⟨"1'b0", by decide, by decide⟩, ⟨";", by decide, by decide⟩], by simp⟩]
+  ⟨[svw!"localparam",svw!"HD_LITERALS",svw!"=",numeral (2*(h.inputs+h.latches+h.gates)+1),svw!";"],by simp⟩,
+  ⟨[svw!"wire",net 0,svw!"=",svw!"1'b0",svw!";"],by simp⟩,
+  ⟨[svw!"wire",net 1,svw!"=",svw!"1'b1",svw!";"],by simp⟩,
+  ⟨[svw!"assign",svw!"state",svw!"[",numeral h.latches,svw!"]",svw!"=",svw!"1'b0",svw!";"],by simp⟩,
+  ⟨[svw!"assign",svw!"outs",svw!"[",numeral h.outputs,svw!"]",svw!"=",svw!"1'b0",svw!";"],by simp⟩]
 
 private def svEnd : Block Unit := fixed [⟨[⟨"endmodule", by decide, by decide⟩], by simp⟩]
 
-/-- Scalar gate equations use one common literal bus; arbitrary state has no initializer. -/
+/-- Scalar literal wires avoid quadratic HDL elaboration of huge packed buses.
+Arbitrary state has no initializer. -/
 def Aag.svLinesNamed (moduleName : Word) (g : Aag) : List Line :=
   let h : Header := ⟨g.inputs,g.next.length,g.outputs.length,g.gates.length⟩
   (svHeader moduleName).encode h ++ (svConstants h).encode () ++

@@ -10,6 +10,12 @@ open Lean Elab Command
 are compiled separately, without importing this module. -/
 run_cmd liftTermElabM do
   for (target, source) in #[
+    (`HDLean.Review.Dag_Build_emitWord_ensures, `HDLean.Dag.Build.emitWord_ensures),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_emitNative_correct, `HDLean.MultiClock.Shared.MultiDag.emitNative_correct),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_decode_emitNative, `HDLean.MultiClock.Shared.MultiDag.decode_emitNative),
+    (`HDLean.Review.MultiClock_Shared_MultiDag_nativeLower_correct, `HDLean.MultiClock.Shared.MultiDag.nativeLower_correct),
+    (`HDLean.Review.Backend_Graph_withStatePorts_wellFormed, `HDLean.Backend.Graph.withStatePorts_wellFormed),
+    (`HDLean.Review.Backend_Graph_withStatePorts_eval, `HDLean.Backend.Graph.withStatePorts_eval),
     (`HDLean.Review.Dag_Build_run_implements, `HDLean.Dag.Build.run_implements),
     (`HDLean.Review.Toy16_DagPhysical_decode_output, `HDLean.Toy16.DagPhysical.decode_output),
     (`HDLean.Review.Toy16_DagPhysical_decode_next, `HDLean.Toy16.DagPhysical.decode_next),

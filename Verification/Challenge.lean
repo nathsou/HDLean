@@ -2844,4 +2844,85 @@ theorem Dag_Build_run_implements :
               (@HDLean.Circuit.evalOutput d i r o c s xs))) :=
   @HDLean.Dag.Build.run_implements
 
+/-- Frozen statement of `HDLean.Backend.Graph.withStatePorts_eval`. -/
+theorem Backend_Graph_withStatePorts_eval :
+    ∀ (g : HDLean.Backend.Graph) (inputs state : Array.{0} Bool),
+  @Eq.{1} Nat (@Array.size.{0} Bool inputs) (HDLean.Backend.Graph.inputs g) →
+    @Eq.{1} Nat (@Array.size.{0} Bool state) (HDLean.Backend.Graph.latches g) →
+      @Eq.{1} (Prod.{0, 0} (Array.{0} Bool) (Array.{0} Bool))
+        (HDLean.Backend.Graph.eval (HDLean.Backend.Graph.withStatePorts g) inputs state)
+        (@Prod.mk.{0, 0} (Array.{0} Bool) (Array.{0} Bool)
+          (@Prod.fst.{0, 0} (Array.{0} Bool) (Array.{0} Bool) (HDLean.Backend.Graph.eval g inputs state))
+          (@HAppend.hAppend.{0, 0, 0} (Array.{0} Bool) (Array.{0} Bool) (Array.{0} Bool)
+            (@instHAppendOfAppend.{0} (Array.{0} Bool) (@Array.instAppend.{0} Bool))
+            (@Prod.snd.{0, 0} (Array.{0} Bool) (Array.{0} Bool) (HDLean.Backend.Graph.eval g inputs state)) state)) :=
+  @HDLean.Backend.Graph.withStatePorts_eval
+
+/-- Frozen statement of `HDLean.Backend.Graph.withStatePorts_wellFormed`. -/
+theorem Backend_Graph_withStatePorts_wellFormed :
+    ∀ (g : HDLean.Backend.Graph),
+  @Eq.{1} Bool (HDLean.Backend.Graph.wellFormed g) Bool.true →
+    @Eq.{1} Bool (HDLean.Backend.Graph.wellFormed (HDLean.Backend.Graph.withStatePorts g)) Bool.true :=
+  @HDLean.Backend.Graph.withStatePorts_wellFormed
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.nativeLower_correct`. -/
+theorem MultiClock_Shared_MultiDag_nativeLower_correct :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd) (s : @HDLean.MultiClock.Shared.MultiDag.State nd c)
+  (e : @HDLean.MultiClock.Shared.MultiDag.Event nd c),
+  @Eq.{1}
+    (Prod.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+      ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool))
+    (@HDLean.MultiClock.Shared.MultiDag.Graph.eval nd c (@HDLean.MultiClock.Shared.MultiDag.nativeLower nd c) s e)
+    (@Prod.mk.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+      ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool)
+      (@HDLean.MultiClock.Shared.MultiDag.next nd c s e) (@HDLean.MultiClock.Shared.MultiDag.output nd c s e)) :=
+  @HDLean.MultiClock.Shared.MultiDag.nativeLower_correct
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.decode_emitNative`. -/
+theorem MultiClock_Shared_MultiDag_decode_emitNative :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd) (f : HDLean.MultiClock.Shared.NativeFormat),
+  @Eq.{1} (Option.{0} (List.{0} HDLean.Backend.Proved.Aag))
+    (@HDLean.MultiClock.Shared.MultiDag.decodeNative nd c f (@HDLean.MultiClock.Shared.MultiDag.emitNative nd c f))
+    (@Option.some.{0} (List.{0} HDLean.Backend.Proved.Aag)
+      (@List.map.{0, 0} (Prod.{0, 0} Nat HDLean.Backend.Proved.Aag) HDLean.Backend.Proved.Aag
+        (@Prod.snd.{0, 0} Nat HDLean.Backend.Proved.Aag) (@HDLean.MultiClock.Shared.MultiDag.nativeModules nd c))) :=
+  @HDLean.MultiClock.Shared.MultiDag.decode_emitNative
+
+/-- Frozen statement of `HDLean.MultiClock.Shared.MultiDag.emitNative_correct`. -/
+theorem MultiClock_Shared_MultiDag_emitNative_correct :
+    ∀ {nd : Nat} (c : HDLean.MultiClock.Shared.MultiDag nd) (f : HDLean.MultiClock.Shared.NativeFormat)
+  (s : @HDLean.MultiClock.Shared.MultiDag.State nd c) (e : @HDLean.MultiClock.Shared.MultiDag.Event nd c),
+  @Eq.{1}
+    (Option.{0}
+      (Prod.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+        ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool)))
+    (@HDLean.MultiClock.Shared.MultiDag.nativeMeaning nd c f (@HDLean.MultiClock.Shared.MultiDag.emitNative nd c f) s e)
+    (@Option.some.{0}
+      (Prod.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+        ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool))
+      (@Prod.mk.{0, 0} (@HDLean.MultiClock.Shared.MultiDag.State nd c)
+        ((d : Fin nd) → Fin (@HDLean.MultiClock.Shared.MultiDag.outputs nd c d) → Bool)
+        (@HDLean.MultiClock.Shared.MultiDag.next nd c s e) (@HDLean.MultiClock.Shared.MultiDag.output nd c s e))) :=
+  @HDLean.MultiClock.Shared.MultiDag.emitNative_correct
+
+/-- Frozen statement of `HDLean.Dag.Build.emitWord_ensures`. -/
+theorem Dag_Build_emitWord_ensures :
+    ∀ {d : HDLean.Domain} {i r w : Nat} (s : HDLean.Dag.Build.State d i r) (f : Fin w → HDLean.Dag.Op d i r),
+  (∀ (k : Fin w), @HDLean.Dag.Op.Valid d i r (@HDLean.Dag.Build.State.count d i r s) (f k)) →
+    @HDLean.Dag.Build.Ensures d i r (HDLean.Dag.Build.Word w) s (@HDLean.Dag.Build.emitWord w d i r f)
+      fun (refs : HDLean.Dag.Build.Word w) (t : HDLean.Dag.Build.State d i r) =>
+      ∀ (k : Fin w),
+        @HDLean.Dag.Build.Refines d i r t
+          (@GetElem.getElem.{0, 0, 0} (HDLean.Dag.Build.Word w) (Fin w) HDLean.Dag.Build.Ref
+            (fun (xs : HDLean.Dag.Build.Word w) (i : Fin w) => @LT.lt.{0} Nat instLTNat (@Fin.val w i) w)
+            (@Fin.instGetElemFinVal.{0, 0} (HDLean.Dag.Build.Word w) HDLean.Dag.Build.Ref
+              (fun (x : Vector.{0} HDLean.Dag.Build.Ref w) (i : Nat) => @LT.lt.{0} Nat instLTNat i w) w
+              (@Vector.instGetElemNatLt.{0} HDLean.Dag.Build.Ref w))
+            refs k
+            (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val w k) w) (Nat.decLt (@Fin.val w k) w)
+              fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val w k) w)) =>
+              @HDLean.Dag.Build.emitWord_ensures._proof_1 w k a))
+          (@HDLean.Dag.Build.opExpression d i r (@HDLean.Dag.Build.State.expression d i r s) (f k)) :=
+  @HDLean.Dag.Build.emitWord_ensures
+
 end HDLean.Review

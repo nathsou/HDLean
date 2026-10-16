@@ -153,3 +153,43 @@ the result type, while physical offsets are allocated internally. The original
 expression-tree syntax remains available explicitly as `treeCircuit do`.
 All 16 state/input/reset combinations of the two-register example are checked
 by kernel reduction. The frozen audit candidate contains 98 headline statements.
+
+### Current v0.2 checkpoint: 104 obligations
+
+The native multi-domain SV/RTLIL path now emits one module per local DAG and a
+fully decoded clock/synchronizer wrapper. Old-state observation ports carry
+source registers across module boundaries. The generic `emitNative_correct`
+theorem quantifies over every input, reset, edge set and first-flop sampling
+oracle. Decoding checks module bounds, port dimensions, source-state taps and
+all wrapper wiring. Four independent export checkers accepted the six new
+framework roots (7,565 declarations). A two-domain fixture passes 240 external
+SV and RTLIL-derived-Verilog events, including arbitrary startup storage,
+independent/coincident/no-edge schedules, resets and wrong-clock rejection.
+This does not complete the new physical asynchronous-FIFO refinement, reusable
+CPU/memory hierarchy, or new event-AIGER flattening.
+
+Atomic word-node allocation and list-based lowering preserve the original CPU
+node order and AIGER bytes. The native AIGER remains 1,909,434 bytes with SHA-256
+`4bf2968ddf5c8febc4caa4692cdf8e0b0c9dea9a6fced98da2079e889f8771d1`.
+The revised CPU and block-allocation roots pass independent replay (8,453
+declarations), and the full ISA regression passes again. The whole 104-headline
+set also passes independent replay (11,718 declarations), using only the three
+baseline axioms. The project build, axiom audit and existing simulation suite pass.
+The checker integration suite passes all 19 tests; its native-tool test was
+rerun separately with explicit Icarus/Yosys paths after initially being skipped.
+
+Two required acceptance checks remain blocked. A serial bundled-nanoda run over
+the earlier 98-headline whole-project export exceeded both 11,000 and 14,000 MiB
+RSS budgets on this 16 GiB worker. A fresh exact CPU AIGER equality exceeded an
+actual 6 GiB (6,144 MiB) RSS budget after 19.3 seconds. These safely stopped
+probes are not successful kernel replays or byte certificates. The local worker
+also cannot provide the mandatory nested namespace isolation for L2/L3. The PR
+therefore remains a draft; no complete v0.2 or release sign-off is claimed.
+See [the evidence record](reports/v02-remediation.json).
+
+The final CPU artifacts also pass independent AIGER interpretation, 100 Icarus
+cycles, all-state SV/RTLIL transition equivalence and complete clock/state audits.
+The current executable emits exactly the tested SV and RTLIL bytes. Native parser
+regressions reject noncanonical identifier aliases, odd physical gate targets and
+zero-width padding; all 14 workflow tests pass. These checks do not replace the
+missing kernel CPU byte certificate.

@@ -37,6 +37,21 @@ def map (g : Grammar p t α view) (f : α → β) (back : β → α)
     rw [h]
     rfl
 
+/-- Reject representations that lose information under a retraction. This is
+needed for native names and dimensions: odd literal targets and zero-width
+padding must not silently decode to a different physical wire or width. -/
+def checkedMap [DecidableEq α] (g : Grammar p t α view) (f : α → β) (back : β → α)
+    (h : ∀ b, f (back b) = b) : Grammar p t β view where
+  encode b := g.encode (back b)
+  decode ts := do
+    let (a,ts) ← g.decode ts
+    if back (f a) = a then return (f a,ts) else none
+  roundtrip b tail := by
+    rw [g.roundtrip]
+    dsimp only [Bind.bind,Option.bind]
+    rw [h]
+    simp
+
 def fixed [DecidableEq t] (words : List p) : Grammar p t Unit view where
   encode _ := words
   decode ts := if (words.map view).isPrefixOf ts then some ((), ts.drop words.length) else none
@@ -52,6 +67,16 @@ def natural : Row Nat where
     | [] => none
     | t::ts => do let n ← t.toNat?; return (n,ts)
   roundtrip n tail := by simp
+
+/-- Safe numbered HDL identifiers with a generic lexical round-trip proof. -/
+def numbered (pre : Word) : Row Nat where
+  encode n := [prefixed pre n]
+  decode ts := match ts with
+    | [] => none
+    | word::rest => do
+      let n ← parsePrefixed pre.text word
+      if word = (prefixed pre n).text then pure (n,rest) else none
+  roundtrip n tail := by simp [Word.text,prefixed_parse]
 
 def before [DecidableEq t] (words : List p) (g : Grammar p t α view) : Grammar p t α view :=
   (pair (fixed words) g).map Prod.snd (fun a => ((),a)) (by intro a; rfl)

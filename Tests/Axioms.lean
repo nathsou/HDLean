@@ -7,6 +7,12 @@ import Tests.Invariant
 open Lean in
 run_cmd do
   let names := #[
+    ``HDLean.Dag.Build.emitWord_ensures,
+    ``HDLean.MultiClock.Shared.MultiDag.emitNative_correct,
+    ``HDLean.MultiClock.Shared.MultiDag.decode_emitNative,
+    ``HDLean.MultiClock.Shared.MultiDag.nativeLower_correct,
+    ``HDLean.Backend.Graph.withStatePorts_wellFormed,
+    ``HDLean.Backend.Graph.withStatePorts_eval,
     ``HDLean.Dag.Build.run_implements,
     ``HDLean.Toy16.DagPhysical.decode_output,
     ``HDLean.Toy16.DagPhysical.decode_next,

@@ -28,7 +28,7 @@ private def ilStart (moduleName : Word) : Block Unit := fixed [
   ⟨[⟨"wire", by decide, by decide⟩, ⟨"input", by decide, by decide⟩, ⟨"1", by decide, by decide⟩, ⟨"\\clk", by decide, by decide⟩], by simp⟩]
 
 private def ilHeader : Block Header :=
-  (pair ilInputs (pair ilOutputs (pair ilRegs ilGates))).map
+  (pair ilInputs (pair ilOutputs (pair ilRegs ilGates))).checkedMap
     (fun p => ⟨p.1-1,p.2.2.1-1,p.2.1-1,p.2.2.2-1⟩)
     (fun h => (h.inputs+1,(h.outputs+1,(h.latches+1,h.gates+1))))
     (by intro h; cases h; simp)
@@ -37,6 +37,7 @@ private def ilConstants (h : Header) : Block Unit := fixed [
   ⟨[⟨"wire", by decide, by decide⟩, ⟨"width", by decide, by decide⟩, numeral ((2*(h.inputs+h.latches+h.gates)+2)), ⟨"\\n", by decide, by decide⟩], by simp⟩,
   ⟨[⟨"connect", by decide, by decide⟩, ⟨"\\n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, ⟨"0", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"1'0", by decide, by decide⟩], by simp⟩,
   ⟨[⟨"connect", by decide, by decide⟩, ⟨"\\n", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, ⟨"1", by decide, by decide⟩, ⟨"]", by decide, by decide⟩, ⟨"1'1", by decide, by decide⟩], by simp⟩,
+  ⟨[⟨"connect",by decide,by decide⟩,⟨"\\state",by decide,by decide⟩,⟨"[",by decide,by decide⟩,numeral h.latches,⟨"]",by decide,by decide⟩,⟨"1'0",by decide,by decide⟩],by simp⟩,
   ⟨[⟨"connect", by decide, by decide⟩, ⟨"\\outs", by decide, by decide⟩, ⟨"[", by decide, by decide⟩, numeral (h.outputs), ⟨"]", by decide, by decide⟩, ⟨"1'0", by decide, by decide⟩], by simp⟩]
 
 private def ilInv (k : Nat) : Block Unit := fixed [
@@ -104,7 +105,7 @@ private def ilGateEnd (k : Nat) : Block Unit := fixed [
   ⟨[⟨"end", by decide, by decide⟩], by simp⟩]
 
 private def ilGate (k : Nat) : Block Gate :=
-  (pair (ilGateStart k) (pair ilGateAB (pair ilGateB (pair (ilGateEnd k) (ilGateTarget k))))).map
+  (pair (ilGateStart k) (pair ilGateAB (pair ilGateB (pair (ilGateEnd k) (ilGateTarget k))))).checkedMap
     (fun p => ⟨p.2.2.2.2 / 2,p.2.1,p.2.2.1⟩)
     (fun g => ((),(g.a,(g.b,((),2*g.lhs))))) (by intro g; cases g; simp)
 

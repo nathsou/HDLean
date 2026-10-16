@@ -27,7 +27,7 @@ def protected_files():
     paths.update(ROOT / name for name in ('Designs/AsyncFifo/Model.lean',
                                          'Designs/Fifo/Circular.lean'))
     for name in ('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'Tests/Axioms.lean',
-                 'scripts/verify.py', 'scripts/check_backends.py', 'scripts/freeze.py'):
+                 'scripts/verify.py', 'scripts/check_backends.py', 'scripts/check_native_clocks.py', 'scripts/freeze.py'):
         paths.add(ROOT / name)
     paths.update(ROOT.glob('scripts/independent/*.py'))
     paths.update(ROOT.glob('scripts/comparator/*.py'))

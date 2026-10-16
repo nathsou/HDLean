@@ -113,6 +113,15 @@ class Workflow(unittest.TestCase):
         self.assertNotEqual(p.returncode, 0)
         self.assertIn('requires Python assertions', p.stderr)
 
+    def test_native_parser_rejects_aliases_odd_targets_and_zero_widths(self):
+        lake=os.environ.get('LAKE','lake')
+        if not shutil.which(lake):
+            self.skipTest('Lean is required for native parser checks')
+        result=subprocess.run([lake,'env','lean','--run','Tests/BackendProvedMain.lean'],
+                              cwd=ROOT,capture_output=True,text=True,timeout=60)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertEqual(len(result.stdout.splitlines()),32)
+
     def test_waveform_cycle_and_little_endian_bits(self):
         rows = [{'cycle': 3, 'inputs': [True, False, True], 'state': [], 'outputs': [False], 'next': []}]
         self.assertIn('3 | 101 | 0 | 0 | 0', render(rows, 'table'))

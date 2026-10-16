@@ -40,7 +40,7 @@ class ReplayTests(unittest.TestCase):
     def export(self, theorem, suffix):
         path = self.project / (suffix + '.ndjson')
         with path.open('w') as stream:
-            subprocess.run([self.lake, 'env', str(self.tools['exporter']), 'Fixtures', '--', theorem],
+            subprocess.run([self.lake, 'env', str(self.tools['exporter']), 'Fixtures', '--', *([theorem] if isinstance(theorem,str) else theorem)],
                            cwd=self.project, stdout=stream, check=True, timeout=60)
         return path
 
@@ -92,6 +92,27 @@ class ReplayTests(unittest.TestCase):
         for roots in ([], ['IndependentFixtures.valid'] * 2):
             with self.assertRaises(ValueError):
                 replay.audit_export(path, roots)
+
+    def run_serial_adapter(self, export, reject_unused):
+        template = (ROOT / 'scripts/independent/nanoda_serial.py').read_text()
+        body = template.replace('@HDLEAN_CHECKER@',str(self.tools['checker'])).replace(
+            '@HDLEAN_CHECKER_SHA256@',replay.sha(self.tools['checker']))
+        if not reject_unused:
+            body = body.replace('REJECT_UNUSED_AXIOMS = True','REJECT_UNUSED_AXIOMS = False')
+        adapter = self.project / ('serial-strict.py' if reject_unused else 'serial-whole.py')
+        adapter.write_text(body)
+        config = export.with_suffix('.adapter.json')
+        config.write_text(json.dumps(replay.checker_config(export)))
+        return subprocess.run(['python3',str(adapter),str(config)],capture_output=True,text=True,timeout=60)
+
+    def test_whole_project_policy_omits_unused_axioms_but_rejects_every_use(self):
+        unused = self.export(['IndependentFixtures.valid','IndependentFixtures.foreign'],'unused-axiom')
+        accepted = self.run_serial_adapter(unused,reject_unused=False)
+        self.assertEqual(accepted.returncode,0,accepted.stdout+accepted.stderr)
+        self.assertIn('skipping exported but unpermitted axioms',accepted.stdout)
+        self.assertNotEqual(self.run_serial_adapter(unused,reject_unused=True).returncode,0)
+        used = self.export('IndependentFixtures.foreignProof','used-axiom')
+        self.assertNotEqual(self.run_serial_adapter(used,reject_unused=False).returncode,0)
 
     def test_modified_binary_digest_fails(self):
         data = json.loads(self.manifest.read_text())

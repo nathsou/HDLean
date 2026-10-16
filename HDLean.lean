@@ -28,3 +28,5 @@ import HDLean.MultiClock.Backend
 import HDLean.Backend.DagEmit
 import HDLean.MultiClock.Dag
 import HDLean.Core.DagBuilder
+import HDLean.Core.DagBuilderBlock
+import HDLean.MultiClock.NativeText

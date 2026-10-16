@@ -290,8 +290,15 @@ theorem lowerMuxes_correct (ws : List (Wire × Wire × Wire)) (v : Array Bool)
       rw [heq, hh]
       exact muxMeaning_extends (run_extends _ _) _ (hb ws[k] (by simp [List.getElem_mem]))
 
+/-- Traverse register drivers and reset kinds once, instead of repeatedly
+indexing a logically represented array during kernel byte evaluation. -/
 def resetTriples (c : Dag d i r o) : Vector (Wire × Wire × Wire) r :=
-  Vector.ofFn fun k => resetWires i (i+r+2) k.val c.next[k] c.reset[k]
+  ⟨(List.zipWith (fun kn kind => resetWires i (i+r+2) kn.1 kn.2 kind)
+    ((List.range' 0 r).zip c.next.toList) c.reset.toList).toArray, by simp⟩
+
+@[simp] theorem resetTriples_get (c : Dag d i r o) (k : Fin r) :
+    c.resetTriples[k] = resetWires i (i+r+2) k.val c.next[k] c.reset[k] := by
+  simp [resetTriples,List.getElem_zipWith,List.getElem_zip,List.getElem_range']
 
 /-- A single arithmetic pass, preserving the numbered source graph without search. -/
 def lower (c : Dag d i r o) : Graph where
@@ -300,7 +307,7 @@ def lower (c : Dag d i r o) : Graph where
   latches := r
   gates := (lowerNodes (i+r+2) 0 c.nodes ++
     lowerMuxes (i+r+2+3*c.nodes.length) c.resetTriples.toList).toArray
-  next := (Vector.ofFn fun k : Fin r => nodeLit (i+r+2) (c.nodes.length+k.val)).toArray
+  next := ((List.range' c.nodes.length r).map (nodeLit (i+r+2))).toArray
   outputs := c.out.toArray.map (nodeLit (i+r+2))
   inputNames := c.inputNames.toArray.push "rst"
   stateNames := c.stateNames.toArray
@@ -308,7 +315,11 @@ def lower (c : Dag d i r o) : Graph where
   sources := c.sources.toArray
 
 theorem lower_next (c : Dag d i r o) : c.lower.next =
-    (Vector.ofFn fun k : Fin r => nodeLit (i+r+2) (c.nodes.length+k.val)).toArray := rfl
+    (Vector.ofFn fun k : Fin r => nodeLit (i+r+2) (c.nodes.length+k.val)).toArray := by
+  apply Array.ext
+  · simp [lower]
+  · intro k hk hk'
+    simp [lower,List.getElem_range']
 theorem lower_outputs (c : Dag d i r o) : c.lower.outputs = c.out.toArray.map (nodeLit (i+r+2)) := rfl
 
 @[simp] theorem lower_inputs (c : Dag d i r o) : c.lower.inputs = i+1 := rfl
@@ -320,7 +331,7 @@ theorem lower_outputs (c : Dag d i r o) : c.lower.outputs = c.out.toArray.map (n
 theorem resetTriples_bounded (c : Dag d i r o) (k : Fin r) :
     WiresBounded (i+r+2+3*c.nodes.length) c.resetTriples[k] := by
   have hn : c.next[k.val] < c.nodes.length := c.wf.2.1 k
-  simp only [resetTriples, Vector.getElem_ofFn]
+  simp only [resetTriples_get]
   cases hk : c.reset[k.val] <;> simp [resetWires, hk, WiresBounded, nodeWire] <;> omega
 
 theorem resetTriples_correct (c : Dag d i r o)

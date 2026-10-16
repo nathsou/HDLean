@@ -65,11 +65,11 @@ def testbench(module, rows, buses=False):
         lines += [f'wire [{no}:0] outputs_padded;',f'assign outputs = outputs_padded[{no-1}:0];']
     lines += [f'{module} dut({", ".join(ports)});']
     if nr:
-        packed = ', '.join((f'dut.state[{k}]' if buses else f'dut.n{ni+k+1}') for k in reversed(range(nr)))
+        packed = ', '.join((f'dut.s_{k}' if buses else f'dut.n{ni+k+1}') for k in reversed(range(nr)))
         lines += [f'wire [{nr-1}:0] state_bits = {{{packed}}};']
     lines += ['initial begin', 'clk = 0;']
     for k, b in enumerate(rows[0]['state']):
-        target = f'dut.state[{k}]' if buses else f'dut.n{ni+k+1}'
+        target = f'dut.s_{k}' if buses else f'dut.n{ni+k+1}'
         lines.append(f'{target} = 1\'b{int(b)};')
     for row in rows:
         v = sum(int(b) << k for k, b in enumerate(row['inputs']))
@@ -109,9 +109,9 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
               f'rename {module} gold; design -stash gold; '
               f'read_rtlil {paths["rtlil"].name}; write_json {name}_il.json; '
               f'rename {module} gate; design -stash gate; design -copy-from gold -as gold gold; '
-              f'design -copy-from gate -as gate gate; expose -evert-dff -shared; '
+              f'design -copy-from gate -as gate gate; splitnets gold/state gate/state; expose -evert-dff -shared; '
               f'opt_clean; select -assert-none t:$dff; check -assert; equiv_make gold gate equiv; '
-              f'hierarchy -top equiv; equiv_simple; equiv_status -assert; stat')
+              f'hierarchy -top equiv; opt_merge; opt_clean; equiv_simple; equiv_status -assert; stat')
     log = run([yosys, '-p', script], cwd=work)
     (work / f'{name}_yosys.log').write_text(log)
     assert 'Equivalence successfully proven!' in log

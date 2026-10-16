@@ -11,3 +11,4 @@ import Tests.BackendProved
 import Tests.MultiDag
 import Tests.DagBuilder
 import Tests.Allocate
+import Tests.DagBuilderBlock

@@ -32,7 +32,7 @@ revision and a separate `lean4export` checkout are no longer needed.
 ```sh
 python3 scripts/independent/bootstrap.py
 lake build
-lake check --paranoid            # requires bubblewrap and unprivileged user namespaces
+python3 scripts/independent/paranoid.py  # invokes lake check --paranoid with the pinned resource adapter
 python3 scripts/independent/replay.py \
   --module HDLean --module Designs --module Tests.Certificates \
   --theorem HDLean.Backend.Graph.validate_sound \
@@ -179,3 +179,34 @@ exports all three axioms and the pinned checker's finite primitive name cache fr
 their actual declarations and complete dependency closure, alongside the protected specification closure. Use that
 comparison for adversarial submissions, rather than treating standalone replay as
 independent specification or baseline-axiom approval.
+
+## Whole-project resource adapter
+
+Lean 4.35's Lake invokes nanoda with four workers; their fixed worker stacks
+overflow on this project's network proofs. `scripts/independent/paranoid.py`
+creates a separate, hash-checked toolchain view and runs the unchanged bundled
+nanoda serially with the OS stack limit. Other checkers are the same bundled
+release binaries. The installed toolchain is never rewritten.
+
+`verify.py --paranoid` uses this launcher and requires every bundled acceptance
+message plus Lake's complete used-axiom audit. The default namespace sandbox is
+mandatory. The launcher's explicit `--inadvisably-no-sandbox` flag is solely a
+local diagnostic and records `isolated: false`.
+
+Whole-project exports contain unused Prelude declarations such as `sorryAx`.
+Following Lake's own policy, this path skips unpermitted axiom declarations;
+**every reference to them still fails** as an unknown constant, and Lake audits
+all used axioms afterwards. Explicit-root replay and comparator adapters retain
+strict rejection even of unused unpermitted declarations. Native regression
+tests cover both policies, including a proof that actually uses a foreign axiom.
+Whole-project replay has a larger memory footprint than headline-root replay;
+a 6.5 GiB whole-project cap and an 11 GiB serial nanoda cap have both been
+rejected safely on the expanded export. These failed probes are not acceptance.
+
+The larger whole-export nanoda probe also exceeded 14,000 MiB RSS (13.67 GiB)
+and was stopped before risking the 16 GiB worker. The exact CPU byte-equality
+probe was repeated at precisely 6,144 MiB, rather than approximating 6 GiB as
+6,000 MiB; it too was stopped at the resident-memory cap. Neither is acceptance.
+The legacy `--certificate-memory-mb` option limits Lean's managed allocator;
+it is not by itself a process RSS limit. The v0.2 resource measurements above
+used a separate process-tree RSS supervisor and report its actual byte limits.

@@ -18,6 +18,12 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE_AXIOMS = {'propext', 'Classical.choice', 'Quot.sound'}
 NATIVE_AXIOMS = set()
 EXPECTED_THEOREMS = {
+    'HDLean.Dag.Build.emitWord_ensures',
+    'HDLean.MultiClock.Shared.MultiDag.emitNative_correct',
+    'HDLean.MultiClock.Shared.MultiDag.decode_emitNative',
+    'HDLean.MultiClock.Shared.MultiDag.nativeLower_correct',
+    'HDLean.Backend.Graph.withStatePorts_wellFormed',
+    'HDLean.Backend.Graph.withStatePorts_eval',
     'HDLean.Dag.Build.run_implements',
     'HDLean.Toy16.DagPhysical.decode_output',
     'HDLean.Toy16.DagPhysical.decode_next',
@@ -176,8 +182,11 @@ def main():
     run([ROOT / '.lake/build/bin/tests'], work / 'simulation.log')
     if args.backends:
         run([sys.executable, ROOT / 'scripts/check_backends.py'], work / 'backends.log')
+        run([sys.executable, ROOT / 'scripts/check_native_clocks.py', '--lake', args.lake], work / 'native-backends.log')
     if args.paranoid:
-        run([args.lake, 'check', '--paranoid'], work / 'lake-check-paranoid.log')
+        run([sys.executable, ROOT / 'scripts/independent/paranoid.py',
+             '--tools', args.independent_tools, '--project', ROOT,
+             '--report', work / 'paranoid-kernels.json'], work / 'lake-check-paranoid.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Designs'], work / 'kernel-designs.log')
     run([args.lake, 'env', 'leanchecker', '--fresh', 'Tests'], work / 'kernel-certificates.log')
     axioms = audit_axioms(run([args.lake, 'env', 'lean', 'Tests/Axioms.lean'], work / 'axioms.log'))

@@ -14,6 +14,19 @@ def main : IO Unit := do
   unless (Aag.parseSystemVerilog (g.systemVerilog ++ "assign bad = 1;\n")).isNone &&
     (Aag.parseRTLIL (g.rtlil.replace "parameter \\CLK_POLARITY 1" "parameter \\CLK_POLARITY 0")).isNone &&
     (Aag.parse (g.print.replace "aag" "aig")).isNone do throw (IO.userError "malformed text accepted")
+  let aliasName := g.systemVerilog.replace " & n_2 ;" " & n_02 ;"
+  let target := 2*(g.inputs+g.next.length+1)
+  let oddSV := g.systemVerilog.replace s!"wire n_{target} = g_0 ;" s!"wire n_{target+1} = g_0 ;"
+  let oddIL := g.rtlil.replace s!"connect \\n [ {target} ] \\gates [ 0 ]" s!"connect \\n [ {target+1} ] \\gates [ 0 ]"
+  unless aliasName != g.systemVerilog && oddSV != g.systemVerilog && oddIL != g.rtlil do
+    throw (IO.userError "malformed identifier/target fixtures did not change the input")
+  unless (Aag.parseSystemVerilog aliasName).isNone && (Aag.parseSystemVerilog oddSV).isNone &&
+      (Aag.parseRTLIL oddIL).isNone do
+    throw (IO.userError "noncanonical name or odd physical target was accepted")
+  let noRegs : Aag := ⟨1,[],[0],[]⟩
+  let badWidth := noRegs.rtlil.replace "wire width 1 \\state" "wire width 0 \\state"
+  unless badWidth != noRegs.rtlil && (Aag.parseRTLIL badWidth).isNone do
+    throw (IO.userError "zero-width padding was accepted")
   for si in [:8] do
     for ii in [:4] do
       let state := (Array.range 3).map fun k => si.testBit k

@@ -18,6 +18,8 @@
     "HDLean.Backend.Format.validates_sound": "HDLean.Review.Backend_Format_validates_sound",
     "HDLean.Backend.Graph.validateLocal_sound": "HDLean.Review.Backend_Graph_validateLocal_sound",
     "HDLean.Backend.Graph.validate_sound": "HDLean.Review.Backend_Graph_validate_sound",
+    "HDLean.Backend.Graph.withStatePorts_eval": "HDLean.Review.Backend_Graph_withStatePorts_eval",
+    "HDLean.Backend.Graph.withStatePorts_wellFormed": "HDLean.Review.Backend_Graph_withStatePorts_wellFormed",
     "HDLean.Backend.Proved.Aag.parse_print": "HDLean.Review.Backend_Proved_Aag_parse_print",
     "HDLean.Backend.Proved.Aag.parse_rtlil": "HDLean.Review.Backend_Proved_Aag_parse_rtlil",
     "HDLean.Backend.Proved.Aag.parse_systemVerilog": "HDLean.Review.Backend_Proved_Aag_parse_systemVerilog",
@@ -26,6 +28,7 @@
     "HDLean.Counter.Challenge.budget": "HDLean.Review.Counter_Challenge_budget",
     "HDLean.Counter.Challenge.correctness": "HDLean.Review.Counter_Challenge_correctness",
     "HDLean.Counter.reset_schedule": "HDLean.Review.Counter_reset_schedule",
+    "HDLean.Dag.Build.emitWord_ensures": "HDLean.Review.Dag_Build_emitWord_ensures",
     "HDLean.Dag.Build.run_implements": "HDLean.Review.Dag_Build_run_implements",
     "HDLean.Dag.lower_correct": "HDLean.Review.Dag_lower_correct",
     "HDLean.Dag.lower_gate_count": "HDLean.Review.Dag_lower_gate_count",
@@ -49,8 +52,11 @@
     "HDLean.MultiClock.Circuit.eventCircuit_correct": "HDLean.Review.MultiClock_Circuit_eventCircuit_correct",
     "HDLean.MultiClock.Format.correct_of_validated": "HDLean.Review.MultiClock_Format_correct_of_validated",
     "HDLean.MultiClock.Graph.eval_correct": "HDLean.Review.MultiClock_Graph_eval_correct",
+    "HDLean.MultiClock.Shared.MultiDag.decode_emitNative": "HDLean.Review.MultiClock_Shared_MultiDag_decode_emitNative",
+    "HDLean.MultiClock.Shared.MultiDag.emitNative_correct": "HDLean.Review.MultiClock_Shared_MultiDag_emitNative_correct",
     "HDLean.MultiClock.Shared.MultiDag.first_samples": "HDLean.Review.MultiClock_Shared_MultiDag_first_samples",
     "HDLean.MultiClock.Shared.MultiDag.lower_correct": "HDLean.Review.MultiClock_Shared_MultiDag_lower_correct",
+    "HDLean.MultiClock.Shared.MultiDag.nativeLower_correct": "HDLean.Review.MultiClock_Shared_MultiDag_nativeLower_correct",
     "HDLean.MultiClock.Shared.MultiDag.second_samples_first": "HDLean.Review.MultiClock_Shared_MultiDag_second_samples_first",
     "HDLean.MultiClock.Shared.MultiDag.sourceSafe_single_bit": "HDLean.Review.MultiClock_Shared_MultiDag_sourceSafe_single_bit",
     "HDLean.Netlist.optimize_correct": "HDLean.Review.Netlist_optimize_correct",
@@ -3698,6 +3704,13 @@
       "kind": "def",
       "protected": true,
       "type": "7fe8c54bcad45200c7604ec3cee2133354e6fe8c8cba9d143d027d97743f9a4d"
+    },
+    "Bool.decide_and": {
+      "body": "af921763c6b87f1a90a66c18d7b4d234b74bfce2f3a7a025922559b3c73739fb",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "4ee32be35d50e4330efffb5c1ff22c050b0495b01270ceb52347cb7174ee5996"
     },
     "Bool.decide_eq_true": {
       "body": "296fdc1b165e634fa4149e8a2f0518547ec864a194673ba6e02d598db62f08a5",
@@ -8116,6 +8129,13 @@
       "protected": true,
       "type": "2a2c1b2bb6a880c805a5a2d2df86950cd344619cdec4b6270d486440b64b2e19"
     },
+    "HDLean.Backend.Graph.name": {
+      "body": "cb010c47bb03a026408b4184839c73ea0033a2f882600e74442dbeada43c8431",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6e1b7e1282d81957e0301f38e325678cb264ce7619c09191d57933a0fa7d5bc5"
+    },
     "HDLean.Backend.Graph.next": {
       "body": "1f416b743ce13eb0545fe37b2959457f16b38502009d22e276bee9a0d3c1e48d",
       "foundation": false,
@@ -8185,6 +8205,13 @@
       "kind": "def",
       "protected": true,
       "type": "1bf81dcc821657608a0a7146212abdf5962b8638769390956a70126ad6b64213"
+    },
+    "HDLean.Backend.Graph.withStatePorts": {
+      "body": "00e8b25334d3db4030eb40a05bb429a41bdc4f85ba7e9b9f5aeb4947915215f3",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "f1fc250c888ea99c38ddba8bb805d87cb037194c3609e9bafa0190ec91caf0b2"
     },
     "HDLean.Backend.Lit": {
       "body": "d0d56cb3e64d8445747b3f0c9cad3a7733b2478bb97195205b72b007d0862fa8",
@@ -9138,12 +9165,33 @@
       "protected": true,
       "type": "e1b0e696438d76239b2b1dd81115e12d0b1113b0d68cb3562c8b3587da5bbe69"
     },
+    "HDLean.Backend.Proved.Aag.readRTLILModule": {
+      "body": "c679062ae3d5a49eca6926bb668113f280125a14f3630854cbef2dc1d593ae7f",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bc22299c41453a522d7b54af9d4250177b8ac64104f9813f29f58efcdb2d506d"
+    },
+    "HDLean.Backend.Proved.Aag.readSystemVerilogModule": {
+      "body": "2bd526200ecc71084ff151425f0712d241be2949f76ff8f0dcded28853454d84",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bc22299c41453a522d7b54af9d4250177b8ac64104f9813f29f58efcdb2d506d"
+    },
     "HDLean.Backend.Proved.Aag.rtlil": {
       "body": "3fb84650b6b63a77e7cfdd79b73e72b6df28a2720cf02a7df9c625f73b543557",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "e1b0e696438d76239b2b1dd81115e12d0b1113b0d68cb3562c8b3587da5bbe69"
+    },
+    "HDLean.Backend.Proved.Aag.rtlilModuleLines": {
+      "body": "bb203939ca8df18b95071545388ec3b531dbbfd5134372cd355f25b4c57e7c34",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "4f6aec65d15e0a855c0c31ae85b01572a0aaf64b200f66fcbbcb6f291521868c"
     },
     "HDLean.Backend.Proved.Aag.svLines": {
       "body": "4be9a750cb4f0e7f66d2a3808be0592acb57d867252d4c871127db8795c5a597",
@@ -9165,6 +9213,13 @@
       "kind": "def",
       "protected": true,
       "type": "e1b0e696438d76239b2b1dd81115e12d0b1113b0d68cb3562c8b3587da5bbe69"
+    },
+    "HDLean.Backend.Proved.Aag.systemVerilogModuleLines": {
+      "body": "c2e8023d55ff02dfa3dc7c2ecfe6c028de424673601af54b6c380fb83b8da5a7",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "4f6aec65d15e0a855c0c31ae85b01572a0aaf64b200f66fcbbcb6f291521868c"
     },
     "HDLean.Backend.Proved.Format": {
       "body": "25c21fc26d33e1165af9a32276c8ec363f0905484baee852580eca1d1b9f8a07",
@@ -9355,6 +9410,20 @@
       "protected": true,
       "type": "0dec0f888abcaa984564904f235bbfa93a56f5c148fd5850de5a10c44d661099"
     },
+    "HDLean.Backend.Text.Grammar.checkedMap": {
+      "body": "5c82e73b337af99c7892eadc90ad1ce6fc59a2827dddada56e976bac7178a0f1",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "7dd684cf071eb12556a25ef25d15aab2e76dd8ae8cceee7ce77b1f782f171195"
+    },
+    "HDLean.Backend.Text.Grammar.checkedMap._proof_1": {
+      "body": "c4b2f15ce167bebf23cae00da66b778a90eac1364ee58b5c4b12c69d530cdfa4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "aa4bceffb4cc409c7eab74e1150e7e7299f1eb6ceb621a277ff83e7fee87ccf6"
+    },
     "HDLean.Backend.Text.Grammar.decode": {
       "body": "a64dfac5f7a7d914feae015ebf3e6fa053cff14e866965b4fddccf9e90c2c4fa",
       "foundation": false,
@@ -9459,6 +9528,20 @@
       "kind": "def",
       "protected": true,
       "type": "dc629b3f31a2eee28bcdcb0edaba27731297e53a134627129628c7603f463aab"
+    },
+    "HDLean.Backend.Text.Grammar.numbered": {
+      "body": "656fa07aea887687ec4bef8f530f0bd8272fbbb01079125862f60ed830027e1e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "eba1496ccde002305eaa2c4753f7d4846bc7e31b55ede47d6fa17a0b960fe496"
+    },
+    "HDLean.Backend.Text.Grammar.numbered._proof_1": {
+      "body": "f94ad12af05401cc0cba2816e85b2c803a6302ca97d8efea4e4121cb118d1e6f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b788499cdf02c11a4d2cdcac34f57175bd0d67725d11880179c797bd3acf065e"
     },
     "HDLean.Backend.Text.Grammar.pair": {
       "body": "024169959c0d2517bc30959578199955a79ca0dcab6ac0d9601a3e5fe5bb4437",
@@ -9656,6 +9739,13 @@
       "protected": true,
       "type": "f5227996f2c9a5509af7b0254dd671731d2ffec3759081a02bec79acc1ee3912"
     },
+    "HDLean.Backend.Text.parsePrefixed": {
+      "body": "21cc0e41e8380e18a986a0c510df960247f7cce818eb5894fe040e9db578b7a6",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "118a29b9c0fb5cc2dd94a1e2de3b75580d6d2257ad1291f86a80b1ac1898c7f8"
+    },
     "HDLean.Backend.Text.prefixed": {
       "body": "0d94009c865360d044d53c9028cc0b1d6efa600ec3c66fe7ee6a329c5ded2d50",
       "foundation": false,
@@ -9676,6 +9766,27 @@
       "kind": "thm",
       "protected": true,
       "type": "aaf9b0ee8a3710dce05c4b0f8a2e241f0b954e8627fc610053167d05e2a758ef"
+    },
+    "HDLean.Backend.Text.prefixed_parse": {
+      "body": "8713c74bc1221f9e7bc3dccc66bbdd0c3cca3a3b9ebb46fd13a972c80fc010df",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "aaf266bfd38117e355cd1a89bb078d15d3681ad32dcad86425cf520030e28b66"
+    },
+    "HDLean.Backend.Text.prefixed_parse._simp_1_3": {
+      "body": "a0a459c2f13d4d93e3591a3631a7b342041348c4f73b698a909599bf5757a5cf",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "7c2236c56d9d669689f9e4fd864aeed3f47067500af63c7b95b69c6bcac2e65e"
+    },
+    "HDLean.Backend.Text.prefixed_parse._simp_1_4": {
+      "body": "053c4e7220e3e957f9776581d349a259b2c5a74c1eb556eb34973f863ec04ec7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "f2b72402d515cc24d9973a0e9dd4f3bca86d8e64e42b09d4e836edd11270ae4f"
     },
     "HDLean.Backend.Text.render": {
       "body": "15ee2c7326927857416db587ea203c36091dd1ce16757093767d226567eea817",
@@ -10433,6 +10544,34 @@
       "protected": true,
       "type": "06a2f3077dff9b9feb0344128aee4c01adf544a8c73bcf96d0f8281df4073080"
     },
+    "HDLean.Dag.Build.emitBlock": {
+      "body": "fe6eb51f65638bf55f794107bf8feaa66a20bdd8b8146b6678f453581bb9ec27",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "28fed0dcb59b7ce18d0778e0edf567ebfcca47041e0efab43354f283ddd68f9c"
+    },
+    "HDLean.Dag.Build.emitBlock._proof_1": {
+      "body": "4c426ce346017c114071bb4423248a9415409342b7f2642b9845abbc473f0563",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "63c330a80480ecfdafce75b4338d367022111603e7d11c9e3b8b8e26acca6d67"
+    },
+    "HDLean.Dag.Build.emitWord": {
+      "body": "326124f79432d022e8446754bc948c6232c50aa835ea0ed494b656f6c7b7d6df",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "999918e2bc271014f14fe6c5f96ff5b5479eb79458145eb00602e0f4ebe28cf1"
+    },
+    "HDLean.Dag.Build.emitWord_ensures._proof_1": {
+      "body": "b84440cb0dc645e81628548e4fa2b19b3ad2220ad5e6739d0e66a86075160b23",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dc6a9c63be163a190c0237de7e57ac0d26da9085cf0ea44f6847c3d045ef7b45"
+    },
     "HDLean.Dag.Build.empty": {
       "body": "0ce7cad216fb62ca50661c8e05cc457452b242e6fbb0b844101f348b1eef8c16",
       "foundation": false,
@@ -10460,6 +10599,27 @@
       "kind": "def",
       "protected": true,
       "type": "fb3755ef5264e90380aa5bf103f9705c793fb3f024b1b6c2d7f94cdf90191a10"
+    },
+    "HDLean.Dag.Build.extendBlock": {
+      "body": "27217c91bd87a60695471561b96b1ab4a44fcdf069250b9e8283704a5679a927",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "1901c377ce91042881eae76920ae16c83d0084d4f19edda8f6c01e46ef0c29b0"
+    },
+    "HDLean.Dag.Build.extendBlock._proof_1": {
+      "body": "f866b209276b7803712882ad88825d27eec01a8e4bc3193c3ad72a8b99efd004",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "72326e506fd6ecf200f9b58f7ddd0b412f523029b3b53e18c03ea24ae52ab19c"
+    },
+    "HDLean.Dag.Build.extendBlock._proof_2": {
+      "body": "7e6977f04cee8abc12e635787176836d63927b55424a85e96ac261700d933c61",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "572725bb3b762d9d31bc8fc1616552af38b0b03160b5d91927711cd61da449ca"
     },
     "HDLean.Dag.Build.finish": {
       "body": "93ef130772c8000b358f2df6df4e60154d76dcd53cb5de60ce400939869e9306",
@@ -10489,6 +10649,20 @@
       "protected": true,
       "type": "32993e6aeb0ec40666ced5c3e372595ca672ff9c12d59766a52ded7b421d72c3"
     },
+    "HDLean.Dag.Build.nodesWF_of_valid": {
+      "body": "24ca37e90ae98bfffb8880f508414d090e507e93e11b24d6e066640c1ac5cce4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "f24caf4464459e6a13e5963a2d82841fae741ccdd2363c2a11737ff237e0ae38"
+    },
+    "HDLean.Dag.Build.nodesWF_of_valid._proof_1_1": {
+      "body": "cd2f2a89510a79bc1b4cb19fdada16d8e68a00515c73a6c21d6e13a19f375952",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "11de4aca954d858deb502aa7cd77754b00c6a94f2f573c9f2cae47a68fe2b184"
+    },
     "HDLean.Dag.Build.opExpression": {
       "body": "fb1a5a4e4ec9ad4bc7a33053dbf1fa5b11a92cea9d4800b9d5ec33f0dbc854c6",
       "foundation": false,
@@ -10517,6 +10691,34 @@
       "protected": true,
       "type": "b78275aa3e232e8ae47a033d89370c3bfccef3931fafd7306f369de7a1c8ee36"
     },
+    "HDLean.Dag.Build.valid_mono": {
+      "body": "2b71aaa906e54bcea95d655eb43f94368b0fea15fcc1f7838d1fdc66a131a6cb",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6550da2a36cb3698ffcf1dda3131b4d16fab4661d46b63927880034e2241880f"
+    },
+    "HDLean.Dag.Build.valid_mono._proof_1_10": {
+      "body": "f1cf0571f2466be75c174c79000e7fea383ece48ea40a0c8df641880a086cec8",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0010d0627b07f32620998d3c16e789db413fa2c7136ccfcd68f51308818d6868"
+    },
+    "HDLean.Dag.Build.valid_mono._proof_1_11": {
+      "body": "984e7ce166934bd524f69bb8adbf8ab3c154ff59f0559906f223da03a491d231",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "48b0a8aa3304327ed73ebab2c19c881447030f7a64797d9930348d690c981b13"
+    },
+    "HDLean.Dag.Build.valid_mono._proof_1_9": {
+      "body": "bac4d71d42c51da4f3022598c7fd15420a0bb2d364dd65af34d582aed9e48c9e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ca40d1935eb21c10832ff491b59d08f3695f1a982639e09625086f2171a252e0"
+    },
     "HDLean.Dag.NodesWF": {
       "body": "99c4faa399cfaeebf0e43beeb00faaa9b21ba9a516b59d2fe2a2e23cb2a31edc",
       "foundation": false,
@@ -10530,6 +10732,13 @@
       "kind": "def",
       "protected": true,
       "type": "325052dd3571b41e78653e804c9d377b9d11d246982ac95a3b7486ca5bd6f5f7"
+    },
+    "HDLean.Dag.NodesWF.eq_2": {
+      "body": "dcf051c771a85e16eec22cc8510d5db2ced2a3cee3b8221dc2da8337bdb36516",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b9d78d76e4b46f20508e3fa7985afaaf87fb42bfbe0ee09239905ebebe9d0c8f"
     },
     "HDLean.Dag.NodesWF.match_1": {
       "body": "21947a8bee98e6e6b2c2a508e185619f46e433aca2c2703e5211e4f10ff96211",
@@ -10720,6 +10929,69 @@
       "protected": true,
       "type": "574cad941e2c8c5e12685c3cfaef4bed44ff452bb7987f794a3d69a29a390845"
     },
+    "HDLean.Dag.instDecidableValid": {
+      "body": "832beeb1f3813841f93f653a8ca8efa9cf50ffbcaf88d9379f4a0e6dde6b22cc",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "3fcefef7c7bb5701dfa64395bede882dba1b6b728de2047ca7e7824ee097707f"
+    },
+    "HDLean.Dag.instDecidableValid._proof_1": {
+      "body": "bb76d056a367088b922854f98848214972b705ea70f364a450228492e22a5b31",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "089d4b07781d5871c773a6cb94c869e7fc005691de7dd935e8050893e04c5564"
+    },
+    "HDLean.Dag.instDecidableValid._proof_2": {
+      "body": "73654843ba327a4cef8f9156bd3cd9d52bd131ac8571cf8f5acdc3058925eac5",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "93a0ee14ed99868fb7020f07e7f0f43338d46e5e0400a9c1a0ea27f80fbe701a"
+    },
+    "HDLean.Dag.instDecidableValid._proof_3": {
+      "body": "ac6e9403949d038a16d71f72f30fae2ce4207728524963385f38998e15511e41",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "19e77611fccca6f4babd7ac3a172b1d7996f4d150aa53d1e01d7d3882cb0e219"
+    },
+    "HDLean.Dag.instDecidableValid._proof_4": {
+      "body": "cd8593cb50466ed9edbc66f2e2ed09e4669392b58a11f32b2b7263b546043ff7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "f4f46f1a33fe9a37d2ac1b2be07d082854e008a8a8e012bf22502e8d4e7a09dc"
+    },
+    "HDLean.Dag.instDecidableValid._proof_5": {
+      "body": "6a5c147c197e97cffcd7af3460a8a9e263075d33643df34b1a6b9cc1df2faf32",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "f40b95d022fe29fe996a8a76e4afc1173c7002f73cd0402b9db130cc1fed05fd"
+    },
+    "HDLean.Dag.instDecidableValid._proof_6": {
+      "body": "593edd60ec292517011448f6723ada4271a2003afc0bf6456197b7f818598039",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "316021acea3db8cb3fcbd488d6b5015d78f61cac2a283f705704e7037310dbd1"
+    },
+    "HDLean.Dag.instDecidableValid._proof_7": {
+      "body": "0e2ef4b9f2d0c5558f306d60cce244732d0d4b8441e6ef5da2f5738d847bc57d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "7c0d1f8fff8b6203d08a64a1a2193e7d09d2956b2e887d2dc52d32c5ffe8d345"
+    },
+    "HDLean.Dag.instDecidableValid._proof_8": {
+      "body": "d5e9e73db313714884352ed5a047bc848c6461f427f906236114f98edbe4592d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "5953455f420b4c8e8fe3787061832be467a1182898b7f374174ed29cfd4c60af"
+    },
     "HDLean.Dag.instReprOp.repr.match_1": {
       "body": "3db22aee756402dd10faf1823ec16c4fe2ebe8e4f64fbd4f23de2ea81c199176",
       "foundation": false,
@@ -10728,7 +11000,7 @@
       "type": "0bac2b18c2b21b3daf4596d55e4c8ea93a11d19da4be61284aaa5ec7a90c0fda"
     },
     "HDLean.Dag.lower": {
-      "body": "c55949d6b6af8ae9ddc9ac12dc1f7e61ef3dc58b1eac72b6cd08278f891ac384",
+      "body": "a01354615f60059e9198ecc3698ac12129e85b20bec384c90f223f7912aab757",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -10839,6 +11111,20 @@
       "protected": true,
       "type": "4b5939fad42dd9d1a914601a5e41ff9b474d0b17d61881fbc628c91760224224"
     },
+    "HDLean.Dag.nodesWF_append": {
+      "body": "e4f2aa67faba1ff6cee40481e70b2f8c34ccd06c2ab355906733eb69f08343ad",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ffd52297539710ad9d712391333bd8dbf5e69d7be4c99085f1d1d964a32f8ea1"
+    },
+    "HDLean.Dag.nodesWF_append._proof_1_4": {
+      "body": "cf2b7de56343558f70d7d39e8f9577d0c3d8148cf057181a482ea967c8aeb030",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "32b4812b999dd0e1e56c7e00517b106e68e4d7687d1d2b570640954171167716"
+    },
     "HDLean.Dag.opWires": {
       "body": "2a13b1e424fb7b92273236602ad9fdd5ba79e9da7313c1dba9ce3e23e0d4356a",
       "foundation": false,
@@ -10882,18 +11168,18 @@
       "type": "3c3edf34f47b2293ace663e783d8cff5affde5fa8805e123c9a3821d96b35de4"
     },
     "HDLean.Dag.resetTriples": {
-      "body": "00c8591b2bd23a3989e8a479124e9494a7231207a18fbbcd23dd746b66e6e792",
+      "body": "2c6074f36912707a81e00b1caa6ac5ad72e47e00bcd7228598e03004fcd148d1",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "d15b797e94ee59fe34d8b63c696a657161b896c744a8852098c7177e6328790d"
     },
     "HDLean.Dag.resetTriples._proof_1": {
-      "body": "d404dea7a353356642a3debde65b09b8cd4d3a5af44b203e5f485460d27baf38",
+      "body": "bd6d8d5c7ed3019bf53ae385c21e8a5b084a1f69403c0ac43ca52f66d4d067a3",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "89aa87117f4e5bee9f74fae2cdc2674929f999d890ae081a2f67161c77d8bc22"
+      "type": "013313545094b0d9880231b0929e38922606f389cf81bc417abd7dd134a924dc"
     },
     "HDLean.Dag.resetValue": {
       "body": "09ecaac96cffaa1803e8457039022769e859e879ba460a9f45c33c854bb3312b",
@@ -12533,6 +12819,34 @@
       "protected": true,
       "type": "a77273346284519ba88c80c71256cae6be7615e07da07f1f5126b251b087ed9d"
     },
+    "HDLean.MultiClock.Shared.MultiDag.decodeNative": {
+      "body": "297dc86e30be3cbbeae2302ae456d39d498062e42d6ff62e8d9082d1e4de87c0",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "01356e7801535ec8cffbd8f32be566f1e21346e0258003828eaeb55e2a0a7a95"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.decodeNative.match_1": {
+      "body": "374585ecc2f5b9bb8fafffbfeb6ddc83460bf6ba86950c5a052d826b979522f0",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "524bc93a3c0f0b79c2f8658c157b4f109d4bb6d5de74fa1b58bb81b9ad40b401"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.decodedGraph": {
+      "body": "c3bb57b6aa70039d9c5fe36638b0473149e316004e1f8575461c0556055efc46",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "1545465bf90f097fe5009c5bbe1b5a832b92a7cd5a8f36e4290ed2a7542c6323"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.emitNative": {
+      "body": "2de318f99ebf764732ec1cabd51cfd4e3135555e20e4e580125fd0ea484caedc",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "c026cf7f71a884b854092e842a04535d89cfd84f1496eeffe5e7c8be29487a16"
+    },
     "HDLean.MultiClock.Shared.MultiDag.inputs": {
       "body": "c293c7b6c3cecf489795376a01b9a07fcaf0cc8e5c309ff05c704899ad48763b",
       "foundation": false,
@@ -12581,6 +12895,41 @@
       "kind": "constructor",
       "protected": true,
       "type": "473642b24a7cc43cc73baa79c41f3daf27f66853dfe2ef10794f8366629b72b1"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.nativeLines": {
+      "body": "a0778f72a1f5512c22d7f4595c21e2dc2d6b2dc04ca5a962ba78957e70e4e7cd",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "220694db921fa8dbfbc8aabc324bab3380a7bc373412e54cdf9a69e4da72254f"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.nativeLower": {
+      "body": "6e31adfce36cd94b12b3140e59dd2c9a1a525a054e4947466c1650e779d17588",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "207b3db95fe5bf4647470ea66e69779f6a25c4f5446147c1f8eb463aecd76994"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.nativeMeaning": {
+      "body": "b89fb3a3ca1b5917241ecd5fd748af9b87d52ee3444ad17641c69ad6c9cbde3f",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "49607c89af65fa5393ac53485f650e3c84f9affcb82d4b42343a22dccf2dac91"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.nativeModuleShape": {
+      "body": "c8b46adee44b42bfd4642c837475a63879ff8f48b1bb7387853075aee3392d14",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6a67e575fc8c528bbccc08645745224e50baa8130866de8d2af88b4d416e5a05"
+    },
+    "HDLean.MultiClock.Shared.MultiDag.nativeModules": {
+      "body": "da12a6e28e0333e306a57d97cc33123b364ddfbc096098ea4862e9bd2bea9e19",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "1ffc217a055e72d78a9fcc427c731e00bcafb2761ee965c9a688573b0a4ee56c"
     },
     "HDLean.MultiClock.Shared.MultiDag.next": {
       "body": "994998e0c6c729a3eec40e4db9a8dc9455325c48808a9b0cdc5658a7880676ff",
@@ -12652,6 +13001,111 @@
       "protected": true,
       "type": "9b934d8535212603dd51fcd12e673196508e890731a5fc6ffdff333ffb1f7665"
     },
+    "HDLean.MultiClock.Shared.MultiDag.topLines": {
+      "body": "60883167ea91439645e13e98ac7c98bcb1957c8fce112d27eaebc05ed9ace1cb",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "220694db921fa8dbfbc8aabc324bab3380a7bc373412e54cdf9a69e4da72254f"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat": {
+      "body": "4ca93b8012e7860167ed63b32725a5d97d7f9eea4eef6946d9ba3fd71efd248f",
+      "foundation": false,
+      "kind": "inductive",
+      "protected": true,
+      "type": "733e2514046449c42d66e7059d7c0a5fb207a617be198f02230a265f24f85a7c"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.casesOn": {
+      "body": "c42cc71cee138002f01ce2b52ed920066b1f48848933da2f1aedef4223c2c94e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "45deb7fe2deeb51202a54b52d72b0d392a98415a6c5656eb7c3c4fae7405f54d"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.libraryLines": {
+      "body": "acb873e3b8b20aa83b386539c660f931280b0ccce362d88f92d69d6d2b8cb69c",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "f3473c90eed48fb14d2b66f9ad3c9927d8b61edce6b9b8adbc091f691d7ac146"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.libraryLines.match_1": {
+      "body": "f49fe6f7e0fadb547c0f8c08a33bddc42830745e91f7da487009ad35712f5c7a",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "8709cf1e7c3e14c7b331829319683691e7b6e63ad8140e11518a15cf5b1df3cd"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.moduleLines": {
+      "body": "d4f5c5a7bd0198b6118a084aab4e21d3408717299d51afe6eb21b48b405978db",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "de3a155923a9acd019749bd7361e442085f41b2b5b9eca6aa3fcebcb01cc049c"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary": {
+      "body": "8f6c02482dcd495c454c5c660bd3c905e846514c6dfb9cf3e1c4fc7484663bbc",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "52b544d19e09b5ec52712dd0893bbfcfbf2120b7836998fa87338e656c9b18fa"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary._f": {
+      "body": "f4ec93f68a478bfe25c5985d942f48c9f56e1a806567efe32cf1e88777f196d4",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "a0e05bdd5305c5e917b4961f34e8767b30b2f7819944e1baf1a6686565cc3b5d"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary.match_1": {
+      "body": "ccc3598ac2558ae1e88cec136cb38143207178125c0a525b20dfc956ee1eb551",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "81ebf6a72202218956e877109ff3b99ee2834b50c3c2af571db2fc9280bcabb9"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary.match_3": {
+      "body": "f037aca93079d1a1d2d1f8af12f09056d7bf2fe44024f97632311f4060199c30",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "e131b42c7981e3c229530818ed9f76574131fef26d3d58cd1b9ebef99f9f3343"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary.match_5": {
+      "body": "58ae1783c7e1b09583a13644ea40cded8356b9a9a60819ddb625b7319fd3c5d6",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "be62ec2776592fba12c02bd08c6861974eb2889b28fa75bdc66aeb7076657b88"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.readModule": {
+      "body": "ab143771ebbdd05a69a179c1e7baff45f0eafddd7dad9844f705a603b2186488",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "7bffb14aae6f96f14e577265b1d97a0b9c9f722ba0abcab26d6c409fc05a5c3e"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.rec": {
+      "body": "87a728736d6439ee34c9aaac0ba06a4d8c6da8006526872963e64e6bc58902a0",
+      "foundation": false,
+      "kind": "recursor",
+      "protected": true,
+      "type": "daff953fc9e70c5773c574f7fd737cef56339336e9557531a7d8634941760abf"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.rtlil": {
+      "body": "57ef9256e5113a78c3bcb653401c38f873440964d07fc36a0a198fb805bbe2de",
+      "foundation": false,
+      "kind": "constructor",
+      "protected": true,
+      "type": "7cfe20cbe98309b01a64bdce8fa84a6bdeec500ddf983921e6880805e2855ae6"
+    },
+    "HDLean.MultiClock.Shared.NativeFormat.systemVerilog": {
+      "body": "77eac3be593c9a27b4a5f19fead11fc3e4bd0f6adb89fff41bc139e92b3a128b",
+      "foundation": false,
+      "kind": "constructor",
+      "protected": true,
+      "type": "7cfe20cbe98309b01a64bdce8fa84a6bdeec500ddf983921e6880805e2855ae6"
+    },
     "HDLean.MultiClock.Shared.Port": {
       "body": "ed7a9413b59d8d3ba869f48411283b094843aa3875ec33b343672e79d9773296",
       "foundation": false,
@@ -12686,6 +13140,13 @@
       "kind": "constructor",
       "protected": true,
       "type": "b8e61695c8f595744a490faa73d521ad72a0a3732551e4426210d006d36f53f9"
+    },
+    "HDLean.MultiClock.Shared.instReprNativeFormat.repr.match_1": {
+      "body": "41f43eb80eaf9039eab09e3fb313d8362f08e1be95d250400ec77ab23c955bc3",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "d00a2be11830bda07bc1cdc0b50fcb5594e7d55c802c5d885dd099fcdfc7964c"
     },
     "HDLean.MultiClock.instReprFormat.repr.match_1": {
       "body": "549cdd9a3367b00005bb7ee4b7a89a7c1221d973e400aa7ebbd416f52f5973e3",
@@ -13688,6 +14149,20 @@
       "protected": false,
       "type": "47a7f81cdb53e5844a174c801a364ef3903243232a25425cf90eac3a1b278233"
     },
+    "HDLean.Review.Backend_Graph_withStatePorts_eval": {
+      "body": "3316a48c1bf9cc73163e56c432f9aa5620074bf0b26a65d8da20eefd82a883e5",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "2888a1feead2f42dc943c37556e0ed1fbba962123742008788003be081f8b393"
+    },
+    "HDLean.Review.Backend_Graph_withStatePorts_wellFormed": {
+      "body": "b75739b02851655843b3c9c39196e746379b72d127178715a3d70f6625945e5e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "0ebc0f04a36d2f0a7376ec4f9fbdae67b0932e5a1701b8395491d583eab4e47f"
+    },
     "HDLean.Review.Backend_Proved_Aag_parse_print": {
       "body": "748cc53a49e09c7f43387373ffef90715c5d931d68ef8b46dd322ba4baa568a4",
       "foundation": false,
@@ -13743,6 +14218,13 @@
       "kind": "thm",
       "protected": false,
       "type": "9659fce9ec0b98fec2f1d40c0c6a619d0c0b33f73a6e25c1970411e7d5bf2737"
+    },
+    "HDLean.Review.Dag_Build_emitWord_ensures": {
+      "body": "0ff097f98888879c9be2966accbd373bf084e69f830f952eaba8165fc0be57fe",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "4bc0b55b0dca139ff66f63ceaa8cd0984d8bf8fa1db554c618ffe2810ca00a55"
     },
     "HDLean.Review.Dag_Build_run_implements": {
       "body": "fd0fa6bda474b1d3224beef63045b68f46407930f75509a2d7b493fb1e8d7554",
@@ -13905,6 +14387,20 @@
       "protected": false,
       "type": "79327341a4185133f2bc9afc2262db1677e2e5736e056c4b7d5dbd865b22bf82"
     },
+    "HDLean.Review.MultiClock_Shared_MultiDag_decode_emitNative": {
+      "body": "4516639a020d0a3775638d83f84035e7417ad71ff1a278962837b3ee6ef32d22",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "5085d678be0b2bf2bce2506d7bc023a5fd92e8b05dc620df43fee6cf6acac84a"
+    },
+    "HDLean.Review.MultiClock_Shared_MultiDag_emitNative_correct": {
+      "body": "860a12ff2959898dca758bffa52262d4229a6ef1b8c01a0a28ef69bcdf1bd0f4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "f82b49b556d242eec8f86a93526d5b9fc0732c25fd9ba40c3c88348fb8180c8f"
+    },
     "HDLean.Review.MultiClock_Shared_MultiDag_first_samples": {
       "body": "8b1e5eb163f94208c2e933e3b915d3e95c16f0c4bad05ccdad51156e09af9682",
       "foundation": false,
@@ -13918,6 +14414,13 @@
       "kind": "thm",
       "protected": false,
       "type": "b9e04d518c0fe9dd8bca3896bac33cb4670e65d92bd165854438dfd8ebce17e5"
+    },
+    "HDLean.Review.MultiClock_Shared_MultiDag_nativeLower_correct": {
+      "body": "a9d70070f527e53e56d9be3996692fd4e2753ff1b2aed41a2bcaa01c11d97653",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "801bbccff25c52c264f12a44b61670b6aff2f2e5ee1bdf5d2de4b60b9b0cd0d3"
     },
     "HDLean.Review.MultiClock_Shared_MultiDag_second_samples_first": {
       "body": "8fe9696ac6f8dfc18200b2a4e38a778311a6de2372334734f36ba6c62bc1b2e6",
@@ -21269,6 +21772,27 @@
       "protected": true,
       "type": "b82f006b08911d62c15500f1ddf1f8f733de79697760999151ede1be01676539"
     },
+    "List.all_eq": {
+      "body": "24b96208bc589d227e3367289142dbc7400c3fdd2aa63a5bd5d3b448b9b6a8fa",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "25245c7c8978f942c950c13237b241dcc7fc9e04c6f7b76bfd10dc0abe343d4c"
+    },
+    "List.all_eq_true": {
+      "body": "1dab5e46e5f2b1a149cd80aa3d94d1aebe23e8f44484314365537b67c5daf769",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "583d1a700c377485ccb57d34b0d4b03eba1425323ca2f710888cf30b1c75afb8"
+    },
+    "List.all_eq_true._simp_1": {
+      "body": "033a8a3e034318b3dd4828f276751597f0d25edc8be7b196c8031bdcbbaecf93",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "aaf53c1daeb4e0cc5aaa3d97962f9bded990c552c3521ed89f03685e73c292dc"
+    },
     "List.any.match_1": {
       "body": "eee818cadac8c4de4cc84cd22a10bed62ffb100264f5ba210b44e06b7c5b4828",
       "foundation": false,
@@ -23103,6 +23627,20 @@
       "protected": true,
       "type": "1523f1834893db65cb699b574b2815cd11808f8566a40fb78bfc951316184b5d"
     },
+    "List.intersperse": {
+      "body": "d2092236c7ef65776ec5a3f4e0fa61edaac1535fdcdf296e59aae5863ec9ec13",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "b7cfaacca6a77e7ea96ddc461f249713a7f7ecaddce5c8903ea8067e0cbd7e72"
+    },
+    "List.intersperse._f": {
+      "body": "28a1834b394789dd451ad43e95fde14f2efd17dd8c42f688d6eec863a2dc9b0e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bfc45848695362aa2f198eef271aa6f578d5279918a759c42fe09f1c380629af"
+    },
     "List.isEmpty": {
       "body": "b0d9b3a4b283bab7d6b6d561c2aa276fc46698ef0607a47595789dfba7144e7c",
       "foundation": false,
@@ -23285,6 +23823,20 @@
       "protected": true,
       "type": "3b0802ec9765444043517f0bd5270e781e40f9bfc225db697be9479fdfa25910"
     },
+    "List.length_range'": {
+      "body": "e3a93662084b9bc6d287e5d745a5eeaf127ea51ab9cbcde425dc86666e674849",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "065d44373e164ce68cc0561738258947d5e596856e8e8d9feefe7a1c946a1963"
+    },
+    "List.length_range'._f": {
+      "body": "7c156d63b42ef218218b66df189cb8bce8ff241291e8b46f2c20a4f7c7aca8e1",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "de2e96f2efd81811081833da132465807285372e6d41580f351a26b8c8632bce"
+    },
     "List.length_replicate": {
       "body": "026a565139cb9d375470a09435e0c7735fbf9a10688939496f591a656bf0af67",
       "foundation": false,
@@ -23312,6 +23864,13 @@
       "kind": "thm",
       "protected": true,
       "type": "49f1c9a5a8ef955d7fbe300bce4e99f65124240f08074e8ea9c90df8f5791f27"
+    },
+    "List.length_zip": {
+      "body": "87eb771519273829894dbbb2a24e400493817991c76ea53bf9fce407364ac2bb",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "7511367343373ad7465a6e90969d54cdc63126882cdaa19cadecb526d06fcc0a"
     },
     "List.length_zipWith": {
       "body": "378ccd666f00e779ea5a30f357b552cc6143fd37cbb910ffe04268834929668b",
@@ -24649,6 +25208,13 @@
       "kind": "thm",
       "protected": true,
       "type": "a1291cfa57406e2a35df41664e7d74ac403d30908d42a99ad35d251a1c772125"
+    },
+    "List.zip": {
+      "body": "97a88453f5e77ce239b463a76d25d10d98e0306ff432714de42a6542fb581e0f",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "91a0ad29cb47d35f4080e5448f3df3bde238e0f220f7f4bddbfbbc61dd8bf058"
     },
     "List.zipWith": {
       "body": "2c5c916f135022413d080986d958c2547f532a03584f2466904745bb834fd9d2",
@@ -31713,6 +32279,13 @@
       "protected": true,
       "type": "34aa512be9e6a0614da656ccac3f5392c1342cc9bd72121c6929171fdcba2674"
     },
+    "PUnit.ext": {
+      "body": "9389cc89714728edb197994b0fcb9ed2a06951bf24d605be4241e811dffbd01e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c5e1221998f799a941eb24e1b4203a1395f3f440ad50d759a7380c83968186d2"
+    },
     "PUnit.rec": {
       "body": "b2d3cc0dc64dcac2025d42c57741cb032fadfad516e0f483376914e7cc323996",
       "foundation": false,
@@ -31803,6 +32376,20 @@
       "kind": "constructor",
       "protected": true,
       "type": "20827e74da32c04c3ce05641b8726135fa336f2d8929cdfc33f762fb747134f6"
+    },
+    "Prod.noConfusion": {
+      "body": "2310b830be7f21bef601016a326d230f888d05aa94b9838de6ea8b58322dbe58",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "171f1235bfb067d571333e5deef6c39232a658105aade10993025885d2780292"
+    },
+    "Prod.noConfusionType": {
+      "body": "5d389453f517767569e633b20cb6a0df0ca58c4ed612ea6ba9723bc6b076a046",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "1f45974a45c3655e78c775ae448c32f4c9369d22e70b4a3ebb0c7e551cf8485a"
     },
     "Prod.rec": {
       "body": "a52d6ec3e720b88188253ba2c326740bb22a0a44a07453489f26e16258f2c100",
@@ -46169,7 +46756,7 @@
       "type": "12a0c7ec7c4b180cdfabc72f7af51ec81ae89b49b012b8ed2eb7961dbb47b747"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants": {
-      "body": "3f24abac095a4349efb212a9c00ddc6ccd28cf352dcff4e373b42dcddae1f47d",
+      "body": "04815c6df8866786b38b18ae1be6ce056e3189f8afc9b0ec9a5de4f244134bb5",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -46239,7 +46826,14 @@
       "type": "b04d150a6d55873da9db18fa445b43a665b126af313d61416b06c0cd19224101"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_18": {
-      "body": "6b5400e5bc8baa1598fedb725ba910f4e531eabe234af89a5b34dc65235f29e2",
+      "body": "4aa2ce01729d25ec3619418939915c9f3caa0ac3628e324c82597467ace22395",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "81f42eebb1fd17e24c17e3d1d7dcce18a598af17d3472823baabf1db72a9328b"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_19": {
+      "body": "4803385bb6f9aca98045bd04aa43f3b3c7a2739d7527acb548e42598a3f8db54",
       "foundation": false,
       "kind": "thm",
       "protected": true,
@@ -46309,7 +46903,7 @@
       "type": "b525e82e98eeac73f20ec0dc38a3f043811798e0b39e106595175fbd6141d33e"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilGate": {
-      "body": "6cca75036af49cc4bc706490a8380f5eb5ce74c8b5ca57eeb6cd307815abb672",
+      "body": "7b4e6d9c5c1d4b24201cf21f7ee05259567749417bcf8dffce41cb70b00fea46",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -46533,7 +47127,7 @@
       "type": "ce442da8543a017da50d51adf64039aca58f48ac3f32cbbab9e1cfef2b63af50"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilHeader": {
-      "body": "76c636d361e808d642e49b0658834a14deae6a7246c0a1a6532cc57637f40d85",
+      "body": "78c2a68d5e6c48b82785158242b581f9e62e9d93c3be39ddd0fc48accb9c39c7",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47246,6 +47840,27 @@
       "protected": true,
       "type": "7b95dbdf963fa7b6fc00ddc1f9df820ff55f0c5f554a2d190fb49455528e6ec4"
     },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.numberedWord": {
+      "body": "d95c056966d6b0d3f9d870cacc906d143bc47387eb2dbecac4c4acc995968448",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6df2bcd4436de042a4c6a5af1c1aa5e2f90d67cdcd241c0494d04c087888aee5"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.numberedWord._proof_1": {
+      "body": "0e3251e9269abfd67fb3b5e41e5e07426681d4e07c7ca81791679577c55551bd",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9a5af74f267c6b0b951b0c30263a53d553568e9a18de02bea19ff61714958f0f"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.numberedWord._proof_2": {
+      "body": "36171ab26b9a42c4cceee56c9914d9072518b117295bbade65598128ed75f082",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "157ace1dcf541b7786f9c493fef794521e64d61fd0fcd5a590acfe952f3a364f"
+    },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens": {
       "body": "9cf311f47e90ee0f443ce27c202739a3bc771629eaf26057c6850409d677ccc3",
       "foundation": false,
@@ -47330,6 +47945,76 @@
       "protected": true,
       "type": "12a0c7ec7c4b180cdfabc72f7af51ec81ae89b49b012b8ed2eb7961dbb47b747"
     },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.gateNet": {
+      "body": "0edbbe59f5f566d6b2f7291032d246197a84a5fbf86617309a7a5c384c9d68a1",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6df2bcd4436de042a4c6a5af1c1aa5e2f90d67cdcd241c0494d04c087888aee5"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.gateNet._proof_1": {
+      "body": "e1b3f84747fe16ba9ecf72616f8a0df1c8966500c35b9aa98116c95ab1ed3d9d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "cb9c7f0810dd4b30cf18d106432f36f15296444ad22650927cb17a33968bb533"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.gateNet._proof_2": {
+      "body": "67258c3c6038858c539376dd658bd59acf1af20665451dbbeb69dbfd588c5e7c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "bc0da7da4caaa7b6de8f70f5bf18a7e1cc786b39bcfdf0206182efde54a6dabd"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.literalRef": {
+      "body": "4abf6452d7d605aeabb932f903bc0925850d8f3686899c2ef4c8bc108cfd5886",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "82a9441fd93e65d2fe6c1b56bd75a5124217c995328aca3c8dee7b54f5884573"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.net": {
+      "body": "cd1a442ea7b382689dc22ac3863d6ae7a426cbcb189aaf33a79c9654bf60cec7",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6df2bcd4436de042a4c6a5af1c1aa5e2f90d67cdcd241c0494d04c087888aee5"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.net._proof_1": {
+      "body": "50f8fd598ad92ac51a3830d74d402a0a4934826f52802280d51982b81d109e69",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "750e2247c61efcaa40cca8ec8c0d612d622b779920792d7c54e8f304463578a7"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.net._proof_2": {
+      "body": "8cd1cb7ac53b5ac982c2816af0086f6c83fa57649c75a4d29841ba7bd3ccc802",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "31b88ff3fd2733fa912647406cdbebae74fa92b1981e88f3d70cef3c296b2222"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.numberedWord": {
+      "body": "46d5705f223272245e0815a7128cecbeab91c12761eddd39a2558dc917b8c5fd",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6df2bcd4436de042a4c6a5af1c1aa5e2f90d67cdcd241c0494d04c087888aee5"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.numberedWord._proof_1": {
+      "body": "2d4aa73c1951fc2e1a3d45db2ebbf38ce5d178d51f6f767503ef1586a50242dc",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a829a8653831555545472116d8cded03215cd25cf2b0adb2f6638a2db3e3dc1b"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.numberedWord._proof_2": {
+      "body": "515c65ba4e75b8c5aca31d4bd857ad7e940d247b0e23fb16d46c2d342cf580c1",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "81adae0de3ea045c40b7c0c3aa4123ba88e89ee2abb4080e4b7280d9ccd19a69"
+    },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens": {
       "body": "d48ab496d5158859835936edef9502d519090c972da6b0d5c0f0c229fd805692",
       "foundation": false,
@@ -47386,61 +48071,89 @@
       "protected": true,
       "type": "12abd6325465243eed46d769c59a0878c263d0b2e57c5f282a524894083f8783"
     },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.stateNet": {
+      "body": "2bf1da77091bb03d14217ddb355ae759baa9e6d142ff0cd08ba5b43491073189",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "6df2bcd4436de042a4c6a5af1c1aa5e2f90d67cdcd241c0494d04c087888aee5"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.stateNet._proof_1": {
+      "body": "f53dd42959b1a74864d64c922693808647bfbd39815670d402af5303f3f8c5f7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "79fe80e9da2014e4003dfee1e9f218116b2fb71045364f436c1f07829a576eb2"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.stateNet._proof_2": {
+      "body": "53aadc685694f2320281e7c2a2e9e76d31d4fc985b47b08e217b794b56cfd5ea",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "72969ac1c1b80d783fd68d7701ce73d667850ecb2ba9914f3a76b48bdb2a3087"
+    },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants": {
-      "body": "8ba1082ff24bb6335131701c93970a6fc16da74a3aeb9b848f5c0a1599dbb0c6",
+      "body": "6acab82e3c3d934b7f54d2ef3ae11755a9c85fbefb0517bb8dc221cec7ec8613",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "b8a1a2fdb0bcfe6396f41ba7de14145990306ee0c368a7fae7a6f8876d1158df"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_1": {
-      "body": "8f7a0b10424c50b5dd1f12aca89420f8188eb28d65c8ae5f4961458689b5d07f",
+      "body": "8286f50a5635d3f9227b6bddf5a00d233ca9afe7e6679133b17dfac1860651ce",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "688676de82d73acb04f631932c4d0652aa1a082d96e953e43378312f6b118056"
+      "type": "f09fef7444edcd08f82812fb8f578bbccf152f992b207e0ce40851b4365dc7a7"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_10": {
-      "body": "0b2b958b15338d449e060937bc6b9c8dfd90242f9dbf367f7842663552ea6839",
+      "body": "11e3497e90bb360461c3b947c006067f11e40cdb49c1c088b9e864b9ac50fb49",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "570d6bd845e0edb024f874896df2999226ceb35ea88edf78f35804c65b565221"
+      "type": "298821290ea6f6b826edb045ba63151ccc037f31e6e852793e82708656c30e89"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_11": {
+      "body": "3430b957950f3daf070eb8393ec2dca23f66734b9cf27c7773c5342d8608f420",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "fa44cab2ad35f8661bfeb7f82863a811b0e6f549132044af24e214e68c3b1592"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_2": {
-      "body": "13f6e9b4e85ae123712dc9560e68db4b8a930132beb7ba2d8a771587195954b1",
+      "body": "dcdfc2dafb8efb6d1b8525788d3804687c0f04ea559245c3de33eefb7f1324cb",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "95d03b954aa4ff359dc9b51d04fe8a1ca40c096c4c33be88651ca534718b8db4"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_3": {
+      "body": "90d72951c663dfc4c92bcc8a8b16ec0d85130c3b5fa9b45bf02d54815230006b",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "12cad0425eefa3f10e8a45deb1ed07ba572648c7af8247a95dc74b766102ecb8"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_4": {
+      "body": "b4475908fe06c565278af5bd2af17fe566a643b0866d4606b14a98e0360e4626",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "6b9f7f9096bf4061f53142e7f26e46515c1c42bc77e799e6ac8a43774f5a489f"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_3": {
-      "body": "0477e10c1b1df5534744de0ea613b7dca1553610d45afc6377b72a860bb02b0a",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_5": {
+      "body": "4257c0050c80f88bec22c9a65b98d96c84d6af32e537b4dce78e2db6abead2ba",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "53db07e7a56390cc57b92f7e957763ffb23fa39b6c02c71980d9f448376ded23"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_4": {
-      "body": "9e83b74f4528752a3fae0416b22e6a59e4300fb80ae7d8d92dba4a1eeb57db57",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "141df3092aeb7435a59f925656058f4f7c3230bbd8c71cf7985f5d639295ec6d"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_5": {
-      "body": "6363bbb720c231e10146ca90d6cbe0597d2b4d1290d306dc464691559aa44500",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "6fc24ebff22c28716a662f98cdfcc4b76a5db3a4a8d7c64fb411443ce18540fa"
-    },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_6": {
-      "body": "5ba495a105a79334398feca4e276fc34566d77f7145a001ae71a26edefa87452",
+      "body": "1ce806adee3314cc7e9c832b0e4b9559c42eb931362a02c6225b3c48e46e96ce",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "2dcb1bda0fc603128f90039771a8cfb8e7ff49f2b01ad477a29ced1e9b67ec4c"
+      "type": "5d4b05e084366c322183ba699090d4e3eb67c08d5b08271d5a11e08cc8aa0088"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_7": {
       "body": "7bdf696bb2f5024ab91cb132f9df4d7e5cbaaab27313a03bed7f2a109f8a909c",
@@ -47457,11 +48170,11 @@
       "type": "09536419b77f9f3cd4622e8c50bde8bfbc942d423f420431e09b56d9ca8a6db3"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_9": {
-      "body": "ddd6fb8950b3824dea98f70117d08695495a32d2cf4e873e2123fbdedb7816e7",
+      "body": "d29fcb32d728e4b50645af0c741cbbce64edd42b7bdfb2082536753ee6a3e4bc",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "41db1c725e1cccd44684ae3584ed8d06475d61f1f1ab2429a89b7743235000fc"
+      "type": "dd6192710c8e03b3ab3a0effa04ddea6f2a29b8adc68b75e1e19cee918f078df"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svEnd": {
       "body": "dac721d5e7951fc989cc1cb28bb3eb67276c52959e8ed18c963d1669df7a95a4",
@@ -47492,21 +48205,21 @@
       "type": "14080d776032618a15ad3b1a3d29fa095d830609818c1447a9eddf3d7f8dcf08"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGate": {
-      "body": "8e36b03864139a2314f1be2720abcd265380f043d5b92acec3523c0431ab2528",
+      "body": "ed2390d078d774cd1e32b052464816e67e04f93a67a9e34941e0c2feb9c5b344",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "ac1863bb282b405aa5a489e4e10121914d67c718835e533462f92ce63364c656"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGate._proof_1": {
-      "body": "5932acab10deccc6025146593e672984d06a37cb240338a7acd4156a5c6a8c60",
+      "body": "f68eaadce5091c9d67896cc2276f978ddab6237ad93a5681558369e3c9ff7433",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "bdaea4be061c66a142ab2dbdef5f920f76f2ce27c80dc3d11d737a362c44ec6e"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGate._proof_2": {
-      "body": "5e5c029fd970677ec053d329ecb7bdcda7b4f706b02bd638660b1ba862500ac9",
+      "body": "4c7e96ee8a08e852803e82b0885c2285bfacac09a02b4f59f5e76efe355862d3",
       "foundation": false,
       "kind": "thm",
       "protected": true,
@@ -47520,7 +48233,7 @@
       "type": "aeda7cedc5949fa1ffdf8787371fcba5f734dc342bda02333e6f99669913e11f"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGateRow": {
-      "body": "2aa46af906af1e2e6d55cedf445863d611fde510872b48848fd141690a13cb7a",
+      "body": "836f2912add57c27544c75284be61fe1a4a1f2d46f935073c5f61c17a1167e2d",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47541,7 +48254,7 @@
       "type": "4bd0ef279b4b2389c812caa5627bfdae06aa748d4367c003079d411b9902a8cd"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGateTargetRow": {
-      "body": "3ceca364e04cab8e15fff294bb7555dfc1111cc504108e103de90468570bdf1e",
+      "body": "e64a3e1694bd75b1997a392ac264a6ff34c97021efd1e201b961bd8487d0ee24",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47555,32 +48268,60 @@
       "type": "249a5f1efc3c54f77c3039039da47b2ac43c6e38b3d6634ffa827332ee6599b2"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGates._proof_1": {
-      "body": "8daa2a9a1037de76e8d8dd94aa691b9a8cda32435f537712a56b978372069092",
+      "body": "d0a72fafc18f160bcaf69c3cd9286517ef7ae4dde60030fb7e9e43d3b72eca9b",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "4e8453fdd61bdbf28e73e277a614dc634e38e923eeed795012a75ff92c2dfa56"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow": {
-      "body": "7cd4a226804a1785ff137f543c888cdf1da7832ca759d210aa09c4f8d14190fc",
+      "body": "cb5c01e3b05b57e12082723db70a9ba9e8d025721be0f6704718c3c150192dd8",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "82a9441fd93e65d2fe6c1b56bd75a5124217c995328aca3c8dee7b54f5884573"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_1": {
-      "body": "9bdda6d0ad24bf74ed4d17fbc1cec1e443ea2e430408fcfc872b635772cf8fe9",
+      "body": "c2bb32545f29f9ed5744e892f70580953dda4bed9980c1152d4e6e705d0a8871",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "4bdd1fde1097b8a25aa9d33b9c70ecdcb70204fb51b4a2c44adc62e6defeb2f8"
+      "type": "14883448a6d109f9b1196c93bfb08699bdbacc4a47efbf3794bc1f15a68291f7"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_2": {
-      "body": "de6ac4fef9cdb30d0d5a63003629ce968c03c6321ed1640cb11b50bb8d74a784",
+      "body": "9030e96373ec792dc55e3cb536a9f559dd941e735eceeceb85f4eadceeba7d9b",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "ba1b385469f00b6cdd68adcfa83ba565f053d6c7f94b90811217de40a5b620fe"
+      "type": "d5d3a291224dea8ae54cb1a7a22c445a511b2a05fe4d892887f0e6c64e9cd004"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_3": {
+      "body": "333e0d3e4b79df732379f6337d21ea89a1c71d68518a79ee7737cf1633faf483",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "395e0a79e62af805b83b3d44b703a1477e8cdc5a995960b21b35fe5f1b118d13"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_4": {
+      "body": "fbff7f192599d7f6bf867218ac954aaf0416b5d24cf1a522e9122014aa0b2ac4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "16f28426c5a2f06956e292c0413acd8e5fd379c9d78c822320dc7d2604bdbbf8"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_5": {
+      "body": "fdf0556975a4ed027542280640e914168c3246c8abf0aa41605b2e9535618220",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dc56a20119e359a283fdedcaedad06d8648e3cd5cc28713c3d22fe2b4cd4d544"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_6": {
+      "body": "18502d96dc6f54a4b26e18ef4e70ae55df38ffce49f86006f28d00f35d7711a7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6f801530895dc4c0828683c423b7de2a45681d3e300d3f997dad51dfd11acd05"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svHeader": {
       "body": "e342dda4f0906b65b351e05ae1fc2ff209c83de3751930724ed1c6035ec0a03e",
@@ -47604,14 +48345,14 @@
       "type": "a4dd3fd6745e58c81caf2e3c3bc1acc64c59276c393dc357589dd594cfb315c6"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInput._proof_1": {
-      "body": "4df85e90dcb7b87e64b00ea8c7d52feddf9d1027cdea655cf06fd2d494affe22",
+      "body": "583b1b9bc9808e9990faa7f4b76bfacdddebbf6cf8fa38e139da0bef9db95036",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "0c58afa4a29ab3fbd71efb8736db6d0d992084b90f3cee7eeb9be15ecbebc550"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInputRow": {
-      "body": "b48e08860908677371992105b30906a85e795a4e9bc605155516720c7279024f",
+      "body": "9e87167df28b76cbc3b544acf7a3c48b17d063d4de4b887bc9ee16d7924b1290",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47625,70 +48366,28 @@
       "type": "a4dd3fd6745e58c81caf2e3c3bc1acc64c59276c393dc357589dd594cfb315c6"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInv._proof_1": {
-      "body": "92afaba8dbc9a2bd019f1aa96e109b741b2b463fbed2b123fe6602c30b37fe86",
+      "body": "d9af7aabb8a6305d0834cc82abd9cfb0375ef2c7869c8401dae5e44aa938f254",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "7f4e376236cf85b77b2508662bedca7516752fd73e07a8eb232b1748577dbeee"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow": {
-      "body": "c909f41b8fd2d31888a6b98cb9e7bdfb5b7d20f3e6cc7ca86cfdb1f2b76f3c77",
+      "body": "13e53e89df6bc5586e2fb042f7462b377f606d488968e8345911d8a291a87a2b",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "e632daa8975837da1712759ea6056bf7ff9a54cf996ea7d47cea314359e9b295"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_1": {
-      "body": "6df461375d67a89e05a04da915f093be86e46dfb26e9d3be42cd811e75aa0e32",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "57e52a0e975e039490c00fb6154c5d719d6d5098573ae94aa4dbebe7cdb92f58"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_2": {
-      "body": "6c5a1a7df787620574bfd9364827fbfe364b2f554bcbb938a6861cf84cc0e5f8",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "9a1700240d2fef02d25e3513fb58ace622cd3b30271a6b149737b73cbf7f7c83"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_3": {
-      "body": "694b7117e89137330aa39ac295c911de1f3a327688d47736f5ab3d18cf2b1fbd",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "679109108a976ba54b52ab278f587881f606a036d092b1943d696754be4e85c5"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_4": {
-      "body": "c211d9fab0fe840fa7ec3b345a2885aa15ad3eb51cafb16205478fea1439d200",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "3da679776660646e72d4f37852c913d4f78c5118cb75a8bd4fac3ce0889d4497"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_5": {
-      "body": "28ce3f2666e16e33f1d722aa949ee1f5862b2a3e11c306436965c2b6098b2209",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "dc56a20119e359a283fdedcaedad06d8648e3cd5cc28713c3d22fe2b4cd4d544"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_6": {
-      "body": "2a28e6c9ed730c59a4ccd51449467e83f6048b7738858cfb6eba773cda069902",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "6f801530895dc4c0828683c423b7de2a45681d3e300d3f997dad51dfd11acd05"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_7": {
-      "body": "947cd17c8df91691fbd2b53c4da8b744a30382f4627ca7c02b09ec9e5b7c7418",
+      "body": "ab3e016de83e8f06e6e1b8926a9847c2c9b29cc5218c1e7642adf6fe6e497405",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "953da7e64bd90382660fac497b71696727e9200ffd3833d740431a498f6a7034"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_8": {
-      "body": "a8d067bc40693923cd6bdf6ec54d12c4b4be6dec701bf6ebe4aaa96e14a584a5",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_2": {
+      "body": "b5b1a3752b397e8c64e1abd0786a3b0a9091ba7297643891102a114e462e9773",
       "foundation": false,
       "kind": "thm",
       "protected": true,
@@ -47702,14 +48401,14 @@
       "type": "bfa8a78c0cd2b868617b480d54f527d83901e205afbc14ea91eaf37ef79f7479"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNext._proof_1": {
-      "body": "048f5e1509d140cec76cc20f97203657288a5dde57733caca6f2e61e4eaa13e4",
+      "body": "720bd3dd40f4bbf7eb9f761adb025aaa100a4739be1d2f76dc21c7b3786fef23",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "f95a7b02fae9f9793fcdb78b22e4487b95156d58a849ff3ef886c13a5b139f03"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNextRow": {
-      "body": "85e527ccfc254c3102db2c59aff02eeb78f228a61881e0239d670f01f77962dd",
+      "body": "299f62657342447557703ba1705c28b443c8a3ad4d3eaace85d47e70777c77da",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47779,14 +48478,14 @@
       "type": "bfa8a78c0cd2b868617b480d54f527d83901e205afbc14ea91eaf37ef79f7479"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svOutput._proof_1": {
-      "body": "ffa38f2091dbf8f3984c44ef19adc3cdfbe12490f6363f0a5e13c86e8db17de2",
+      "body": "02b180ff669aeb0f7e1a2b322c99f77f4cd812b12a0c560109314a714142a9b6",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "7c1f0fea2ea86c2bb9e7f9d71bea7466cb47ac7d43820872686cb046f7cfed46"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svOutputRow": {
-      "body": "993e90b86743c68c7dadb80168534661a3b59b51e82e2789c009355b1d511e85",
+      "body": "777bce241737f1808f2a2d355d3c526d3a3b01a9c990c0629d2c0ef57a74fd15",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -48031,67 +48730,88 @@
       "type": "249a5f1efc3c54f77c3039039da47b2ac43c6e38b3d6634ffa827332ee6599b2"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegs._proof_1": {
-      "body": "c1728b333b8b74312b71fd41abef077c24f9da199a29899517a57c174b1ea535",
+      "body": "5d6dfc596097ce52b91f50bff0868d98cc067cda3a54b8112fb28eefa634b569",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "1f7323f137b73f1c182e3ecb5e2c791052b647641bf7b4c8cb5f9815c50bb5d2"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow": {
-      "body": "53345a5ed89f85971ab96163c07e4279facb58c437ceb7503ab43f7024b948ab",
+      "body": "ebd3c4220986f38c32cc37f0d4736854556b98272874a67f9570971bbca1835a",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "82a9441fd93e65d2fe6c1b56bd75a5124217c995328aca3c8dee7b54f5884573"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_1": {
-      "body": "9c6c10132bfacf56a20c280a35a15e5414c347d4290d9b5986c077ae56a6e66c",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "370416f3f34baf1be87bbb0e437355db0d097c3145a2e850d0085f6f6f368f5b"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_2": {
-      "body": "71b369a2acc0da1f68bc45067e9d9d495ca47d60ed9267dddcb99b1042d74ce3",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "b254f8c792d385404b019dd9882f6b6347ab7c0597b81ad4c1c8e0413378f7bb"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_3": {
-      "body": "5356ef2f657cc18ce315487541a95cd63c467ed6e2d32933bb78efb251f672f4",
+      "body": "24c9991a01eb91858f1c51034d594117810aa811d4741ff11a7021018c19ffee",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "bd314adf85a6a16366257b6193c28fde3ee1cf565a6aae7eb9393d1b034743dd"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_4": {
-      "body": "b020cd89e47e386a360c9e088d31271175e89eacaecbc672f516ef970e2773af",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_2": {
+      "body": "5fdfcefd310a199e27247508fda488f758552d64cee71d75ee77a4edf6645188",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "ca82a557eadc1d5bbf20b7985b11fa883392967fd932183bc557bb4f9345d741"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState": {
-      "body": "d91bedb2937dcd9f78a213d3503556d7e2f53547fe9cf751a19a2653eb9d3e63",
+      "body": "92fe6a0a562dddecdc1849e68984de56691b9b8f04e988e15aa79affd20739e7",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "4d6dc5323bb45765b2f6f7c57d25b0e81efb928b597ce3bdcc372ae8f71cd815"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_1": {
-      "body": "3bf1c039cb1dfd4bef76b7795b2206a0abd47db3413fb7f285909a13b0fc86ee",
+      "body": "81f8467b541e67669b1d5c2bfbe24ca060bdcbcdcac5f00a595951bd25fbca44",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "bfded3c87ba5ac082e9c07a4dc794388697fb665e84e6ff75fd4f91550c768d9"
+      "type": "370416f3f34baf1be87bbb0e437355db0d097c3145a2e850d0085f6f6f368f5b"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svStateRow": {
-      "body": "b1986972cbf8b7f29828d4b240ca23487256df3fd13eecea4b6dfef673e98079",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_2": {
+      "body": "1be7de6e7b9acca860baac561b5cfbb24bb2766985bff65f00a4d1cf387be591",
       "foundation": false,
-      "kind": "def",
+      "kind": "thm",
       "protected": true,
-      "type": "283eacd993134362bc29ac14a3fd2efb680941837d425c0046e9e4a4c493acda"
+      "type": "b254f8c792d385404b019dd9882f6b6347ab7c0597b81ad4c1c8e0413378f7bb"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_3": {
+      "body": "99f145a73ff5c5655616d6f563669b5e4984bf8b402f2f0aec8f028fae97f895",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "556b76477976f6a54dea1553c7dde387b756e8dd5b1da8309800683be8584d23"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_4": {
+      "body": "9abc673a32d3c76347935fa4746221019800d041d9b3056ead19f896a46ec8d3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "670fed3f862bfbac29cfeaeda5392272edd0e63668b84a6be336384e4160b015"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_5": {
+      "body": "73975da1eda5889cda60b03bb542f87348bab3097fa7908862e3fa88a42bee95",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "57e52a0e975e039490c00fb6154c5d719d6d5098573ae94aa4dbebe7cdb92f58"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_6": {
+      "body": "a8efe2c9f8aa708eb7f6e8ea66de9b2151311c6c2084ad4df2d4bb8288ef9dd8",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9a1700240d2fef02d25e3513fb58ace622cd3b30271a6b149737b73cbf7f7c83"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_7": {
+      "body": "811062a93f480679e5a7787354bea793caf4f3c02cb4dd9ac29d0d6d142503af",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a843591591a1468594f8a07aa12830cf362dd5a2809026423ac4b4d61e2aca03"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord": {
       "body": "6487af14c9cff08d4ffceffe219eb8ab62839852032accb1c97efee5dc159921",
@@ -48295,6 +49015,1098 @@
       "kind": "def",
       "protected": true,
       "type": "ab4d8c2b28fb31201338ffccbf5a23b60b2155a294b80427d55a534847bb34fd"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.emptyModule": {
+      "body": "5a47a849bc74698c3e88db70885d8682e949b0add90984564e3b8274ba09cc15",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "41545592e239545ec556ca656d88b1344063f04a1614d689a269ab9f24070ea7"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain": {
+      "body": "97fa6db18daee90afb0b9f05e04f730b47817ebddc971cd95b984e77f51b680f",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "96cfba653168bf396dcca2df27b072523140933924283c67ea5077ff1d9dd81a"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_1": {
+      "body": "0b4a57911b5ffc06e23454317b33f0b632f50aa01dec4cbd0c9273fea277f68b",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "8f657358a1f1445f0e9fa8f12269425c38a7f8035b73ef861fd31cf348b54d24"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_10": {
+      "body": "6d95db38031e5c9704f8a1934b07b831e738c17d198d03ed60d8be2c05cea6d1",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "321294531420a8931ace232540d308f97ecd9ce24d343c465037aadd14fc449d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_11": {
+      "body": "473128f38d6521892fad0c1171f17d29fa00842eeae430388ffec56cc830a78f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "e4cd8248ba5787b1db2de16a9f483529b8228e8479a550f8a30f3d969fae442b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_12": {
+      "body": "87c8495560d87894ed55c2f386da7898b1974e93af14d08b8ff99e52c2aca694",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c0a73b961e82e401fbe2d64f8285fb5fd422265785c9cf9d723a6a74e79ccf23"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_13": {
+      "body": "ec377eaca97dcba958678e7ca885328779c4daaa4d879d892db6ffc8950f79e3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b441294d4351d1b17b95b7c7d241b0da7ad84fe3714c2b714e364d7a58658e89"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_14": {
+      "body": "bf965755e134f21e839dd33b69b8ee6f00499239e4e873b4bd568ae548c413a2",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "1ab8e3863f2e12248e06d8b03617f237ac7e7e0bec8bf21d05ba860b65ae3d48"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_15": {
+      "body": "775b1274109ba458c32ca3cc7f5436a0c98884a10cbc9fb918dc01821bba7b66",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ecab3d38ecd7f2ccbbd19c93ed4f758f9797bcdd1ebf75e0382e34ff74c9ba22"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_16": {
+      "body": "abb4b8a3f148bf6039734c1ac2213ec9a94ccb69a7fd870e6c6861df5b90ac16",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6398bb1b0a7da451766ea46714616d9ba5b451a31302c0137b6a70a07482c88f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_17": {
+      "body": "bc6bd9af4efe8412c108210a069fbc1aec60f756860df565823ee658a5d1097f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9a5af74f267c6b0b951b0c30263a53d553568e9a18de02bea19ff61714958f0f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_18": {
+      "body": "3d679510632730e6f3defa3c7e1961ee3865902d39e263d80dfc16c60ae1bdaa",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "157ace1dcf541b7786f9c493fef794521e64d61fd0fcd5a590acfe952f3a364f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_19": {
+      "body": "6be48ae5700c24693b464e7032bb37c6df917785a0e74f208c4a612489be7d41",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b46d57effdf7b4347653e7b95f617642bb6a258f8684cb77505a84ccbaa19e56"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_2": {
+      "body": "355bde5d732a45756d31123eddf81e8ec6995c56924648bef64aa76ac8c4b533",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a9b900169da5383a01f323737d3b67e055b3cbff5ab27552dff7d576dd02b2fa"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_20": {
+      "body": "a477764550edfd635dab4a73b2aa4bbd48e919f9054a5a8abe4b8bb37d6b3ed8",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c902df4f1956bd7892bed2b1cdb47c9e721cf4479cb26d9f4face7a04fd8ede4"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_21": {
+      "body": "3a11f68fd78e5a3ea5edde224a329d6614b27419c4a37a1465279175b3bd156d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "4fc1ffa0b35e211ee5a84601813cf3f0f2cf5dc2949a2e37f3cfd9901e364189"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_22": {
+      "body": "2b2016f782f09f3810b40e7ecdc25e5b034e178c3d19f7536880fe7737cbea50",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "e87fb2c64edbf6fb8a9937f9f256c68188a5e6680438b7c0e14baf8fa3cf56e4"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_23": {
+      "body": "641f308ba53c392aabecc44b42c4e9adea7d51b91096d9ae9bdc9c041259cb9c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "11ea94e3477302a89fc174299c453654e4d322c10d4a8db5f2a380fd50c09f1d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_24": {
+      "body": "157c71d0da6c9b784dd6327c1eaecf3c360f47f63168aae88807f28355d548f0",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c1224939343e8f6c4c2688d6bc448222444102b0f4e17dad8d65c49faf13e812"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_25": {
+      "body": "cb13197702f4f67a04b372fb44314ffa7daea6671db5644ac53b6a6dd1945785",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "8f58c74ca610bfbe399be481fd51229e660843db1867e6f60ad441ae05dd3637"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_26": {
+      "body": "aa4cb54253ab2af7b8abd9aad0c19dc93347f1f171c56484cd66e6347a153c6e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "522a72a438ee247402ddbc65d5df652ebcc73cc776e2fb9c4152530aea4ae430"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_27": {
+      "body": "a639dcde407c3ef5749807969df7733373eb4086fda11a97f86310ba63f959ed",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c4cfdf0f429a1b8f2e12ff9865d0aecc7bf996cae7fc2e10017e9a17494f771e"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_28": {
+      "body": "486f599b7f87ba61ec477fd6beb7bdce8656303f77d3464d8de23663dc8edcf6",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ca7b4b39fbb4e4550c1e519fe1095ce52302efebc248bbe1acdebfdb4be8b08c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_29": {
+      "body": "996e9b0d2f5ccec2e979ae4eeaf22fa33f61af9b7c1d334a401b20c7902ab96c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b00fe9ee41bdc176a05cfc539170d64bec5b67e1ed3147395b07253fc8767c16"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_3": {
+      "body": "6886f5e51e7b0db725392f1f67316da82e73ddc84fb57044febe136f6806e1bd",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d962a68e871f1781f4009b5794f6d2dc2e751ca7e4eb1584d0be3d53649e3406"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_30": {
+      "body": "d6b96410704e74e3bb6768576c91478b89ef47c442ac9ecb5c37ce01486ec214",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a542501f9c64ad3a86dd883e3815ec65432eda5787369086a4b863abfa609d63"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_31": {
+      "body": "bf0fe4f6698942adc2a1608d895c335e4e5521eae6e73d88cb591cf1f9b0b56d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d13dcfdca846ba8d5130958d88b700559d55588345b1c35d7463ffab289a1107"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_32": {
+      "body": "7987eb32ad6f04ce7f04b09e00a61576147da34b931a0b52d1e38ea6bccdce04",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0fa34959b14337856d2e8603f3f22fa06ed59b85eeb31cd1ebc60a62a4bd0ba8"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_33": {
+      "body": "c932d1ba43e3fac9c1c5dbb5f90ae40f1a78e88902ec6ddfb40ed49348769a85",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ef4944fcb6de53fd7671183d907cb5afb75ddb9ce976e588a324606453f9c32c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_34": {
+      "body": "0bdc78bb76e5445a9dd016299e5b77dbc496c91ba7ee24ab545b3cbf9447c88b",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6d2e94aa08bc8931d5b405c5a426de0ca1f3eaec0735d3c336cf07a9a8743436"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_35": {
+      "body": "de1cb60ae97dbe31c506935b591e8cba840c57176ea4347d1d5c84c96f4ec8e4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d16b2442f94fc723cec1992992f7320d2463bda16fae7dfd5d75b2c890144fb2"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_36": {
+      "body": "a53954cb8073c0c3dba7e7ffda39cc4f8f222809cd317d1a645cfbe50da20ae5",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2b797ace2a2e8261ee44cc106075dc9725411cdefafef286688e3549ded73d2f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_37": {
+      "body": "2c8f54f0edfa001ccd0d5af9b3c66d7363b29b6bdb4dde227b3726f83703fc72",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "387e40c3a3bc6b30522367eb9129b08134ca313a39d2ee05ee76b53c39071066"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_38": {
+      "body": "fdeb70aa7ee6145450e0f0ff77a9e31e67631fde07c1dc540b18217340978e33",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "78cdc8ef45624704a77273d06fbc930a8e4c1aba66959efb1bbe6d99c8697c0d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_39": {
+      "body": "c255893b2552f2c2d9b1c21e00ec765eabcfff916321affc92fcdbefd758915b",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d0edaf6228ad8387e0a77e530328af58a6a02a85e7ced23a1340c22ca2d3d521"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_4": {
+      "body": "e24b5d5cfbbd59824ffc182c11bf7e5858d9f907918ac90c1e959d3d20f30508",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "42ff040a15a252f168a5c3b3238f4abccd9ab072f94d0d1bd82523f12ffbf31f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_40": {
+      "body": "19c8706e1c507b0beadfcf03594ce4c33e6b15c4e250f8ef75a9f9414a24fa84",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "191af5cfab46c92068c51b8a9de6e2b36e6de60c84badc75529c4c94744cd24b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_41": {
+      "body": "e9835fbe45c320e22f06f3f1cdd018489cc23457d51d47ae6976fca9085f999a",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2ffa6fe72fed9835a80c7bfac2c79d2c1fe7da2c8fa44e2f290ddbaf704635e2"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_42": {
+      "body": "74d98f8334aeb3ee6c038fb69723171344939d3744f49c642963868f83531400",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9145d888c2dcc8de3e017175fef474d2c351599baeb9181a776c3e725d4360ae"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_43": {
+      "body": "da8a0716b65bf854b7ce1d33685faf55028a68c7959da7c0bde3785f730fb9c4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "973d91c0e34c807d8c626b1c95e473096b2ca896e6ece42c92f6169340916c08"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_44": {
+      "body": "b3c8bdce6720de81443becccf300aa7519e84305cc99f01038290ed1dfa4a001",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "cf60cfcbefc15fc1330a785e18b00f14ab7868a87bc0f69249f45626bf751a86"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_45": {
+      "body": "4db291d0c1987de898a6a766615f934ca37c2ac70a0cee95368365842f253eff",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6fc24ebff22c28716a662f98cdfcc4b76a5db3a4a8d7c64fb411443ce18540fa"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_46": {
+      "body": "317bedfdb1b5e75bb2da37aa48be50d0ee79aae0eba8009fa6b8f2003d6c2e01",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2dcb1bda0fc603128f90039771a8cfb8e7ff49f2b01ad477a29ced1e9b67ec4c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_47": {
+      "body": "f342b91bf2da496ccb4b626c0381c08958348eb1da7e855183c89e9ebd2d09d4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "3974c59da509e47cc968510a1e00fafbc40458d6efe283d17030d0dceaedd71c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_48": {
+      "body": "b944051e2b22f833db5d6a9a9a0e8b37e99632eda4da67a2cf7777159bfde3f3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "01a7845ccf79f2e048e2fb495e03d0865808786a27fe21ae6c72468a90bcdf73"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_49": {
+      "body": "243a72b77c60695f29cf09f637c1c86c66af5f13a7f7f9844a10a5c992d4286c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b2f034634a0d31966f5c966cea1b18d3681c1f2412340f688f1fd9123ea7157f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_5": {
+      "body": "30433802bb8218888c1f186be82387b82dd4735448c081fb39e2c35d4f3e9bc9",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "cb6164226e3ab1223970aca8d3e1bf52f974463c4075bd8dfb74ff25c96aa79d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_50": {
+      "body": "99ad983ae012f7f563a758f7d04a60bad5e5efda2811d4b25e07975b81df7e77",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2559709394e2d0484de80f78240252c77ea52bf7f025b3092eecc4027722b8af"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_51": {
+      "body": "b1df9dfbcc7154aa8d74b45d22017529078a777b492f97fe10708c7053b8f4c3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dac42bad7e1eddd4c43595df17b83363b94e9328d431c5cc110126760fc047fd"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_52": {
+      "body": "d8d6728a93814aee610a4baa0a68b2f2c99f144228bc960526cc530f9eced796",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2a715bc40cb62fe80082adada84a114e82341f863ff2ff66b682e3536eac1c5f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_53": {
+      "body": "b6d968a1ba3ec631c69597fc36a698fed9b9b1dd415c79c22303f837f6a2f664",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "82fab73af4ff96c6ac09d79db865777c4a41ad5a4772b5820d70623073859702"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_54": {
+      "body": "0f68fe2387b72767e030c32829072627a5c5ef7ec84d62de926df8d56a1a9121",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "307c75c2bab55aa57c08ee4c756b14e004a3c2d7d8699d31b4be9acf5cbafe2e"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_55": {
+      "body": "5de7cc044f9e201e725eb9867e4cae8e0d995d3696e3cb0865047e8d67b6226a",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9307bd9a9d2995294916ad1b8b931b05c82ad198015f236c4e28964b672ffd94"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_56": {
+      "body": "053e7e7b2bd9868789b6200abc3b4662d227569234d082937726bf3e3522b3b4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ab02bce1f1ec5fb3161ea9cd575beac84ff32186d610917e93cfd273b4781280"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_57": {
+      "body": "691e158e930e33a491223a2c9b07a3bef87e54f4f08bb21c497aaa74897c5e72",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "3c1311d402df3c0bf0b28101131e6a8cd95650c76ce8ffbcb318e1caefee4df3"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_58": {
+      "body": "4cf5bc7c352a8f11bc8bcaa454054c27e1ad4a50c1b03d6d1f7e34f4b1aa7be3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "8d42709f1eb7d188c152777be6fb2b1c660134680fc00e03a9fb73896755b763"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_59": {
+      "body": "d77e3e4cbe34ff42a3e58aa5021c12a69e5d3caeb9301a67f72f901a5c736029",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0fd5fa712b7fa5f20da2e45fe34af04df1e81de7c3705b47d11904f39feb9f53"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_6": {
+      "body": "fb7339379a15bc50e4adb30e0f44457c51ff956c3ba609a0cacacda39605ce5e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "001a317e7c0d6ced84031a06d09310ffaaa74e3a54558662cb1db495372c7e26"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_60": {
+      "body": "026b6749ddc5a0f3312b01a586abf5c37541b42aba9185f41802b4f36ba023da",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "69947ce1de879b4be4634421a0624fffc1aa0bc7dd46ed5a8f014164899eb808"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_7": {
+      "body": "1c75a73d80aa8ecd5437962e39d63ea52b8b63b67cabce88c8c005927e24f434",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a37aa0d54206b9ed7e57cac52488a966862f140b3ce82ec3f3c5c49076e20142"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_8": {
+      "body": "5ecef5e6498b7f124112785a15bd7549348aada018c0c4f9f6fb8a268c46db85",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "8df7078cdf71f5359f5a94e5ab114874a046f8affe1626ca3cce805cc99ec59f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_9": {
+      "body": "e150bcffd7a55ac3bd3db23ea411066bd785b8cc0b8ec2e7ad84786e7b8d2b8f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "aa5b2b0532715dfd1aa5f9aac6c960521ffa6e158d55723ec49cdab32049f069"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilTop": {
+      "body": "0f17b1911b89c8877745415b6cfd06e681df6406f8d05386f8e4dc8544d3f1d5",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "5a34f2cb37f647fdae1baca1573ecf8b346e172655bbaf16811d6788e02bd6cb"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilTop._proof_1": {
+      "body": "69edb5ceee3251062149f2db114669e314cea2b81841f4191fc6eeaf3bb19d44",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "346fa5d78df04e510fa27b6dfddc27238dd83685dcd3ddbaf8732a0db5242db6"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilTop._proof_2": {
+      "body": "2af223b52a7e19170cd4852439cb9135e2eb47fd3a6ded973d7a9edf3afe8479",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "18372cf8ef4b8e7f08d045e799e085319474cb0435acf8821f89cd99ce9d6aa3"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.nativeModulesValid": {
+      "body": "914d3022d2a55b05120cd789ef781b4de34612ded2701c1eb93be95ea2c337e7",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "924df5cb8ded29505f3c0963b5584d7ce37f684f3a0c37f747a3fbbb6d60dbc0"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.nativeModulesValid.match_1": {
+      "body": "d4295cd41429d062464a3e06978a6348c0006dfe88d0a788acddc108c64e95c7",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "8517cc8109ac02e32acbc8fcc6bc8a69d9ffd98fcc12b0aa656cecb64db0ef69"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain": {
+      "body": "d7941ea2f6f825d20a81e4f6d03eaf0816b2741f99deb3688c970d8646f025dd",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "96cfba653168bf396dcca2df27b072523140933924283c67ea5077ff1d9dd81a"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_1": {
+      "body": "f5efbb8e6f4e05271451536732f7ef67cce4702a52ae26b77091c904d55f2ae4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "fd4bd9198949ebd476036e308f5df7a3dfd277eefd6474cb7d7e6350da7a5a9c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_10": {
+      "body": "0b35855a2e4e12468660216263acfd64c8e1308146f0bf90c7dcac2c46ac815e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "aa0aac612c97c68b98330c7ef9b6993996808d75ef5fd868773041bc3e6679db"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_11": {
+      "body": "33c6e87a07dadfe21cdf7aa92a8cbde7a6f5ad3e423e766cfe333efffb11b73f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "f3617761f37a0b0ea03d74f6b2df3d0a7a44b2ae6ed8e1295d419a977126f44b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_12": {
+      "body": "8796fb75b990bbe2c7291713bba8ba517b6dbc6892971ae498b87386e2e937a4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ccb2f41a82e054bb5d6a537f6cd7588db2ef22f79b1fde29f79f125933e7cf4a"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_13": {
+      "body": "682e9a10f70a6f8c1d202928b07428c204de8be429adc8a03c5ed76aed3fb2c7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "045e59f0436a5eedd122ffd68833ed41b1eeb0c85b66fd07bd802119893f3724"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_14": {
+      "body": "a0b0cd5af8b9e99cf5b45b85c5341b52c8508674f60b51394d81c68d7d74461c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dd6ee15f89a3edce5d3a2839bf6a7fa564046115f7a25415cb5b359e8a5c23c2"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_15": {
+      "body": "63e0d47097238ab20582e6a23fd1248473d11dd91bae7cf1820e36debd162bc1",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d3b181930dcbc1e14008c7d35b583e5f3a6b42987f996a12fd393241a867beab"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_16": {
+      "body": "1498450ab8c7cbe50218a42f146579d61d3fedc44ccb17dc83527caeba44e096",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "05c3403ffedf2d25c85c7d8bdbf342dec5a3e7352964b978b211adbfe21301d5"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_17": {
+      "body": "9725df258c646473d4d4f148fa1f4cf48b0520bb499c49970f6f622d985e256d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "7df2b2013b722cc4e04fb11a2274c5a77f05ad1d82658e95bc99f64c3034d5e6"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_18": {
+      "body": "72b53acfec5933aceb2f1ac8d8d0b86b8b8a416d4ba9556ec4771d924f68783b",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a829a8653831555545472116d8cded03215cd25cf2b0adb2f6638a2db3e3dc1b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_19": {
+      "body": "4ff5cba4b2d874e7568635abfef6e4bee5da6a58126ef1fde93b23c6d52c619a",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "81adae0de3ea045c40b7c0c3aa4123ba88e89ee2abb4080e4b7280d9ccd19a69"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_2": {
+      "body": "db0d60a5487c2677a3cd2c33b3aa3f48baafed3603965490962e3796c8b2a2dc",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0b5b61bce883a576d6ae7405844e5737fb29eb79c1f824f869fd6f0968ced0fe"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_20": {
+      "body": "7d14444d485076cd3769af82c121169f624e59c3786df27af71000115c613031",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0eba164933d2739cdd677d2f3c5955454d621fc2484ef8c23a4e26ec3e5b1c4a"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_21": {
+      "body": "dc73ec28f330a27ca4cfcc7d3c24cbc29afe6cebd9f4f78db0a350bcdb93a4fc",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a9e884b4a26f8704bc63f6e2b18c5df961618a7044773b70cf2f1a1cf6a617fb"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_22": {
+      "body": "0927c0977ed11b866efbf181a4549ec4d7823701d974102b77caf0d2a550b1ff",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "35d2558d18d13fb2cb6d11706853e7b84fb1e03508698a745444f5119ac2d9d7"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_23": {
+      "body": "b4a1c59ae927f67538254f74917af957d55c43a636115c84bd9d78b59571c4ab",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "78cc1b16a6230244dbcc1695f975f6a6982b9d74c622a04c7c5ba754ac1d80ec"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_24": {
+      "body": "d4b7e21bc62000983603c9c7c33d0487ed20d6a17ecb2e0fbc67e5c92cdfd0b1",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "56363c694c9845987a4dbf873bfb28b0e45d0d870a11187ab6c157909e2e134f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_25": {
+      "body": "24f6309bc56157684977bb6a01f24a5dbbff61dd46a63b2ae161ef2e00c03699",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "130e196360c81401de69e2736c0bf4a55c53c788e532f60825ba3576bb4b818b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_26": {
+      "body": "3dd6ae8798e4aee025cbb5097b82cc4d86f229c40bf92e7f4839c7a12ce74400",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "10749eb18fa4d05ae9876c97448593cd060205bd6b0c6193f4b68ff37dcaf55f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_27": {
+      "body": "64dd5db423743d1483d42cd547fe1cc30842444f74c890e272b0181168e35bfb",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a4e75638ae1c24c9440d824b8d6571b748d74cfa4b2a1c137ef9824c56246ecc"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_28": {
+      "body": "d2ed349ceecb9dd40bf96fba4616beaac357749b1bf18e867207839e82e5092d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "590afa05d9da9f26095fcc313cfb247d487d91883ace47c5dc984889d8155627"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_29": {
+      "body": "95344ad492165c6a86b8e4e48c5cdfd4bbd3878cb6867b15f933b9db3c6ba481",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "937017287e2f6b4238a1cb18f643c2df3e0feef06a436f03230a69742b6f5f06"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_3": {
+      "body": "cd1ec865140b6e7f3f48fc2603adb8d216091ea6737ba3e775dd22cab2555988",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "452e6d605aaab7fe6fc47ada41caed6167360abc0b608ccace953e999f18e8f4"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_30": {
+      "body": "58004faacbcbacb69fb773b8030ed40d7beead7056b0438941770ca0808b20ec",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dc8bd92cfc42cd17623b845ae6cee8cef6bc4cd04d7688b5b424b6a9fcf52f9d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_31": {
+      "body": "b6dbf7a190792af66dcf89243aa0aa44e8feb4e28bb77ece6f0e50d47e24eea9",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "e2d5980bf92e76d2b5b4f910a3816c4d7f2ce40db84c537b1ad21a3aa02cdd01"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_32": {
+      "body": "ec6daaa1bb7f4cac1cf6651e3f2a02276a31df267d3c5993553908e42af02ca2",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "199ec23cbc1952290e8573e065503051103b6b6c8a20c7b207efc395cfe19bf0"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_33": {
+      "body": "8f4912cb1f45d438b81ef4dc6cee7f495558254d2f05fe74a26c546b47723a0c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "539bbcaa937c89e59800429fa8a2a9a40d024a6be8523cd70439a1bff5acca7c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_34": {
+      "body": "e7f3086e7bfb750dced2f301b994ddb333246db6214beb6daf25df48d0b0fa54",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "57e52a0e975e039490c00fb6154c5d719d6d5098573ae94aa4dbebe7cdb92f58"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_35": {
+      "body": "407c27d35d70ee5a0c064fcbe92e3128196135d5cced8cca845a89c39c1111d5",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9a1700240d2fef02d25e3513fb58ace622cd3b30271a6b149737b73cbf7f7c83"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_36": {
+      "body": "dc5afb8364b6db6f50d4d8148ea7b8cfc02629ebf3de67fb5e5dba7ba43d3efd",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dc56a20119e359a283fdedcaedad06d8648e3cd5cc28713c3d22fe2b4cd4d544"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_37": {
+      "body": "eee2355e385f197295b5eb1138ac84ad950c2ea444748cf13755b1777c5768ce",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6f801530895dc4c0828683c423b7de2a45681d3e300d3f997dad51dfd11acd05"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_38": {
+      "body": "fce32457604cd1902c666d0e0a78a6cdbc1d09d891d25a8fc1c6faa0f73e9805",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6b9f7f9096bf4061f53142e7f26e46515c1c42bc77e799e6ac8a43774f5a489f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_39": {
+      "body": "8586477c018d8ea1de341f1bc5ba833a2cb1e3f3237df1b3db44ac5e3b544d80",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "53db07e7a56390cc57b92f7e957763ffb23fa39b6c02c71980d9f448376ded23"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_4": {
+      "body": "d2c47831148800eae7c44120d7d84748d57ebe361f790deac2d49d44ad6428e7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "8da6f79e54522a38d270a13e4431076e29d4a17465b2716d2056ea6fb50290a4"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_40": {
+      "body": "eab72cee2fc286ad0730c6c39379a1a6e4a683dfb25a3c137b2048cced228c83",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "ec0c843dec38f6965a5c5abfb699ab8dbd122be89769fb677782398a87907bd2"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_41": {
+      "body": "76d4d9e872524564066f0ecc8250ea6b13339cf19c7a867fa14447f9dd45de07",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9a499decb7b8f1c537026acafe12673b9e96410295449ccc9b4de5be6342c67d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_42": {
+      "body": "08bd4b340babfa637b20559a910da76011da5a4262307db87f938d95104ed67e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "4c764b139b14fccc7e8aed5f1730342efa71a315b35983a57adbad0a4844276d"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_43": {
+      "body": "875a00c7d8890bbc2355ced562432a0b77b39d15a708e66025bf4ff93eb7d051",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9644eb9a2972dd55bb9de6aa2ce814f34e70245d009b0547d0b2a3cb69340d43"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_44": {
+      "body": "bb6ca41dc6fc35eef8823c21dba4b1e050348cc02424b6f1922e3d04b72c090a",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "370416f3f34baf1be87bbb0e437355db0d097c3145a2e850d0085f6f6f368f5b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_45": {
+      "body": "b98d37ed0fd7612b24f6faab12bcc836c4c4649726875c93355ded36e4ae90b9",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b254f8c792d385404b019dd9882f6b6347ab7c0597b81ad4c1c8e0413378f7bb"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_46": {
+      "body": "197a0877fef78318de53e3056d032aa380a3d66d64ce4040e98a4186b50f31b6",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "84f14b81978a43bf73f12e6c7a025867339d8e525154942bc68cab9e5e82e2e6"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_47": {
+      "body": "e22999b94d4c50220f277386aae9f7a837cd0741a3b4ce0bcfca8c6bc2e4fb4a",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "e235867257ef1b871803052ae70f565d7e7e288c9cae16fc4bafcc819b165b1b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_48": {
+      "body": "910f119c2165f853fc328f9979ac06cf265cd10dde4e52b5597644b2bfcefa82",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "08d0c1f0a96c9ab8bfe334e88569b0093949e091f1815f9c5a7e1b6edce60d6b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_49": {
+      "body": "181475f4b2b641f418fc9dc8fd6255af3fff917512cdec25458e63854d53ec86",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6a25448587bd8ab2402898faf9986db81690a44e58a3499a89645e6d6de15f4a"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_5": {
+      "body": "3b7a5ba67ce29cd3c85c91d058556ea08d33b6bc1be184bc60e21a5331736aaf",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6ab8f8648c1af39f5ba5a007e90a4d67928e993ae6d623328e925b21f709acbc"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_50": {
+      "body": "92dcf1815910370bdb63ce527d8f52ff8d6350be1dc3930bae7e3641c73c1e67",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "1f630b2db4a110efa92ec4cbd9f6c8a499529f0a183038778989ceea2f8fbfaa"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_51": {
+      "body": "81146c709e511296322fdf3980c318eaf4068c4b6193d25e8cb5e2cd07d01b67",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "e3e14de9c2325a91ba1397555e96965d2e7564638a05c81d983faf077bb05706"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_52": {
+      "body": "d44a4bbfd4a422a95b6dd3bd5123d31267bf21cdc9d6cc83cdc8902741b9a53c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b3b23b08c23ce2bfa13212e216d5f957f7ff0a0b3dcd802907b5360a9579dbb7"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_53": {
+      "body": "b8beea5262f85b6b37852d6cd0d35d94b8335c7e715612354af27a988cb302ae",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "bfaad5747b43a522cb4da4664cbb29bbb2334246906c98f15405f2be65ae1020"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_54": {
+      "body": "fbb1748ef62c943ff898b7b94cb33e5c68222f62054b3af7601a0ec0dea8859c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "983af33ed35a6ce2eddd06a4b75ed32ea82c0772f3205b94ff1d09dfd819d434"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_55": {
+      "body": "26c08e40c3be495707ecee1e8b11ec314feb40956f152c62c17497ce47aa68f2",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2f860bac05c2db435215ceb2ee47ecfc160904b8ae6565be044e054b6b33f97e"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_56": {
+      "body": "d129ece394ab0c916c8935aa43244fe7ce2381585065e62d4efae13c79524f8a",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "671bca8cd270d119b51d6f003c84b97780ad9d54334f431a76b8da1ea30d5c40"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_6": {
+      "body": "52dae1aaf63239418df03ebd719838c639cdfa09f7c1ce899968fa637ae5f69f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "6344a9477e91532f92266cc83b1428e40ad6ed532e51d2dea54eef9a4a442509"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_7": {
+      "body": "ec5cca024a0c4eb5897797bf68748187ce7028c89e63831d5a3b13f6ca372cf9",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "b4808e3688b5b3ba4908826755867b173ad987cf619f48d53f1e33d2a1b7408b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_8": {
+      "body": "25e28cd4e56a1119b64a9f467a6d48d093d7e552c746828dec2415fa7ee883ae",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0a526a3586c13f1185c4ca02660bdf195601a240d8085b063f7d96d8571e4c1f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_9": {
+      "body": "0d69c61928b69c84bde612bd6598e8cf3cd1d323b2aac2822e23818a8e9580f1",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "27aef73da900ec30da5b1a57a5f57ec677d9dc2edcbc4ea73dbe443a5f9d0505"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain.match_1": {
+      "body": "36f420720c21dde9d33ca6d807922e51b7baaa87cea547ba92e87ffce1a9ef28",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "24d7af9a8d2fb572c9a67f71e47d4382652c95c7c57ceb370010cc456f89a571"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames": {
+      "body": "6bce74e428db3c6cebb1f788f077c656e6192e6892649a356be889420590e9c9",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "ac4964b0fe9bb44f251010ace80887d59457dc8b0dbb84d6944dcd567574f198"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_1": {
+      "body": "153f9cd5a8143b576ea0f150e62a35c3e03643f3f6e2d1466e183af9c4f55014",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "75b56c13208182fd9afb5b65d048b5a3cb30af63253785f556b1b3e995606d28"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_2": {
+      "body": "125dad6fcf905573e2df1fbfec43a2bec82116a8dd7da87c54e9108972eadeaa",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "760992e8d4d179e0dac4abeac397c4c28bfd700bffdcfcb2be9eaf931f177d0f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_3": {
+      "body": "566999aff4f04b5e799bfd77686a67e882cd0d733011519aa1876d72f4df39ac",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "82c742dd91c719c98a4de4e5a0078758d1bac151e1b610ee2bd8cc59e2ff6ce7"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_4": {
+      "body": "3ebe406d0565385cfa4e06126f0d55a1f007bb4caf6c202efdadc37626bae331",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "9f899ec6daf487b07ea377c8dec1e23c19c93f84a4e2be29f5b5fe3458c990f3"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_5": {
+      "body": "4981c3c450a0af9a18d5c6c9d5ae278c8a9d3e09a65aef4646f1b2f24e0ebdc7",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "bae5dc28f862a52b1c213c4e727ed6e9cdbbafe0e545bfc45d2a7c54baed729e"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_6": {
+      "body": "7f9318ecea01868a6fc2f2331e4e7545f609e8537be2ef0de112326092f9c74e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c83d44619939076a39c3ba5a0becb2b8e14fdf82dacb244e1532c3b525b5127f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_7": {
+      "body": "dd276a1fb6553718139b8ff5b36c0493522883b932585b1a3f8ebc35488181b8",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "5477c266b4eb55db7a3d203b88c8ad8313e55a48df170da890820174ddd1edbe"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_8": {
+      "body": "a82c7deef32ff16eea0e813144d4199d5a55757378f98268caf29ad7fe2ef508",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "bd2c4a36e69671bd932f0cdbd24309ad4d80fbdeec7470e4ffa9a1f0f3d1c4eb"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop": {
+      "body": "76a8ce915463e3bf6a0cec9a2fc5c429dc8e0c64ffe807ae4f8fd9b474c29237",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "5a34f2cb37f647fdae1baca1573ecf8b346e172655bbaf16811d6788e02bd6cb"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_1": {
+      "body": "d3026afc8e634521fe7ede7c0459d7ecd2def197da9f70e86b5759215f24f193",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2204bcc5a8a0dfaeaada3df2762ffbf5e76df3db89647496aebd8a8716f3ab17"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_2": {
+      "body": "9fa82ff0a51779063b4c7a2a2843c55134cec50ea2cd0db9de9724a1406b9fd3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "123e87170c4fcd5959503745fb2c460f4a70a017bb93e62ee148001afd182617"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_3": {
+      "body": "0917f65da500da31f03c5e34c7a337587ec34b4ddd0f013fc95d314475a8c44f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d30096b34e4c562056eb88a752cc86493f522bb5afece8e95fab27d8870d4daa"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_4": {
+      "body": "3dea07185e4d13aeb8da7a4fcf8062b0e1c4585fb0e5f9d02c9cf85d3179f001",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2ab7e31f1a956277ef4f313ed85348e8e14a4d9fbd55aca6b49c279bba8912b1"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_5": {
+      "body": "811397f6f24c060d01287c6b12f3c31a701476b907c56db7df4ccbe2b33e81ee",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "21a15516244faf2cb7c86ed6f15fd3e4ba4860d9a301687c4914bb8e1360928f"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_6": {
+      "body": "c1a147692ac6f863fc2a727d28a674ea7d9cd1ac2854e0c653eea390c3690539",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "db74369e2edcd941bad7262a9828fc4b0e439cf113e7ba681d4f9fc1df61ab53"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.appendWord": {
+      "body": "735b92d083cd2d370a9d953fcb612049beb479b017b6f2c11d80412c8a8afd3c",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "76f21409c2d51d034a25f244d5efcb079cab7f8bbcf7a417e64c338c9f97be06"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.appendWord._proof_1": {
+      "body": "fe8b090c68697a6c0d23b5c892b4a149d76c99e78ecf6caa94e15e06a56e37e8",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "4093e76a4d6877cf1c61487e5d6acdb4810d03037307bffd15915924ad4c432b"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.appendWord._proof_2": {
+      "body": "7ada3ede237212b266104c59c04175222ead3d27fbd1138b511667c5134bfea4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "aff38d90c60233971ceac9f336cdcb5b142754b0c09fd1ac34d1636f19c6bbc6"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.id": {
+      "body": "adeef18ad5093c74f57d203cae58444c16d55c335c95f8af149379c23274ef34",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "ff71fe9cb867d25b92b76d060ed2b83cb15703f5e680079141d7be3b2ce53b97"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.ilRef": {
+      "body": "7be6ef245e2d41352043c65f2244cb8722a10f0c1e4b05682c354dafc46668c8",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "e828a8bf7ca6992b1beb5c60f912b60cbf920b9607eb957e2363bebf8b241a96"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.row": {
+      "body": "97c17e4979b1d9580f5382fbf68036931be094c8edb61a5fc288a3a9c743db78",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "2d19da2a0306047629bf415fb6a4fffb9235504fed11ac9f59e6a31ec0907acb"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.row._proof_1": {
+      "body": "f886b8caa5a3673cdc31e2a911bd38e33d01ae81c91135330813355196f32ad6",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d5cac9d3154d6623baf6a01d6bca21d172bdb77317b2cc762be8c5009fee837c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef": {
+      "body": "02ef6bd6738ef44c89d496f09f87288d6381b192d6fade1015bbf41151589e2e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "e828a8bf7ca6992b1beb5c60f912b60cbf920b9607eb957e2363bebf8b241a96"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_1": {
+      "body": "f290ba6cf4509296e7b0a6511d3e72e7800cc5210fd5dcbc8988465a4b752159",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "42ac9cc173cec63d6c18b2e8af5855ad843fa42eb9555d3331cf4d7e90460dd5"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_2": {
+      "body": "46034aa2621d46e8b99db785daccb6ea733dc8fa49aa15edf91a09882c883477",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "34c213e06e18af811c8e7fb506a359e52a28fee21459aeeba1a8d367628a14ee"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_3": {
+      "body": "7d0ceb3516ae30acc80c4030ea3a4cd0b822ccc096ba74199d4ea4100900b9c5",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c9d56a382d4d7da814c316fe49db7b142e98cefa66ae8140273941ed9e026a40"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_4": {
+      "body": "2e60ebfecf6ceb49370a816098fe768cff739649fa2adcfa37fd34f32419a45f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "5e1e6f2363347c18ea72c902e1c8cc86da5be38455d82168dff0e0c1a2435f2c"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.syncId": {
+      "body": "8bc3218fbaea8f6899d0844504fba8b126a751667ce91b763009084171d5754c",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "69b53cdb4f29bab3f150a79c3ddcbff4b2285abbb8a431e405e87222259b29c8"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.syncId._proof_1": {
+      "body": "bfc91f2fcdea2df3368ba22ea194c048288ff734e02025dcda238b952428ea4b",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "07304d967fc29ea02866da8effa021221c011e8844c4c2b7e762b7003ecf0f81"
+    },
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.syncId._proof_2": {
+      "body": "9419def2328b0ed9557b5e912bc7b44217544448fc4efe7c9af45dbb263e963d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "5bb91de4d0b2b4beadb22c2e051acbf4d2e370055105ff468966f6bed871defb"
     },
     "_private.Init.Classical.0.Classical.em.match_1_1": {
       "body": "f2178efa32aaddd40b65632942e9ebf4c5f92e10f66f90c722a0f06211d3e5eb",
@@ -51095,6 +52907,13 @@
       "kind": "def",
       "protected": true,
       "type": "33b5eb93ea238d3959cf76971fe82393d42ab7b1eb7c241a18aa78d06844ac9b"
+    },
+    "_private.Init.Data.List.Range.0.List.length_range'.match_1_1": {
+      "body": "05cc1be43dc9527a0c0cd83a30b0856d112737aed973a80f8c3e65a0cbf8c8c5",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "b3f8c473a8b3a4311e09cdc3d34384059c7ecf475892abb76fc45aa431bad135"
     },
     "_private.Init.Data.List.SplitOn.Basic.0.List.splitOnPPrepend.match_1": {
       "body": "9ada200dd46feeffa697b61de8193dce740b0677341cce950f2cf97d4974e060",
@@ -61701,6 +63520,41 @@
       "protected": true,
       "type": "53ef6babc85bb6669f2d43de42817a570575d16f72779053fe39e04bc038e660"
     },
+    "instDecidableEqPUnit": {
+      "body": "6b63609579403615e83bfee1e99cfb37ee6773aa5e82923fe8eb0dd4917d6800",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "af9df4fbafe6b5f2a9f218837dccc184eb2c815080a176985432437d29e72a51"
+    },
+    "instDecidableEqProd": {
+      "body": "1c15d830db63a9d2afb931a92bf9a70d4279e5fac8f1abd519293e52a0d8c629",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "99779a4f1ba0ecac18a8fe38cf3e7636c4b4143282284f005b2240e8fa16b7b9"
+    },
+    "instDecidableEqProd._proof_1": {
+      "body": "4c73a1ed78b889c876ec388ef7f405f24642b9204f64c1b9fd8a6ba9144fb655",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "172cdc5d1e2d2cfd23ee5f9c6c7b90d5a0edf6fa7d696711a9d166c857df15d7"
+    },
+    "instDecidableEqProd.match_1": {
+      "body": "ba459f716a4a3d33995961a77d7da9df3b6576831b754c0f4fa050add9a1d62f",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "3977ca2f40001fc0f49eb22129edf3bf68104003f1a5c663b6dd946bb3586cef"
+    },
+    "instDecidableEqProd.match_3": {
+      "body": "a91b29dc7fd10412e001bcf4a1ccfda5bb523bd610154263493799305a9bb1f9",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "8855c0d0297e453ab6a9bc9860e04b6ddab86d2a672c2e468f209222419c02a8"
+    },
     "instDecidableEqRaw": {
       "body": "2c8c1ea194b18b35e08f5cecb8837bf63788e262bad5498fdcf6ccc4a97c6e47",
       "foundation": false,
@@ -63563,6 +65417,7 @@
     "Bool.decEq",
     "Bool.decEq._proof_1",
     "Bool.decEq.match_1",
+    "Bool.decide_and",
     "Bool.decide_eq_true",
     "Bool.eq_and_self",
     "Bool.eq_and_self._simp_1",
@@ -64194,6 +66049,7 @@
     "HDLean.Backend.Graph.latches",
     "HDLean.Backend.Graph.logic",
     "HDLean.Backend.Graph.mk",
+    "HDLean.Backend.Graph.name",
     "HDLean.Backend.Graph.next",
     "HDLean.Backend.Graph.outputNames",
     "HDLean.Backend.Graph.outputs",
@@ -64204,6 +66060,7 @@
     "HDLean.Backend.Graph.validateLocal",
     "HDLean.Backend.Graph.values",
     "HDLean.Backend.Graph.wellFormed",
+    "HDLean.Backend.Graph.withStatePorts",
     "HDLean.Backend.Lit",
     "HDLean.Backend.Local.AndEntry",
     "HDLean.Backend.Local.AndEntry.a",
@@ -64340,10 +66197,14 @@
     "HDLean.Backend.Proved.Aag.parseRTLIL",
     "HDLean.Backend.Proved.Aag.parseSystemVerilog",
     "HDLean.Backend.Proved.Aag.print",
+    "HDLean.Backend.Proved.Aag.readRTLILModule",
+    "HDLean.Backend.Proved.Aag.readSystemVerilogModule",
     "HDLean.Backend.Proved.Aag.rtlil",
+    "HDLean.Backend.Proved.Aag.rtlilModuleLines",
     "HDLean.Backend.Proved.Aag.svLines",
     "HDLean.Backend.Proved.Aag.svLinesNamed",
     "HDLean.Backend.Proved.Aag.systemVerilog",
+    "HDLean.Backend.Proved.Aag.systemVerilogModuleLines",
     "HDLean.Backend.Proved.Format",
     "HDLean.Backend.Proved.Format.aiger",
     "HDLean.Backend.Proved.Format.casesOn",
@@ -64371,6 +66232,8 @@
     "HDLean.Backend.Text.Grammar.after._proof_1",
     "HDLean.Backend.Text.Grammar.before",
     "HDLean.Backend.Text.Grammar.before._proof_1",
+    "HDLean.Backend.Text.Grammar.checkedMap",
+    "HDLean.Backend.Text.Grammar.checkedMap._proof_1",
     "HDLean.Backend.Text.Grammar.decode",
     "HDLean.Backend.Text.Grammar.encode",
     "HDLean.Backend.Text.Grammar.fixed",
@@ -64386,6 +66249,8 @@
     "HDLean.Backend.Text.Grammar.natural",
     "HDLean.Backend.Text.Grammar.natural._proof_1",
     "HDLean.Backend.Text.Grammar.natural.match_1",
+    "HDLean.Backend.Text.Grammar.numbered",
+    "HDLean.Backend.Text.Grammar.numbered._proof_1",
     "HDLean.Backend.Text.Grammar.pair",
     "HDLean.Backend.Text.Grammar.pair._proof_1",
     "HDLean.Backend.Text.Grammar.pair.match_1",
@@ -64414,9 +66279,13 @@
     "HDLean.Backend.Text.numeral._proof_1",
     "HDLean.Backend.Text.numeral._proof_2",
     "HDLean.Backend.Text.numeral_parse",
+    "HDLean.Backend.Text.parsePrefixed",
     "HDLean.Backend.Text.prefixed",
     "HDLean.Backend.Text.prefixed._proof_1",
     "HDLean.Backend.Text.prefixed._proof_2",
+    "HDLean.Backend.Text.prefixed_parse",
+    "HDLean.Backend.Text.prefixed_parse._simp_1_3",
+    "HDLean.Backend.Text.prefixed_parse._simp_1_4",
     "HDLean.Backend.Text.render",
     "HDLean.Backend.Text.splitLines",
     "HDLean.Backend.Text.splitWords",
@@ -64525,20 +66394,34 @@
     "HDLean.Dag.Build.State.wf",
     "HDLean.Dag.Build.Word",
     "HDLean.Dag.Build.WordRefines",
+    "HDLean.Dag.Build.emitBlock",
+    "HDLean.Dag.Build.emitBlock._proof_1",
+    "HDLean.Dag.Build.emitWord",
+    "HDLean.Dag.Build.emitWord_ensures._proof_1",
     "HDLean.Dag.Build.empty",
     "HDLean.Dag.Build.empty._proof_1",
     "HDLean.Dag.Build.expressionFold",
     "HDLean.Dag.Build.expressionRead",
+    "HDLean.Dag.Build.extendBlock",
+    "HDLean.Dag.Build.extendBlock._proof_1",
+    "HDLean.Dag.Build.extendBlock._proof_2",
     "HDLean.Dag.Build.finish",
     "HDLean.Dag.Build.finish._proof_1",
     "HDLean.Dag.Build.finish._proof_2",
     "HDLean.Dag.Build.finish._proof_3",
+    "HDLean.Dag.Build.nodesWF_of_valid",
+    "HDLean.Dag.Build.nodesWF_of_valid._proof_1_1",
     "HDLean.Dag.Build.opExpression",
     "HDLean.Dag.Build.opExpression.match_1",
     "HDLean.Dag.Build.run",
     "HDLean.Dag.Build.run.match_1",
+    "HDLean.Dag.Build.valid_mono",
+    "HDLean.Dag.Build.valid_mono._proof_1_10",
+    "HDLean.Dag.Build.valid_mono._proof_1_11",
+    "HDLean.Dag.Build.valid_mono._proof_1_9",
     "HDLean.Dag.NodesWF",
     "HDLean.Dag.NodesWF._f",
+    "HDLean.Dag.NodesWF.eq_2",
     "HDLean.Dag.NodesWF.match_1",
     "HDLean.Dag.Op",
     "HDLean.Dag.Op.Valid",
@@ -64566,6 +66449,15 @@
     "HDLean.Dag.evalOutput",
     "HDLean.Dag.initial_input._proof_1",
     "HDLean.Dag.inputNames",
+    "HDLean.Dag.instDecidableValid",
+    "HDLean.Dag.instDecidableValid._proof_1",
+    "HDLean.Dag.instDecidableValid._proof_2",
+    "HDLean.Dag.instDecidableValid._proof_3",
+    "HDLean.Dag.instDecidableValid._proof_4",
+    "HDLean.Dag.instDecidableValid._proof_5",
+    "HDLean.Dag.instDecidableValid._proof_6",
+    "HDLean.Dag.instDecidableValid._proof_7",
+    "HDLean.Dag.instDecidableValid._proof_8",
     "HDLean.Dag.instReprOp.repr.match_1",
     "HDLean.Dag.lower",
     "HDLean.Dag.lowerMuxes",
@@ -64583,6 +66475,8 @@
     "HDLean.Dag.nodeLit",
     "HDLean.Dag.nodeWire",
     "HDLean.Dag.nodes",
+    "HDLean.Dag.nodesWF_append",
+    "HDLean.Dag.nodesWF_append._proof_1_4",
     "HDLean.Dag.opWires",
     "HDLean.Dag.opWires.match_1",
     "HDLean.Dag.out",
@@ -64825,6 +66719,10 @@
     "HDLean.MultiClock.Shared.MultiDag.State.mk",
     "HDLean.MultiClock.Shared.MultiDag.State.registers",
     "HDLean.MultiClock.Shared.MultiDag.State.second",
+    "HDLean.MultiClock.Shared.MultiDag.decodeNative",
+    "HDLean.MultiClock.Shared.MultiDag.decodeNative.match_1",
+    "HDLean.MultiClock.Shared.MultiDag.decodedGraph",
+    "HDLean.MultiClock.Shared.MultiDag.emitNative",
     "HDLean.MultiClock.Shared.MultiDag.inputs",
     "HDLean.MultiClock.Shared.MultiDag.localInput",
     "HDLean.MultiClock.Shared.MultiDag.localInput.match_1",
@@ -64832,6 +66730,11 @@
     "HDLean.MultiClock.Shared.MultiDag.logic",
     "HDLean.MultiClock.Shared.MultiDag.lower",
     "HDLean.MultiClock.Shared.MultiDag.mk",
+    "HDLean.MultiClock.Shared.MultiDag.nativeLines",
+    "HDLean.MultiClock.Shared.MultiDag.nativeLower",
+    "HDLean.MultiClock.Shared.MultiDag.nativeMeaning",
+    "HDLean.MultiClock.Shared.MultiDag.nativeModuleShape",
+    "HDLean.MultiClock.Shared.MultiDag.nativeModules",
     "HDLean.MultiClock.Shared.MultiDag.next",
     "HDLean.MultiClock.Shared.MultiDag.next._proof_1",
     "HDLean.MultiClock.Shared.MultiDag.next._proof_2",
@@ -64842,11 +66745,27 @@
     "HDLean.MultiClock.Shared.MultiDag.regs",
     "HDLean.MultiClock.Shared.MultiDag.sync",
     "HDLean.MultiClock.Shared.MultiDag.syncCount",
+    "HDLean.MultiClock.Shared.MultiDag.topLines",
+    "HDLean.MultiClock.Shared.NativeFormat",
+    "HDLean.MultiClock.Shared.NativeFormat.casesOn",
+    "HDLean.MultiClock.Shared.NativeFormat.libraryLines",
+    "HDLean.MultiClock.Shared.NativeFormat.libraryLines.match_1",
+    "HDLean.MultiClock.Shared.NativeFormat.moduleLines",
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary",
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary._f",
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary.match_1",
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary.match_3",
+    "HDLean.MultiClock.Shared.NativeFormat.readLibrary.match_5",
+    "HDLean.MultiClock.Shared.NativeFormat.readModule",
+    "HDLean.MultiClock.Shared.NativeFormat.rec",
+    "HDLean.MultiClock.Shared.NativeFormat.rtlil",
+    "HDLean.MultiClock.Shared.NativeFormat.systemVerilog",
     "HDLean.MultiClock.Shared.Port",
     "HDLean.MultiClock.Shared.Port.casesOn",
     "HDLean.MultiClock.Shared.Port.input",
     "HDLean.MultiClock.Shared.Port.rec",
     "HDLean.MultiClock.Shared.Port.synchronized",
+    "HDLean.MultiClock.Shared.instReprNativeFormat.repr.match_1",
     "HDLean.MultiClock.instReprFormat.repr.match_1",
     "HDLean.Netlist.Module",
     "HDLean.Netlist.Module.evalOutput",
@@ -65975,6 +67894,9 @@
     "List.Subset.refl",
     "List.all",
     "List.all._f",
+    "List.all_eq",
+    "List.all_eq_true",
+    "List.all_eq_true._simp_1",
     "List.any.match_1",
     "List.append",
     "List.append._f",
@@ -66237,6 +68159,8 @@
     "List.instLawfulGetElemNatLtLength",
     "List.instMembership",
     "List.instReflBEq",
+    "List.intersperse",
+    "List.intersperse._f",
     "List.isEmpty",
     "List.isPrefixOf",
     "List.isPrefixOf._f",
@@ -66263,10 +68187,13 @@
     "List.length_map",
     "List.length_ofFn",
     "List.length_pos_iff",
+    "List.length_range'",
+    "List.length_range'._f",
     "List.length_replicate",
     "List.length_reverse",
     "List.length_set",
     "List.length_tail",
+    "List.length_zip",
     "List.length_zipWith",
     "List.map",
     "List.map._f",
@@ -66458,6 +68385,7 @@
     "List.utf8Encode_eq_empty._simp_1",
     "List.utf8Encode_nil",
     "List.utf8Encode_singleton",
+    "List.zip",
     "List.zipWith",
     "List.zipWith._f",
     "List.zipWith.eq_2",
@@ -67467,6 +69395,7 @@
     "PULift.up",
     "PUnit",
     "PUnit.casesOn",
+    "PUnit.ext",
     "PUnit.rec",
     "PUnit.unit",
     "PartialEquivBEq",
@@ -67480,6 +69409,8 @@
     "Prod.ext",
     "Prod.fst",
     "Prod.mk",
+    "Prod.noConfusion",
+    "Prod.noConfusionType",
     "Prod.rec",
     "Prod.snd",
     "Pure",
@@ -69543,6 +71474,7 @@
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_16",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_17",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_18",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_19",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_2",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_3",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilConstants._proof_4",
@@ -69686,6 +71618,9 @@
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_9",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilState",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilState._proof_1",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.numberedWord",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.numberedWord._proof_1",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.numberedWord._proof_2",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_1",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens",
@@ -69698,6 +71633,16 @@
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord._proof_1",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord._proof_2",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.Block",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.gateNet",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.gateNet._proof_1",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.gateNet._proof_2",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.literalRef",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.net",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.net._proof_1",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.net._proof_2",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.numberedWord",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.numberedWord._proof_1",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.numberedWord._proof_2",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens",
@@ -69706,9 +71651,13 @@
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_5",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_7",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_9",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.stateNet",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.stateNet._proof_1",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.stateNet._proof_2",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_10",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_11",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_2",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_3",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_4",
@@ -69734,6 +71683,10 @@
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_2",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_3",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_4",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_5",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow._proof_6",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svHeader",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svHeader._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInput",
@@ -69744,12 +71697,6 @@
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_2",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_3",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_4",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_5",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_6",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_7",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow._proof_8",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNext",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNext._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNextRow",
@@ -69802,11 +71749,14 @@
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_2",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_3",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow._proof_4",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_1",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svStateRow",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_2",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_3",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_4",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_5",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_6",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_7",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord._proof_2",
@@ -69836,6 +71786,162 @@
     "_private.HDLean.MultiClock.Backend.0.HDLean.MultiClock.takeLine",
     "_private.HDLean.MultiClock.Backend.0.HDLean.MultiClock.takeLine.match_1",
     "_private.HDLean.MultiClock.Backend.0.HDLean.MultiClock.words",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.emptyModule",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_10",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_11",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_12",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_13",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_14",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_15",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_16",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_17",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_18",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_19",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_20",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_21",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_22",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_23",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_24",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_25",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_26",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_27",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_28",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_29",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_3",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_30",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_31",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_32",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_33",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_34",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_35",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_36",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_37",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_38",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_39",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_4",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_40",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_41",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_42",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_43",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_44",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_45",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_46",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_47",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_48",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_49",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_5",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_50",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_51",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_52",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_53",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_54",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_55",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_56",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_57",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_58",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_59",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_6",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_60",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_7",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_8",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilDomain._proof_9",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilTop",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilTop._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.ilTop._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.nativeModulesValid",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.nativeModulesValid.match_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_10",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_11",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_12",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_13",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_14",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_15",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_16",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_17",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_18",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_19",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_20",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_21",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_22",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_23",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_24",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_25",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_26",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_27",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_28",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_29",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_3",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_30",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_31",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_32",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_33",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_34",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_35",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_36",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_37",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_38",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_39",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_4",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_40",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_41",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_42",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_43",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_44",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_45",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_46",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_47",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_48",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_49",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_5",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_50",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_51",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_52",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_53",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_54",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_55",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_56",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_6",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_7",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_8",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain._proof_9",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svDomain.match_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_3",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_4",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_5",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_6",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_7",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svPortNames._proof_8",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_3",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_4",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_5",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.MultiDag.svTop._proof_6",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.appendWord",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.appendWord._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.appendWord._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.id",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.ilRef",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.row",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.row._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_2",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_3",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.svRef._proof_4",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.syncId",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.syncId._proof_1",
+    "_private.HDLean.MultiClock.NativeText.0.HDLean.MultiClock.Shared.syncId._proof_2",
     "_private.Init.Classical.0.Classical.em.match_1_1",
     "_private.Init.Classical.0.Classical.em.match_1_3",
     "_private.Init.Core.0.And.symm.match_1_1",
@@ -70236,6 +72342,7 @@
     "_private.Init.Data.List.Nat.TakeDrop.0.List.take_append._proof_1_1",
     "_private.Init.Data.List.Nat.TakeDrop.0.List.take_eq_take_iff.match_1_1",
     "_private.Init.Data.List.OfFn.0.List.getElem_ofFn.match_1_2",
+    "_private.Init.Data.List.Range.0.List.length_range'.match_1_1",
     "_private.Init.Data.List.SplitOn.Basic.0.List.splitOnPPrepend.match_1",
     "_private.Init.Data.List.Sublist.0.List.IsInfix.sublist.match_1_1",
     "_private.Init.Data.List.Sublist.0.List.IsInfix.trans.match_1_1",
@@ -71751,6 +73858,11 @@
     "instDecidableEqOrdering",
     "instDecidableEqOrdering._proof_1",
     "instDecidableEqOrdering._proof_2",
+    "instDecidableEqPUnit",
+    "instDecidableEqProd",
+    "instDecidableEqProd._proof_1",
+    "instDecidableEqProd.match_1",
+    "instDecidableEqProd.match_3",
     "instDecidableEqRaw",
     "instDecidableEqRaw._proof_1",
     "instDecidableEqRaw._proof_2",
@@ -71961,6 +74073,8 @@
     "HDLean.Review.Backend_Format_validates_sound",
     "HDLean.Review.Backend_Graph_validateLocal_sound",
     "HDLean.Review.Backend_Graph_validate_sound",
+    "HDLean.Review.Backend_Graph_withStatePorts_eval",
+    "HDLean.Review.Backend_Graph_withStatePorts_wellFormed",
     "HDLean.Review.Backend_Proved_Aag_parse_print",
     "HDLean.Review.Backend_Proved_Aag_parse_rtlil",
     "HDLean.Review.Backend_Proved_Aag_parse_systemVerilog",
@@ -71969,6 +74083,7 @@
     "HDLean.Review.Counter_Challenge_budget",
     "HDLean.Review.Counter_Challenge_correctness",
     "HDLean.Review.Counter_reset_schedule",
+    "HDLean.Review.Dag_Build_emitWord_ensures",
     "HDLean.Review.Dag_Build_run_implements",
     "HDLean.Review.Dag_lower_correct",
     "HDLean.Review.Dag_lower_gate_count",
@@ -71992,8 +74107,11 @@
     "HDLean.Review.MultiClock_Circuit_eventCircuit_correct",
     "HDLean.Review.MultiClock_Format_correct_of_validated",
     "HDLean.Review.MultiClock_Graph_eval_correct",
+    "HDLean.Review.MultiClock_Shared_MultiDag_decode_emitNative",
+    "HDLean.Review.MultiClock_Shared_MultiDag_emitNative_correct",
     "HDLean.Review.MultiClock_Shared_MultiDag_first_samples",
     "HDLean.Review.MultiClock_Shared_MultiDag_lower_correct",
+    "HDLean.Review.MultiClock_Shared_MultiDag_nativeLower_correct",
     "HDLean.Review.MultiClock_Shared_MultiDag_second_samples_first",
     "HDLean.Review.MultiClock_Shared_MultiDag_sourceSafe_single_bit",
     "HDLean.Review.Netlist_optimize_correct",
