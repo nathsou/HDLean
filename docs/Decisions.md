@@ -42,6 +42,17 @@ These follow the review of this implementation; [Design.md](Design.md) section 1
 | Planned: domain-indexed multi-clock logic with the sampling oracle in hardware semantics | Raw multi-bit crossings type-checked and metastability was fixed to "always old" in the hardware link (finding F1). |
 | Planned: every claimed theorem in a frozen challenge, compared by statement | A theorem weakened to `True` passed L1 (finding F2). |
 
+## Consolidation, milestone R5 (2026-10-16)
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Official Lean kernel only | Owner's choice. `lake build` and `leanchecker --fresh` check everything; the export-based replay with nanoda, con-leche, con-ron and lean4lean, the custom comparator and the bundled-kernel scripts are removed. |
+| One pipeline: tree circuits compile to node graphs by the proved `Circuit.toDag` | The validator-based tree pipeline (graph validators, fast compiler, old printers and parsers, tree netlist) is deleted. Every design is emitted by the generic proved emitter. |
+| Drop exact-byte certificates; read every emitted file back with the proved parser | `emit_correct` already fixes what `emit c` means. Read-back guards the compiled code and the file write at negligible cost; byte certificates did not scale to the CPU. |
+| Readable challenges, enforced by statement constants | The generated 2,928-line statement dump, the claims and declaration-fingerprint files and per-design comparator configs are replaced by hand-written `Challenge.lean` files. The audit requires every statement constant to come from a frozen module, Lean, or a declared implementation hole. |
+| Frozen interfaces for the general-depth and dual-clock FIFOs | Their observation and input maps were agent-defined. Progress for the dual-clock FIFO is now stated from reset, not from an agent-defined relation. |
+| Dual-clock FIFO hardware emitted event-encoded | Its native multi-clock printer used the deleted validators. Clock edges become inputs and the single-clock proved emitter applies; native emission returns with milestone R2. |
+
 The historical entries above record decisions at the time. Later entries supersede
 implementation limitations as the corresponding features and proofs land. The
 [current coverage](Status.md) and [trust boundary](Trust.md) describe the result.
@@ -56,3 +67,19 @@ implementation limitations as the corresponding features and proofs land. The
 | Keep whole-project and root-only axiom policies distinct | Lake exports unused Prelude axiom declarations, including `sorryAx`. Its whole-project nanoda policy skips unpermitted declarations but rejects every reference to them, followed by Lake's complete used-axiom audit. Root exports retain strict declaration rejection. Native checker regressions cover both cases. |
 | Expose source registers through proved state observation ports | Native domain modules have no foreign register operations. The wrapper wires registered source pins into explicit first/second-flop primitives; its parser checks all dimensions, state taps and clock/reset connections. The generic parsed meaning preserves every sampling oracle without adding an oracle input pin. |
 | Emit scalar SV logic and storage wires | Very large packed buses caused excessive Icarus elaboration. Scalar names keep sharing explicit; a wire alias preserves the documented packed state observation. Both native printers tie the unused padding bit to zero, without initializing any real register. External transition checks split state aliases before exposing all flip-flop pins. |
+
+## Word-level RTL, v0.4 (2026-10-16)
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Add a word-level IR beside the bit-level node graph | Memories, word operators (arithmetic, shifts, comparisons, mux, slice, concat, extensions), module instances and typed records were the four scaling gaps. Values are `BitVec` operations on raw naturals read at a width, so the semantics is exactly Lean's bit-vector library, division by zero included. |
+| Intrinsically valid builder | Each primitive checks widths and references when it appends a cell, and the builder state carries the validity proof; cells refer only to earlier cells and instances only to earlier modules, so combinational loops and recursive hierarchies cannot be written. |
+| Memories: combinational read, synchronous write ports, later ports win, never reset | Matches what synthesis maps to block RAM and keeps the semantics total. A memory always has exactly `2^aw` words after a cycle (`Mem.shape`), so every store is a power-up state. |
+| Hierarchy by dependency order; a child is a black box | `Design.sem` evaluates module `k` with the semantics of earlier modules only; `instantiate_ensures` exposes a child's outputs through `e.sem j`, which `Design.env_lt` identifies with the child's own theorem. |
+| Bit-blast with Lean's verified `bv_decide` blasters, proved end to end | Reusing `Std.Tactic.BVDecide`'s verified circuits gives all operators for free; `Design.toDag` correctness covers hierarchy flattening, memory decoders and reset. Only the official kernel is involved; `bv_decide` itself is not used as a tactic. |
+| Reset as per-bit reset kinds | `sem_reset`: outputs never depend on reset, and the next store under reset is the reset-low store with a per-bit `resetValue`, which is what the node graph applies. |
+| Gate-count-preserving lowering `Dag.lowerTight` | The fixed three-gates-per-node layout inflated blasted designs six-fold and made metrics meaningless. A wire table makes negation free and AND one gate; correctness and well-formedness are proved with the same contract, and `emit_correct` now uses it. |
+| `hdl_record` instance proofs by `dsimp` and `HVec.rebuild_eq` | The `rfl` proof of `ofVec (toVec r) = r` was exponential in the number of fields (75 s for 14). |
+| Normalize record specifications before rebuilding records | Proofs that rebuild a 13-field record from per-field facts timed out on unification of `(toVec (decode ..)).tail^k.head` against field projections; `simp only [Bundle.toVec, HVec.head_cons, HVec.tail_cons]` first makes it syntactic (90 s to 4 s for the Toy16 body). |
+| Instruction bus as an input in the word-level Toy16 | A real core does not embed its program as a ROM. The interface answers the fetch address shown on the outputs with the program word in the same cycle (`loop`), which is possible because outputs are registered. |
+| Review document generated from the environment | `hdlean review` imports the compiled modules and pretty-prints every challenge statement with notation, its axioms and the definitions it uses, then runs scenarios through spec and design. `verify.py` fails if `docs/Review.md` is stale. |

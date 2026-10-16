@@ -1,195 +1,93 @@
-# Implementation coverage
+# Status
 
-The [v0.2 design revision](Design.md) reviews this implementation: section 15.5 lists six gaps (clock-domain crossing in emitted hardware, unfrozen theorem statements, the CPU observation map, a self-referential manifest check, bit-level queue models, and the CPU certificate roadblock) and section 16 the milestones that close them. Rows below describe what is implemented, not those planned changes.
+Current state of the implementation. The design and its milestones are in
+[Design.md](Design.md); implementation choices in [Decisions.md](Decisions.md);
+what is trusted in [Trust.md](Trust.md).
 
-HDLean implements the v0.1 framework and all roadmap example families, with the
-explicit design choices below. No unfinished theorem is represented by `sorry`
-or a replacement axiom. Acceptance evidence and resource limitations are kept
-separate from implementation coverage.
+## Pipeline
 
-| Area | Implemented and checked |
-| --- | --- |
-| Machines/reset | Arbitrary power-up; explicit reset inputs; generic simulation and non-interference; arbitrary reset reassertion for physical counter and synchronous FIFO |
-| Types/syntax | Dimension/domain-indexed finite AST; compact finite layouts; generic structure/enum `deriving Synth`; ordinary `circuit do` conditionals, logic, equality and word arithmetic |
-| Core/composition | One next-state driver per register; bounded wiring; explicit reset kinds; Moore proof requirement; generic physical network transition/output/trace refinement |
-| Lowering | Generic kernel proofs for expressions, transitions and outputs; proved normalized-formula and local-gate graph validators; untrusted native DAG candidate compiler |
-| Backends | SystemVerilog, AIGER and RTLIL; strict parsed-text semantic validation before emission; native multi-clock SV/RTLIL and explicit-edge AIGER |
-| FIFO | Generic payload-width refinement on the two-entry AST; reference scenarios, mutations, throughput and exact register budget |
-| Circular FIFO | Generic power-of-two-depth queue safety/order proof; physical bounded word-bank AST; arbitrary-power-up/reset, wraparound and exact storage proofs; 9,000 physical reference cycles |
-| Memory | Physical register-array synchronous read-before-write RAM; generic arbitrary-power-up trace proof and exact budget; 9,600 collision/reset cycles |
-| Pipeline/latency | Physical three-stage elastic pipeline refinement; 2,400 reference cycles; causal `Pipe` contracts; finite delay realization and latency/retiming theorems including zero stages |
-| Toy16 | Full ISA; physical fetch/execute AST; generic opcode, transition, retirement and reset proofs; two-cycle progress bound; 240 arbitrary-power-up physical cycles; actual placed/routed CPU |
-| Clock crossing | Independent/coincident edges; typed named two-flop primitives; generic Gray adjacency/injectivity and arbitrary bit-mixture proofs |
-| Async FIFO | Generic ghost-history queue safety under arbitrary edge/sample masks; held-reset startup; physical two-domain AST/control/memory correspondence; clock-checked backend and external wrong-clock mutations |
-| Automation | Kernel proof tactics; finite invariant search with checked initialization/closure/safety; sampled relation refutation; goal rendering; named/source-aware counterexamples and VCDs |
-| Independent checking | Frozen candidate manifest; typed challenges; fresh Lean kernel replay; `lake check --paranoid` with the five kernels bundled in Lean 4.35.0; bundled nanoda/con-leche/con-ron replay of headline roots; strict baseline-axiom policy; exact byte binding and adversarial rejection tests |
-| Physical metrics | Actual structural counts; proved progress/budgets; pinned Yosys/ABC/nextpnr flow; routed ECP5 counter, elastic pipeline and complete CPU reports |
+Two entry points, one path to bits. New designs are written in the word-level RTL
+(`HDLean/Rtl`, [Design.md](Design.md) 3.1): typed records, a checked builder,
+memories and module instances. They print directly as word-level SystemVerilog
+(proved round trip) and reach the bit-level backends through the proved
+bit-blaster `Design.toDag` (`toDag_nextState`, `toDag_evalOutput`). The bit-level
+path below is unchanged; since v0.4 it lowers with `Dag.lowerTight` (negation free,
+one gate per AND), which `emit_correct` covers.
 
-## Acceptance evidence and roadblocks
+Bit-level path. A design is a node graph (`Dag`), either built directly with the
+node-allocating `circuit do` (the Toy16 CPU) or translated from an expression-tree
+circuit by the proved `Circuit.toDag`. `Dag.lower` (proved once) produces a gate
+graph, and the printers (proved once by parse-after-print round trips) produce
+SystemVerilog, AIGER and RTLIL. `Proved.emit_correct` gives the meaning of every
+emitted file for every design; no per-design validator runs. The CLI reads each
+emitted file back with the proved parser.
 
-The 77 audited headline roots have passed independent nanoda replay over **6,680
-declarations**. Exact counter and FIFO8 bytes in all three formats have passed
-kernel/nanoda replay and byte-for-byte artifact binding. Every native emission
-also requires the generic graph and final-text semantic validators.
+All proofs are checked by Lean's official kernel. There is no `sorry`, and every
+audited theorem uses only `propext`, `Classical.choice` and `Quot.sound`.
 
-A full concrete CPU artifact certificate remains a **real resource roadblock**.
-Its 744,329-byte AIGER file has 40,745 AND gates and 4,288 physical state bits. Single-module
-per-line and chunked exact-byte proofs exceeded the 6 GiB Lean allocation cap;
-a further attempt with separate 64 GiB address-space and 12 GiB resident/managed
-memory limits also failed during lexical checking. A graph-only concrete reduction
-reached over 7 GiB process memory before being stopped. Staging lexical proofs
-across 23 modules checked all 705 chunks, but the complete parser/graph certificate
-has not passed. Even a graph-only experiment with separately checked header
-proofs, linear indexing and bounded cache hints exhausted an 11.5 GiB managed
-allocation limit (12 GiB RSS watchdog). No CPU byte-certificate success was emitted.
-The [measured limits](reports/cpu-certificate-resources.json) and a
-[self-contained reproducer](reports/cpu-certificate-reproducer.tar.gz) preserve
-the failed experiment. The generic semantic
-proofs and independently replayed physical CPU theorems do not erase this gap.
+## Designs and their challenges
 
-The isolated comparator is implemented, with approved implementation holes,
-transitive specification-body comparison and independent byte authentication.
-Genuine namespace integration passed on GitHub Actions, including acceptance
-of changed correct implementations and rejection of altered statements, hidden
-axioms, weakened compiled specifications and mismatched bytes. This managed
-workspace does not permit nested user/network namespaces; local skips grant no
-assurance. CI also passed the additional primitive-definition authentication
-against the independently approved reference. The complete hardware and comparator
-jobs passed at `fac1947` in [run 38829509806](https://github.com/nathsou/HDLean/actions/runs/38829509806).
-The later `ef4d7ed` staging/traversal checkpoint passed the complete local L1
-proof/byte workflow and genuine comparator CI; see the PR checks for final
-external-backend results. A reviewer-approved receipt is always external
-input; a candidate manifest or fixture approval never approves this project.
+| Design | Challenge (frozen, readable) | Hardware path |
+| --- | --- | --- |
+| Counter | Decade behaviour after reset from any power-up state; 4 flip-flops | Tree circuit, `toDag` |
+| Two-entry FIFO | Exact queue after reset, every payload width; `2w+2` flip-flops | Tree circuit, `toDag` |
+| Three-stage pipeline | Three coupled queues after reset; budget | Tree circuit, `toDag` |
+| General-depth FIFO | Refines `Fifo.spec (2^k)` after reset, every depth and width; budget | Tree circuit, `toDag` |
+| RAM (register array) | Read port follows the read-before-write memory for some initial contents; budget | Tree circuit, `toDag` |
+| Toy16 CPU | Retirement refines the ISA from any power-up state; 2-cycle progress; budget | Node graph |
+| Dual-clock FIFO | Model level: queue trace after startup for every sampling oracle; enqueue and dequeue progress from reset | Legacy multi-clock circuit, emitted event-encoded |
+| Toy16 CPU, word level | Retirement refines the ISA after one reset cycle from any power-up store; 2-cycle progress | Word RTL: register file and data memory as RTL memories, ALU as an instantiated module, 13-field register record |
+| RAM, word level | Read port follows the read-before-write RAM for some initial state, any inputs and resets | Word RTL: one RTL memory, one write port |
 
-The pinned physical CPU run meets **12 MHz** on ECP5-25K and reports **47.02 MHz**
-register Fmax, 12,629 combinational cells and 4,234 mapped flip-flops. See
-[the reproducible flow and reports](Physical.md) for constraints and provenance.
+`scripts/verify.py` audits 40 theorems: the 17 challenge theorems and 23 generic
+framework theorems (emitter, both lowerings, tree translation, refinement rules,
+bit-blasting, word SystemVerilog round trip, reset, builder, memory and instance rules).
+[Review.md](Review.md) is generated from them by `hdlean review`.
 
-## Deliberate implementation bounds
+## Checks
 
-- Toy16 alternates fetch and execute. Its theorem promises retirement within two
-  cycles; it does not promise overlapping instruction execution or one IPC.
-- RAM and circular/async FIFO memory are explicit finite register arrays. There
-  is no technology RAM macro or hidden storage estimate. Uniform bank padding is
-  counted in AST budgets; mapped counts may shrink through synthesis.
-- Async startup holds both resets until both clocks have observed a reset edge.
-  The queue theorem then covers arbitrary edge interleavings and sample masks.
-  Independent reset assertion during traffic requires a new reset epoch/protocol.
-- The finite invariant oracle uses reachability saturation, with fuel and checked
-  obligations. It does not claim to implement IC3 or solve arbitrary instances.
-- Mathematical `Pipe` contracts may contain arbitrary functions. Synthesis uses
-  finite hardware constructors with separate realization proofs.
-- Tagged unions with payloads use explicit layouts. Deriving layouts for those
-  unions, vendor RAM mapping and alternative overlapping CPUs are extensions.
+- `lake build` and `leanchecker --fresh Designs` (official kernel).
+- Challenge audit: axioms, and statement constants from frozen modules or declared holes.
+- `lake exe tests`: arbitrary-power-up simulation of every design against its
+  reference (9,000 circular-FIFO, 9,600 RAM, 240 CPU, 2,400 pipeline, 8,400 FIFO and
+  1,200 counter cycles), plus emitter read-back and mutation rejection.
+- `scripts/check_backends.py`: AIGER interpretation, 100 Icarus cycles and Yosys
+  RTLIL/SystemVerilog equivalence for every design; a corrupted next state must fail.
+  For word-level designs, Icarus also runs the word SystemVerilog and the
+  bit-blasted netlist side by side against 200 cycles of the Lean trace of
+  `Design.step`, and Yosys elaborates the word-level text (hierarchy, memories).
+- `scripts/check_native_clocks.py`: native multi-domain SV/RTLIL for a two-domain
+  fixture, including wrong-clock rejection.
+- `Tests/test_workflow.py`: the audit rejects foreign axioms and agent-defined
+  statement constants; a weakened agent theorem breaks the frozen challenge.
 
-The [decision log](Decisions.md) records revisions to the proposal's implementation
-choices. The [trust boundary](Trust.md) explains what each acceptance path proves.
+## Emitted sizes (bit-level formats, width 8)
 
-## v0.2 implementation checkpoints
+| Design | State bits | AND gates | Logic depth |
+| --- | --- | --- | --- |
+| Counter | 4 | 152 | 15 |
+| FIFO | 18 | 126 | 5 |
+| Pipeline | 54 | 378 | 5 |
+| RAM, register array (16 × 8) | 136 | 4,992 | 38 |
+| RAM, word level (16 × 8) | 136 | 788 | 8 |
+| General-depth FIFO | 144 | 19,180 | 32 |
+| Toy16 CPU, bit level | 4,288 | 62,072 | 54 |
+| Toy16 CPU, word level | 4,312 | 27,825 | 53 |
 
-The numbered-node `HDLean.Dag` now has generic, kernel-checked lowering,
-well-formedness, and exact gate-count theorems. No semantic validator or native
-computation is needed to instantiate them. SystemVerilog, AIGER, and RTLIL have
-compositional text decoders and generic printer round-trip proofs; `Proved.emit_correct`
-connects their parsed, bounds-checked meaning directly to every source DAG.
-Independent replay accepted the lowering roots (2,645 declarations) and four
-backend roots (7,114 declarations), using only the three baseline axioms.
-Yosys accepted the new RTLIL with zero structural problems; Icarus simulation
-matched Lean on all 32 state/input/reset transitions of the shared test circuit
-for both direct SystemVerilog and RTLIL translated by Yosys.
+Counted after `Dag.lowerTight`. The word-level designs come from the proved
+bit-blaster; memories are counted as state bits here, and stay memories in the
+word-level SystemVerilog. There is no constant folding beyond the AIG
+constructors' and no retiming; synthesis improves on these numbers. The ECP5
+reports in `docs/reports/` predate both changes and should be re-run.
 
-A local whole-project Lean 4.35.0 diagnostic on checkpoint `cd11686` accepted
-166,949 declarations with the default, paranoid, lean4lean, con-leche, and con-ron
-kernels. Lake's bundled nanoda invocation failed with a worker-thread stack
-overflow: Lake hardcodes four workers, whereas direct serial replay of the same
-pinned nanoda succeeds for the audited roots. This is **not** a successful
-`lake check --paranoid` run. The diagnostic disabled the namespace sandbox
-because nested namespaces are unavailable here; genuine isolated acceptance
-remains a required CI job. Shared CPU migration and the stronger queue and
-clock-crossing milestones are still in progress.
+## Known gaps
 
-The next checkpoint expands the frozen audit to **90 statements**, including all
-new generic backend/lowering obligations. The physical circular FIFO now has
-`hardware_refines_queue`: full trace refinement to the reviewed `Fifo.spec (2^k)`
-from arbitrary power-up after reset, for every depth and width. Independent replay
-accepted both model and physical trace roots (3,367 declarations).
-`MultiClock.Shared.MultiDag` admits foreign registered bits only through named
-crossings. Its physical graph semantics carries the caller's first-flop sampling
-oracle, and generic lowering preserves every choice. Three roots passed independent
-replay (2,523 declarations); focused tests distinguish old/new coincident-edge
-outcomes and verify that the second stage always samples the old first stage.
-Native hierarchical printing and full asynchronous-FIFO integration remain open.
-
-The asynchronous reference now specifies full mathematical list contents,
-conservative ready/valid flags, and every accepted transfer. Its reset-prefix
-trace theorem quantifies over arbitrary physical model state, independent edges
-and every sampling mask. Both enqueue and dequeue progress are proved within
-three receiving-clock fairness windows, with arbitrary activity in the other
-domain. These are model-level theorems; the new native oracle/hierarchy link is
-still required. The audit candidate now contains **93 headline statements**.
-The three async model roots passed independent replay (2,950 declarations).
-
-Named SystemVerilog and RTLIL module decoders have generic prefix round-trip
-proofs, so complete modules can be composed without revalidating their bodies.
-The file renderer now uses right recursion; a generic equivalence theorem proves
-it produces the original bytes, and native fixture files compare byte-for-byte.
-The updated emitter/module roots passed independent replay (7,142 declarations).
-The full existing executable simulation suite also passes, including physical
-CPU retirement, RAM collisions, circular queues and asynchronous oracle traces.
-
-The shared Toy16 implementation now proves exact next-state and retirement-bus
-agreement with the full-ISA physical reference for every instruction ROM.
-`Toy16.DagPhysical.hardware_correct` gives retirement and two-cycle progress from
-arbitrary storage after reset; `emit_correct` covers all three proved text formats.
-Four CPU roots passed independent replay (8,364 declarations), at 1.77 GiB peak
-RSS. Construction has 31,483 source nodes and 4,288 state bits. The CPU CLI now
-uses this proved emitter. Exact concrete byte binding remains a separate measured
-obligation: a direct whole-string kernel check exceeded its 6,000 MiB RSS budget.
-
-`circuit do` now runs a node/register allocator. `regR`, `regN`, and their word
-variants return handles; `drive` assigns a single next-state source. Missing,
-duplicate, and excess allocations fail closed. Register capacity is stated in
-the result type, while physical offsets are allocated internally. The original
-expression-tree syntax remains available explicitly as `treeCircuit do`.
-All 16 state/input/reset combinations of the two-register example are checked
-by kernel reduction. The frozen audit candidate contains 98 headline statements.
-
-### Current v0.2 checkpoint: 104 obligations
-
-The native multi-domain SV/RTLIL path now emits one module per local DAG and a
-fully decoded clock/synchronizer wrapper. Old-state observation ports carry
-source registers across module boundaries. The generic `emitNative_correct`
-theorem quantifies over every input, reset, edge set and first-flop sampling
-oracle. Decoding checks module bounds, port dimensions, source-state taps and
-all wrapper wiring. Four independent export checkers accepted the six new
-framework roots (7,565 declarations). A two-domain fixture passes 240 external
-SV and RTLIL-derived-Verilog events, including arbitrary startup storage,
-independent/coincident/no-edge schedules, resets and wrong-clock rejection.
-This does not complete the new physical asynchronous-FIFO refinement, reusable
-CPU/memory hierarchy, or new event-AIGER flattening.
-
-Atomic word-node allocation and list-based lowering preserve the original CPU
-node order and AIGER bytes. The native AIGER remains 1,909,434 bytes with SHA-256
-`4bf2968ddf5c8febc4caa4692cdf8e0b0c9dea9a6fced98da2079e889f8771d1`.
-The revised CPU and block-allocation roots pass independent replay (8,453
-declarations), and the full ISA regression passes again. The whole 104-headline
-set also passes independent replay (11,718 declarations), using only the three
-baseline axioms. The project build, axiom audit and existing simulation suite pass.
-The checker integration suite passes all 19 tests; its native-tool test was
-rerun separately with explicit Icarus/Yosys paths after initially being skipped.
-
-Two required acceptance checks remain blocked. A serial bundled-nanoda run over
-the earlier 98-headline whole-project export exceeded both 11,000 and 14,000 MiB
-RSS budgets on this 16 GiB worker. A fresh exact CPU AIGER equality exceeded an
-actual 6 GiB (6,144 MiB) RSS budget after 19.3 seconds. These safely stopped
-probes are not successful kernel replays or byte certificates. The local worker
-also cannot provide the mandatory nested namespace isolation for L2/L3. The PR
-therefore remains a draft; no complete v0.2 or release sign-off is claimed.
-See [the evidence record](reports/v02-remediation.json).
-
-The final CPU artifacts also pass independent AIGER interpretation, 100 Icarus
-cycles, all-state SV/RTLIL transition equivalence and complete clock/state audits.
-The current executable emits exactly the tested SV and RTLIL bytes. Native parser
-regressions reject noncanonical identifier aliases, odd physical gate targets and
-zero-width padding; all 14 workflow tests pass. These checks do not replace the
-missing kernel CPU byte certificate.
+- Dual-clock FIFO hardware still uses the legacy multi-clock model (clock labels,
+  deterministic sampling). Its challenge is model-level until it moves to
+  `MultiClock.Shared.MultiDag` (milestone R2).
+- Word-level RTLIL is not printed yet (bit-level RTLIL is); Yosys reads the word
+  SystemVerilog instead.
+- No verified optimisation pass on the word IR yet (constant folding, dead cells).
+- The word IR has one clock domain; multi-clock designs still use the bit-level
+  multi-clock layer.
+- Exact emitted bytes are not kernel-checked; the proved-parser read-back replaces it.

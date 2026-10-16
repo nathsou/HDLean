@@ -1,4 +1,3 @@
-import HDLean.Netlist.Lower
 import HDLean.Core.Syntax
 import Designs.Counter.Spec
 namespace HDLean.Counter
@@ -15,5 +14,5 @@ def hardware : Circuit 0 1 4 4 := treeCircuit do
            output := count }
 
 /-- Exact structural budget, independent of any synthesis tool. -/
-theorem ffBits : (lower hardware).ffBits = 4 := rfl
+theorem ffBits : hardware.ffBits = 4 := rfl
 end HDLean.Counter

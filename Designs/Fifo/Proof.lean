@@ -1,6 +1,5 @@
 import Designs.Fifo.Impl
 import Designs.Fifo.Interface
-import HDLean.Netlist.Lower
 import HDLean.Semantics.Reset
 namespace HDLean.Fifo
 
@@ -66,7 +65,7 @@ theorem hardware_correct (w : Nat) :
     exact relation_out _ _ h
 
 /-- Exact flip-flop budget for this shift-register implementation; no hidden resettable payload. -/
-theorem hardware_ffBits (w : Nat) : (lower (hardware w)).ffBits = 2 * w + 2 := rfl
+theorem hardware_ffBits (w : Nat) : (hardware w).ffBits = 2 * w + 2 := rfl
 
 theorem hardware_reset_schedule (w : Nat) :
     RefinesResetSchedule ((hardware w).denote (hardware_moore w)) (wireSpec w) observe := by

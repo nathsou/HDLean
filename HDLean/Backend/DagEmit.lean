@@ -1,6 +1,6 @@
 import HDLean.Backend.SystemVerilogProved
 import HDLean.Backend.RTLILProved
-import HDLean.Netlist.DagLower
+import HDLean.Netlist.DagTight
 
 namespace HDLean.Backend.Proved
 
@@ -54,9 +54,10 @@ def Format.meaning (f : Format) (text : String) (inputs state : Array Bool) :
     Option (Array Bool × Array Bool) :=
   (f.parse text).map (fun g => g.graph.eval inputs state)
 
-/-- Pure emission; all semantic work is supplied by framework theorems. -/
+/-- Pure emission through the gate-count-preserving lowering; all semantic work
+is supplied by framework theorems. -/
 def Format.emit (f : Format) (c : Dag d i r o) : String :=
-  f.print (Aag.ofGraph c.lower)
+  f.print (Aag.ofGraph (Dag.lowerTight c))
 
 /-- Generic source-to-text correctness. Instantiation never validates a concrete circuit. -/
 theorem emit_correct (f : Format) (c : Dag d i r o)
@@ -67,9 +68,9 @@ theorem emit_correct (f : Format) (c : Dag d i r o)
   unfold Format.meaning Format.parse Format.emit
   rw [Format.decode_print]
   dsimp only [Bind.bind, Option.bind]
-  rw [canonical_wellFormed c.lower (Dag.lower_wellFormed c)]
+  rw [canonical_wellFormed (Dag.lowerTight c) (Dag.lowerTight_wellFormed c)]
   simp only [↓reduceIte, Option.map_some]
-  have hn : c.lower.next.size = c.lower.latches := by simp [Dag.lower]
-  rw [Graph.eval_eq_of_logic_eq _ _ (Aag.ofGraph_logic c.lower hn), Dag.lower_correct]
+  have hn : (Dag.lowerTight c).next.size = (Dag.lowerTight c).latches := Dag.lowerTight_next_size c
+  rw [Graph.eval_eq_of_logic_eq _ _ (Aag.ofGraph_logic (Dag.lowerTight c) hn), Dag.lowerTight_correct]
 
 end HDLean.Backend.Proved

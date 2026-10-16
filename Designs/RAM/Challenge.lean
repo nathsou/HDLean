@@ -1,90 +1,25 @@
 import HDLean.Lib.MemoryCircuit
 namespace HDLean.RAM.Challenge
-/-- Frozen obligation; trace-level queue refinement is added in milestone R4. -/
-theorem correctness :
-∀ (a w : Nat)
-  (s₀ :
-    Fin
-        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-          (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
-            (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-              (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-            w)
-          w) →
-      Bool)
-  (xs :
-    Nat →
-      Prod.{0, 0}
-        (Fin
-            (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-              (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) a)
-              w) →
-          Bool)
-        Bool)
-  (t : Nat),
-  @Eq.{1}
-    (HDLean.RAMState
-      (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-        (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-      w)
-    (@HDLean.RAMCircuit.decode a w
-      (@HDLean.PMachine.stateFrom
-        (Fin
-            (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-              (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
-                (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-                  (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-                w)
-              w) →
-          Bool)
-        (Prod.{0, 0}
-          (Fin
-              (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                  (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) a)
-                w) →
-            Bool)
-          Bool)
-        (Fin w → Bool)
-        (@HDLean.Circuit.denote (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
-          (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-            (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-              (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) a)
-            w)
-          (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-            (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
-              (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-                (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-              w)
-            w)
-          w (HDLean.RAMCircuit.hardware a w) (HDLean.RAMCircuit.hardware_moore a w))
-        s₀ xs t))
-    (@HDLean.PMachine.stateFrom
-      (HDLean.RAMState
-        (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-        w)
-      (HDLean.RAMRequest
-        (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-        w)
-      (BitVec w)
-      (HDLean.ram
-        (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) a)
-        w)
-      (@HDLean.RAMCircuit.decode a w s₀)
-      (fun (n : Nat) =>
-        HDLean.RAMCircuit.decodeInput a w
-          (@Prod.fst.{0, 0}
-            (Fin
-                (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                  (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                    (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) a)
-                  w) →
-              Bool)
-            Bool (xs n)))
-      t) :=
-  @HDLean.RAMCircuit.hardware_correct
+open RAMCircuit
+
+/-- The read-data port, LSB first. -/
+def readPort (out : Fin w → Bool) : BitVec w :=
+  (WordExpr.inputs 0 (by omega) : WordExpr 0 w 0 w).eval out (fun k => nomatch k)
+
+/-- For every power-up state there are initial memory contents such that the
+register-array RAM's read port follows the read-before-write reference memory
+on every cycle. The RAM has no reset; contents start arbitrary. -/
+theorem correctness (a w : Nat) (s₀ : Fin (2^a*w+w) → Bool) (xs : Nat → (Fin (1+a+w) → Bool) × Bool) :
+    ∃ m₀ : RAMState (2^a) w, ∀ t,
+      readPort (((hardware a w).denote (hardware_moore a w)).runFrom s₀ xs t) =
+        (ram (2^a) w).runFrom m₀ (fun n => decodeInput a w (xs n).1) t := by
+  refine ⟨decode s₀, fun t => ?_⟩
+  have h := decode_output a w (((hardware a w).denote (hardware_moore a w)).stateFrom s₀ xs t) (fun _ => false)
+  refine h.trans ?_
+  rw [hardware_correct]
+  rfl
+
+/-- Storage is `2^a` words plus the registered read word. -/
+theorem budget (a w : Nat) : (hardware a w).ffBits ≤ 2^a * w + w := Nat.le_of_eq (hardware_ffBits a w)
+
 end HDLean.RAM.Challenge

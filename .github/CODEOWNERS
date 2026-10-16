@@ -4,13 +4,13 @@
 /Designs/*/Spec.lean @nathsou
 /Designs/*/Interface.lean @nathsou
 /Designs/*/Challenge.lean @nathsou
+/Designs/AsyncFifo/Model.lean @nathsou
+/Designs/Fifo/Circular.lean @nathsou
 /verification/ @nathsou
 /scripts/verify.py @nathsou
 /scripts/freeze.py @nathsou
-/Tests/Axioms.lean @nathsou
+/Tests/Audit.lean @nathsou
 /.github/ @nathsou
 /lean-toolchain @nathsou
 /lakefile.toml @nathsou
 
-/Verification/Challenge.lean @nathsou
-/Designs/*/comparator.json @nathsou

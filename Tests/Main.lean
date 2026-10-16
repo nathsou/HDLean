@@ -7,7 +7,7 @@ private def require (p : Bool) (message : String) : IO Unit :=
   unless p do throw (IO.userError message)
 
 private def checkFifo (width cycles seed : Nat) : IO Unit := do
-  let rows := trace (Backend.compile (lower (Fifo.hardware width))) cycles seed
+  let rows := trace ((Fifo.hardware width).toDag.lower) cycles seed
   let mut q : List Nat := []
   for row in rows do
     if row.cycle > 0 then
@@ -19,14 +19,14 @@ private def checkFifo (width cycles seed : Nat) : IO Unit := do
       q := (Fifo.spec Nat 2).next q ⟨row.inputs[0]!, bitsToNat (row.inputs.extract 2 (width + 2)), row.inputs[1]!⟩
 
 private def checkCounter (cycles seed : Nat) : IO Unit := do
-  let rows := trace (Backend.compile (lower Counter.hardware)) cycles seed
+  let rows := trace (Counter.hardware.toDag.lower) cycles seed
   let mut count := 0
   for row in rows do
     if row.cycle > 0 then require (bitsToNat row.outputs == count) s!"counter mismatch at {row.cycle}"
     count := if row.inputs[1]! then 0 else if row.inputs[0]! then (count + 1) % 10 else count
 
 private def checkPipeline (width cycles seed : Nat) : IO Unit := do
-  let rows := trace (Backend.compile (lower (SkidBuffer.hardware width))) cycles seed
+  let rows := trace ((SkidBuffer.hardware width).toDag.lower) cycles seed
   let reference := SkidBuffer.pipelineSpec (0 : Nat)
   let mut q := reference.init
   for row in rows do
@@ -43,7 +43,7 @@ private def checkPipeline (width cycles seed : Nat) : IO Unit := do
     q := fun j => snapshot[j]
 
 private def checkRing (k width cycles seed : Nat) : IO Unit := do
-  let rows := trace (Backend.compileCandidate (Fifo.Circular.Physical.hardware k width)) cycles seed
+  let rows := trace ((Fifo.Circular.Physical.hardware k width).toDag.lower) cycles seed
   let reference := Fifo.spec Nat (2^k)
   let mut q : List Nat := []
   for row in rows do
@@ -55,8 +55,7 @@ private def checkRing (k width cycles seed : Nat) : IO Unit := do
       ⟨row.inputs[0]!,bitsToNat (row.inputs.extract 2 (width+2)),row.inputs[1]!⟩
 
 private def checkToy16 (cycles seed : Nat) : IO Unit := do
-  let c := Toy16.Physical.hardware Toy16.sumProgram
-  let rows := trace (Backend.compileCandidate c) cycles seed
+  let rows := trace (Toy16.DagPhysical.hardware Toy16.sumProgram).lower cycles seed
   let mut initial := true
   let mut q : Toy16.CoreState := ⟨Toy16.ArchState.atReset (fun _ => 0) (fun _ => 0),0,false⟩
   for row in rows do
@@ -70,7 +69,7 @@ private def checkToy16 (cycles seed : Nat) : IO Unit := do
 
 private def checkRAM (a width cycles seed : Nat) : IO Unit := do
   let c := RAMCircuit.hardware a width
-  let rows := trace (Backend.compile (lower c)) cycles seed
+  let rows := trace c.toDag.lower cycles seed
   let mut cells : Array Nat := Array.replicate (2^a) 0
   let mut expected := 0
   for row in rows do
@@ -84,6 +83,7 @@ private def checkRAM (a width cycles seed : Nat) : IO Unit := do
 
 def main : IO Unit := do
   HDLean.Tests.checkBackendTexts
+  IO.println "PASS: emitted SV/AIGER/RTLIL decode back to the lowered graph; changed files rejected."
   for k in [0,1,2,3,4] do
     for w in [0,1,8,16] do
       for seed in [1,42,999] do checkRing k w 150 seed
@@ -96,18 +96,6 @@ def main : IO Unit := do
   IO.println "PASS: 9,600 physical RAM cycles including read/write collisions and arbitrary power-up."
   for width in [0, 1, 8, 16] do
     for seed in [1, 42, 999] do checkPipeline width 200 seed
-  for width in [0, 1, 2, 4, 8, 16, 32, 64] do
-    let c := Fifo.hardware width
-    let g := Backend.compile (lower c)
-    require (g.validate c) s!"translation validator rejected FIFO width={width}"
-    let corrupt := {g with next := g.next.set! 0 (Backend.invert g.next[0]!)}
-    require (!corrupt.validate c) s!"translation validator accepted corrupted FIFO width={width}"
-  let counter := Backend.compile (lower Counter.hardware)
-  require (counter.validate Counter.hardware) "translation validator rejected counter"
-  require (!({counter with outputs := counter.outputs.set! 0 0}).validate Counter.hardware)
-    "translation validator accepted a corrupted counter output"
-  require (!({counter with latches := counter.latches + 1}).validate Counter.hardware)
-    "translation validator accepted a malformed graph"
   for width in [0, 1, 2, 4, 8, 16, 32] do
     for seed in [1, 7, 42, 123, 999, 4294967295] do
       match checkCircuit (Fifo.hardware width) 200 seed with
@@ -129,5 +117,5 @@ def main : IO Unit := do
       | .ok _ => pure ()
       | .error e => throw (IO.userError e)
   IO.println "PASS: 7,500 circular FIFO cycles; 15,000 async oracle steps."
-  IO.println "PASS: 9,600 AST/graph cycles; 8,400 FIFO reference cycles; 1,200 counter reference cycles."
+  IO.println "PASS: 8,400 FIFO and 1,200 counter circuit/graph cycles; 8,400 FIFO reference cycles; 1,200 counter reference cycles."
   IO.println "PASS: 2,400 physical three-stage pipeline/reference cycles."

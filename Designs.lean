@@ -17,3 +17,10 @@ import Designs.Fifo.CircularHardware
 import Designs.Fifo.CircularRefinement
 import Designs.AsyncFifo.Progress
 import Designs.Toy16.DagRefinement
+import Designs.RAM.Challenge
+import Designs.CircularFifo.Challenge
+import Designs.AsyncFifo.Challenge
+import Designs.RAMRtl.Challenge
+import Designs.Toy16.WordBody
+import Designs.Toy16Rtl.Challenge
+import Designs.Review

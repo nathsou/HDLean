@@ -11,6 +11,7 @@ name = "Designs"
 [[lean_exe]]
 name = "hdlean"
 root = "Main"
+supportInterpreter = true
 
 [[lean_exe]]
 name = "tests"
@@ -18,11 +19,3 @@ root = "Tests.Main"
 
 [[lean_lib]]
 name = "Tests"
-
-[[lean_lib]]
-name = "Verification"
-roots = ["Verification.Challenge"]
-
-[[lean_lib]]
-name = "Submission"
-roots = ["Verification.Solution"]

@@ -1,9 +1,0 @@
-{
-  "schema": 2,
-  "lean": "4.35.0",
-  "export_format": "3.1.0",
-  "source": "independent checkers bundled with the Lean toolchain (since 4.35.0)",
-  "exporter": "leanexport",
-  "checker": "nanoda_bin",
-  "extra_checkers": ["con-leche", "con-ron", "leanchecker-paranoid"]
-}

@@ -96,6 +96,34 @@ theorem hardware_correct (imem : Addr → Word) (s₀) (rst : Nat → Bool)
   simpa only [hardware_trace] using core_correct imem (Physical.decode s₀) rst hr hd
 
 
+
+theorem denote_stateFrom (imem : Addr → Word) (s₀) (rst : Nat → Bool) (t : Nat) :
+    ((hardware imem).denote (Dag.isMoore_of_no_inputs _)).stateFrom s₀ (fun n => (Fin.elim0, rst n)) t =
+      (machine imem).stateFrom s₀ rst t := by
+  induction t with
+  | zero => rfl
+  | succ t ih =>
+    simp only [PMachine.stateFrom_succ, ih]
+    rfl
+
+theorem denote_runFrom (imem : Addr → Word) (s₀) (rst : Nat → Bool) (t : Nat) :
+    ((hardware imem).denote (Dag.isMoore_of_no_inputs _)).runFrom s₀ (fun n => (Fin.elim0, rst n)) t =
+      (machine imem).runFrom s₀ rst t := by
+  simp only [PMachine.runFrom, denote_stateFrom]
+  change (hardware imem).evalOutput _ (fun _ => false) = (hardware imem).evalOutput _ Fin.elim0
+  congr 1
+  funext k
+  exact k.elim0
+
+/-- The challenge statement, phrased with the framework's `Dag.denote`. -/
+theorem hardware_correct_denote (imem : Addr → Word) (s₀) (rst : Nat → Bool)
+    (hr : rst 0 = true) (hd : ∀ t, 0 < t → rst t = false) :
+    ∃ regs mem,
+      let retire := fun t => Physical.observe (((hardware imem).denote (Dag.isMoore_of_no_inputs _)).runFrom
+        s₀ (fun n => (Fin.elim0, rst n)) (t+1))
+      RetiresLike retire (isaRetire imem (ArchState.atReset regs mem)) ∧ Progress 2 retire Retire.halt := by
+  simpa only [denote_runFrom] using hardware_correct imem s₀ rst hr hd
+
 theorem emit_correct (f : Backend.Proved.Format) (imem : Addr → Word)
     (s : Vector Bool (268*16)) (rst : Bool) :
     f.meaning (f.emit (hardware imem)) #[rst] s.toArray = some

@@ -8,9 +8,11 @@
    mathematical model or explicitly modeled primitives, never into AST constructors.
 4. Simulate from garbage initial state before proving. Apply the generic simulation
    theorem and prove reset, one-step preservation, and observation agreement.
-5. Compile and compare the exact circuit, not a separately maintained handwritten RTL.
-   Add per-instance graph certificates when feasible and independent backend checks.
-6. Run `lake build`, `lake exe tests`, `python3 scripts/verify.py --backends`, and
+5. Emit through the proved emitter (`hdlean emit`). Tree circuits reach it via the
+   proved `Circuit.toDag`; new designs should use the node-allocating `circuit do`.
+6. If a challenge statement needs an implementation constant, add it to `holes` in
+   `verification/frozen.json`; anything else it mentions belongs in a frozen interface.
+7. Run `lake build`, `lake exe tests`, `python3 scripts/verify.py --backends`, and
    `python3 Tests/test_workflow.py`. Review the per-theorem axiom report.
 
 Framework and trust-surface changes require a new candidate manifest:
@@ -19,10 +21,8 @@ version and approve its digest outside the submission. Never edit the manifest
 just to make an unexpected verification failure disappear.
 
 `hw_step_kernel` uses simplification, arithmetic and kernel-checkable proof search.
-`hw_step` also permits `bv_decide`; its native axioms must appear in the report.
-Use `decide +kernel` for fixed finite certificates. The local graph validator checks
-shared gate equations without expanding symbolic cones. Its native candidate path
-scales to the full CPU; concrete kernel reduction remains more resource intensive.
+`hw_step` also tries `bv_decide`, whose native-evaluation axioms the audit rejects.
+Use `decide +kernel` only for small fixed facts; never reduce a whole concrete design.
 
 `invariant? system, fuel` suggests a finite reachable-state membership invariant.
 `FiniteSystem.check_sound` turns kernel-checked initialization, closure and safety
@@ -40,35 +40,3 @@ An arbitrary mathematical `Pipe` is a contract, not an automatic synthesis reque
 There are no imported solver services or external invariant results silently
 trusted by the build. Future invariant-search tools must suggest replayable
 relations or certificates; they must not introduce axioms.
-
-## Specification v0.2 trust setup
-
-`Verification/Challenge.lean` contains the literal statements of all audited
-claims. Its proof aliases are checked on every L1 build. The independently built
-`Verification/Solution.lean` copies the actual implementation theorem types;
-per-block `comparator.json` files compare those types and their specification
-closure using `lake comparator`. The common challenge is protected by the frozen
-manifest. Toy16's state and retirement observation maps are in its protected
-`Interface.lean`.
-
-The `approved-specifications` CI check fails unless the repository owner supplies
-`HDLEAN_TRUSTED_MANIFEST_SHA256` as a protected repository variable after reviewing
-the candidate manifest. Development checks remain available without approval.
-The candidate digest printed by `scripts/freeze.py --write` is never approval.
-Apply `verification/branch-protection.json` to the main branch using GitHub's
-branch protection API or equivalent settings. This requires repository admin
-access and must include required code-owner review; committing this JSON alone
-does not enable branch protection.
-
-The statement audit also compares the complete dependency meaning with
-`verification/declarations.json`. This catches changes to helper predicates such
-as `Ghost.Safe` even when a theorem keeps the same syntactic type. Only the safe
-implementation definitions listed in the comparator configurations may change
-body. `scripts/statement_audit.py --record-candidate` prepares new review material;
-it is not approval and cannot update the protected repository variable.
-
-Bootstrap places `nanoda-hdlean` in `work/independent-tools/bin`; add that directory
-to `PATH` before invoking the block comparators. This adapter authenticates the
-unchanged bundled nanoda binary, uses its serial path with a larger OS stack, and
-requires an unqualified success report. Lake 4.35's hardcoded four-thread config
-overflows nanoda 0.4.19's fixed worker stack on the pipeline proof.

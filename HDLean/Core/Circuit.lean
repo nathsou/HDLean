@@ -37,6 +37,9 @@ def evalOutput (c : Circuit d i r o) (s : Fin r → Bool) (xs : Fin i → Bool) 
 def step (c : Circuit d i r o) (s : Fin r → Bool) (xs : (Fin i → Bool) × Bool) :
     (Fin r → Bool) × (Fin o → Bool) := (c.next s xs, c.evalOutput s xs.1)
 
+/-- Physical state bits; fixed by the circuit's type. -/
+def ffBits (_ : Circuit d i r o) : Nat := r
+
 /-- Moore restriction is a proof, not an unchecked label on a port. -/
 def IsMoore (c : Circuit d i r o) : Prop :=
   ∀ s a b, c.evalOutput s a = c.evalOutput s b

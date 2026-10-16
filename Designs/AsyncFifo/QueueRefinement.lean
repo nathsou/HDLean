@@ -1,5 +1,5 @@
 import Designs.AsyncFifo.Proof
-import Designs.AsyncFifo.Spec
+import Designs.AsyncFifo.Interface
 import Init.Data.List.Range
 
 set_option backward.isDefEq.respectTransparency false
@@ -37,12 +37,6 @@ private theorem slice_congr (a b : Nat → α) (start count : Nat)
 
 @[simp] theorem queue_length (g : Ghost) (history : Nat → BitVec w) :
     (queue g history).length = g.written-g.read := by simp [queue]
-
-def observe (s : State k w) : Fifo.Output (BitVec w) :=
-  ⟨enqReady s,deqValid s,if deqValid s then some (data s) else none⟩
-
-def queueInput (i : Input k w) : QueueSpec.Input (BitVec w) :=
-  ⟨i.writeEdge,i.readEdge,i.valid,i.data,i.ready⟩
 
 variable {g : Ghost} {s : State k w} {history : Nat → BitVec w}
 
@@ -152,24 +146,6 @@ theorem queue_relation_step (h : QueueRelation s q)
 theorem queue_relation_allowed (h : QueueRelation s q) : QueueSpec.Allowed (2^k) q (observe s) := by
   obtain ⟨g,history,hs,hc,hm,rfl⟩ := h
   exact queue_allowed hs hc hm
-
-/-- Physical startup and every sampling-mask choice remain explicit in the trace. -/
-def stateFrom (s : State k w) (xs : Nat → Input k w) : Nat → State k w
-  | 0 => s
-  | t+1 => next (stateFrom s xs t) (xs t)
-
-def seenWrite (xs : Nat → Input k w) : Nat → Bool
-  | 0 => false
-  | t+1 => seenWrite xs t || (xs t).writeEdge
-
-def seenRead (xs : Nat → Input k w) : Nat → Bool
-  | 0 => false
-  | t+1 => seenRead xs t || (xs t).readEdge
-
-/-- Startup requires held reset and an actual reset edge in both independent domains. -/
-def Startup (xs : Nat → Input k w) (release : Nat) : Prop :=
-  (∀ t, t < release → (xs t).writeReset = true ∧ (xs t).readReset = true) ∧
-  seenWrite xs release = true ∧ seenRead xs release = true
 
 theorem reset_prefix (s : State k w) (xs : Nat → Input k w) (release : Nat)
     (h : ∀ t, t < release → (xs t).writeReset = true ∧ (xs t).readReset = true) :

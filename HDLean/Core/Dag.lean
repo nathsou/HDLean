@@ -124,6 +124,24 @@ def evalOutput (c : Dag d i r o) (s : Fin r → Bool) (xs : Fin i → Bool) : Fi
 def step (c : Dag d i r o) (s : Fin r → Bool) (xs : (Fin i → Bool) × Bool) :
     (Fin r → Bool) × (Fin o → Bool) := (c.nextState s xs, c.evalOutput s xs.1)
 
+/-- Physical state bits; fixed by the graph's type. -/
+def ffBits (_ : Dag d i r o) : Nat := r
+
+/-- Outputs do not depend on current inputs. -/
+def IsMoore (c : Dag d i r o) : Prop :=
+  ∀ s a b, c.evalOutput s a = c.evalOutput s b
+
+/-- Hardware semantics: power-up state is an argument, inputs are (data, reset). -/
+def denote (c : Dag d i r o) (_moore : c.IsMoore) :
+    PMachine (Fin r → Bool) ((Fin i → Bool) × Bool) (Fin o → Bool) :=
+  ⟨fun s => c.evalOutput s (fun _ => false), c.nextState⟩
+
+/-- A graph with no inputs is Moore. -/
+theorem isMoore_of_no_inputs (c : Dag d 0 r o) : c.IsMoore := by
+  intro s a b
+  have : a = b := funext fun k => k.elim0
+  rw [this]
+
 @[simp] theorem values_size (c : Dag d i r o) (xs s) : (c.values xs s).size = c.nodes.length := by
   simp [values]
 

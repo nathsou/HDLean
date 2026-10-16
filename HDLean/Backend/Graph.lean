@@ -1,4 +1,4 @@
-import HDLean.Netlist.Lower
+import HDLean.Core.Circuit
 namespace HDLean.Backend
 
 /-- AIGER literal: variable index in the high bits, inversion in the low bit. -/
@@ -9,7 +9,8 @@ structure Gate where
   b : Lit
   deriving Repr, BEq, DecidableEq
 
-/-- A topologically ordered shared AIG, with explicit arbitrary initial latch values. -/
+/-- A topologically ordered AND-inverter graph, the target of `Dag.lower`.
+Latches have no initial value: power-up contents are arbitrary. -/
 structure Graph where
   name : String
   inputs : Nat
@@ -22,61 +23,6 @@ structure Graph where
   outputNames : Array String
   sources : Array String
   deriving Repr
-
-private structure Build (d i r : Nat) where
-  gates : Array Gate := #[]
-  cache : List (Netlist.Node d i r × Lit) := []
-
-def invert (a : Lit) : Lit := a ^^^ 1
-
-private def gate (a b : Lit) : StateM (Build d i r) Lit := do
-  if a == 0 || b == 0 then return 0
-  if a == 1 then return b
-  if b == 1 || a == b then return a
-  if a == invert b then return 0
-  let s ← get
-  let v := i + 1 + r + s.gates.size + 1
-  set { s with gates := s.gates.push ⟨v, max a b, min a b⟩ }
-  return 2 * v
-
-private def compileNode (n : Netlist.Node d i r) : StateM (Build d i r) Lit := do
-  if let some (_, l) := (← get).cache.find? (fun p => p.1 == n) then return l
-  let l ← match n with
-    | .lit b => pure (if b then 1 else 0)
-    | .input k => pure (2 * (k.val + 1))
-    | .reg k => pure (2 * (i + 1 + k.val + 1))
-    | .inv a => return invert (← compileNode a)
-    | .and a b => do
-      let a ← compileNode a
-      let b ← compileNode b
-      gate a b
-  modify fun s => { s with cache := (n, l) :: s.cache }
-  return l
-
-private def muxLit (c a b : Lit) : StateM (Build d i r) Lit := do
-  let ca ← gate c a
-  let nb ← gate (invert c) b
-  return invert (← gate (invert ca) (invert nb))
-
-/-- Sharing and numbering are untrusted until checked by `Graph.Equivalent`. -/
-def compile (m : Netlist.Module d i r o) : Graph := Id.run do
-  let job : StateM (Build d i r) (Array Lit × Array Lit) := do
-    let mut ns := #[]
-    for j in List.finRange r do
-      let reg := m.state[j]
-      let n ← compileNode reg.next
-      let n ← match reg.reset with
-        | .unreset => pure n
-        | .hold => muxLit (2 * (i + 1)) (2 * (i + 2 + j.val)) n
-        | .synchronous b => muxLit (2 * (i + 1)) (if b then 1 else 0) n
-      ns := ns.push n
-    let mut os := #[]
-    for out in m.output.toArray do os := os.push (← compileNode out)
-    return (ns, os)
-  let ((ns, os), s) := job.run {}
-  return ⟨m.name, i + 1, r, s.gates, ns, os,
-    m.inputNames.toArray.push "rst", m.state.toArray.map (·.name),
-    m.outputNames.toArray, m.state.toArray.map (·.source)⟩
 
 def litValue (values : Array Bool) (l : Lit) : Bool :=
   xor (values[l / 2]?.getD false) (l % 2 == 1)
@@ -101,13 +47,26 @@ def Graph.wellFormed (g : Graph) : Bool := Id.run do
     v := v + 1
   return g.next.toList.all (fun l => l / 2 < v) && g.outputs.toList.all (fun l => l / 2 < v)
 
-/-- A certificate ties a shared graph to the exact circuit for every state, input and reset. -/
-def Graph.Equivalent (g : Graph) (c : Circuit d i r o) : Prop :=
-  g.wellFormed = true ∧ g.inputs = i + 1 ∧ g.latches = r ∧ g.outputs.size = o ∧
-  ∀ (xs : Vector Bool i) (s : Vector Bool r) (rst : Bool),
-    g.eval (xs.toArray.push rst) s.toArray =
-      ((Vector.ofFn (c.next (fun k => s[k]) ((fun k => xs[k]), rst))).toArray,
-       (Vector.ofFn (c.evalOutput (fun k => s[k]) (fun k => xs[k]))).toArray)
+deriving instance ReflBEq, LawfulBEq for Gate
+
+/-- The semantic part of a module; names and source annotations are metadata. -/
+structure Logic where
+  inputs : Nat
+  latches : Nat
+  gates : Array Gate
+  next : Array Lit
+  outputs : Array Lit
+  deriving DecidableEq, BEq, ReflBEq, LawfulBEq, Repr
+
+def Graph.logic (g : Graph) : Logic := ⟨g.inputs, g.latches, g.gates, g.next, g.outputs⟩
+
+theorem Graph.eval_eq_of_logic_eq (a b : Graph) (h : a.logic = b.logic) (inputs state) :
+    a.eval inputs state = b.eval inputs state := by
+  cases a
+  cases b
+  simp only [Graph.logic, Logic.mk.injEq] at h
+  rcases h with ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rfl
 
 /-- Exact shared-graph metrics; includes reset logic, unlike the pre-sharing tree estimate. -/
 def Graph.andCount (g : Graph) := g.gates.size

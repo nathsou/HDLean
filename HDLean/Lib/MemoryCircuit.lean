@@ -1,7 +1,6 @@
 import HDLean.Lib.Memory
 import HDLean.Core.Network
 import HDLean.Core.Word
-import HDLean.Netlist.Lower
 
 namespace HDLean
 namespace WordExpr
@@ -97,7 +96,7 @@ theorem hardware_moore (a w : Nat) : (hardware a w).IsMoore := by
   simp [hardware, Circuit.evalOutput, readRegister, WordExpr.registers, Expr.eval]
 
 /-- Register-array storage and its registered read result have no hidden state. -/
-theorem hardware_ffBits (a w : Nat) : (lower (hardware a w)).ffBits = 2 ^ a * w + w := rfl
+theorem hardware_ffBits (a w : Nat) : (hardware a w).ffBits = 2 ^ a * w + w := rfl
 
 end RAMCircuit
 end HDLean

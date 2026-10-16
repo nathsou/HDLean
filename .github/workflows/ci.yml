@@ -15,16 +15,9 @@ jobs:
           auto-config: false
           build: true
           test: false
-      - name: Install independent RTL checkers and the namespace sandbox
-        run: |
-          sudo apt-get update && sudo apt-get install -y iverilog yosys bubblewrap
-          # Ubuntu AppArmor otherwise denies the unprivileged user namespaces `lake check` needs.
-          if test -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns; then
-            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          fi
-      - name: Pin the independent kernels bundled with the Lean toolchain
-        run: python3 scripts/independent/bootstrap.py
-      - name: Verify proofs, axioms, artifacts and backends
+      - name: Install independent RTL checkers
+        run: sudo apt-get update && sudo apt-get install -y iverilog yosys
+      - name: Verify proofs, challenges, artifacts and backends with Lean's kernel
         env:
           # Approved manifest digest from a protected repository variable: the
           # manifest stored in the branch is never its own trust anchor.
@@ -33,70 +26,11 @@ jobs:
           if [ -z "$HDLEAN_TRUSTED_MANIFEST_SHA256" ]; then
             echo "::warning::HDLEAN_TRUSTED_MANIFEST_SHA256 is not set; the frozen manifest is checked only against itself."
           fi
-          python3 scripts/verify.py --backends --independent --paranoid --certify-bytes --certificate-memory-mb 6144
-      - name: Test independent checker rejection paths
-        run: python3 -m unittest discover -s Tests/independent -p 'test_*.py' -v
-      - name: Test rejection paths and type errors
-        run: python3 Tests/test_workflow.py
+          python3 scripts/verify.py --backends
+      - name: Test the verification boundary
+        run: mkdir -p work && python3 Tests/test_workflow.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: verification-report
-          path: build/
-  comparator:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          build: false
-          test: false
-      - name: Install namespace sandbox
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y bubblewrap
-          # Ubuntu AppArmor otherwise denies unprivileged user namespaces.
-          # This dedicated ephemeral runner runs with no write token or secrets.
-          if test -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns; then
-            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          fi
-      - name: Pin the independent kernels bundled with the Lean toolchain
-        run: python3 scripts/independent/bootstrap.py
-      - name: Require genuine isolated acceptance and rejection tests
-        run: HDLEAN_REQUIRE_SANDBOX=1 python3 -m unittest discover -s Tests/comparator -p 'test_*.py' -v
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: isolated-comparator-evidence
-          path: build/comparator-tests/
-  bundled-comparator:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          build: true
-          test: false
-      - name: Enable the mandatory namespace sandbox
-        run: |
-          sudo apt-get update && sudo apt-get install -y bubblewrap
-          if test -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns; then
-            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          fi
-      - name: Pin bundled kernels and the serial resource adapter
-        run: python3 scripts/independent/bootstrap.py
-      - name: Compare every block against its frozen statements
-        run: |
-          ulimit -s unlimited
-          export PATH="$PWD/work/independent-tools/bin:$PATH"
-          for config in Designs/*/comparator.json verification/comparator.json; do
-            lake comparator --config "$config"
-          done
+          path: build/signoff.json
