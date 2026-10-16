@@ -24,3 +24,4 @@ import HDLean.Core.DagBuilderBlock
 import HDLean.MultiClock.NativeText
 import HDLean.Core.TreeToDag
 import HDLean.MultiClock.Core
+import HDLean.Rtl.Instance
