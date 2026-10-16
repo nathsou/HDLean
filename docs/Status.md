@@ -6,7 +6,15 @@ what is trusted in [Trust.md](Trust.md).
 
 ## Pipeline
 
-One path to bits. A design is a node graph (`Dag`), either built directly with the
+Two entry points, one path to bits. New designs are written in the word-level RTL
+(`HDLean/Rtl`, [Design.md](Design.md) 3.1): typed records, a checked builder,
+memories and module instances. They print directly as word-level SystemVerilog
+(proved round trip) and reach the bit-level backends through the proved
+bit-blaster `Design.toDag` (`toDag_nextState`, `toDag_evalOutput`). The bit-level
+path below is unchanged; since v0.3 it lowers with `Dag.lowerTight` (negation free,
+one gate per AND), which `emit_correct` covers.
+
+Bit-level path. A design is a node graph (`Dag`), either built directly with the
 node-allocating `circuit do` (the Toy16 CPU) or translated from an expression-tree
 circuit by the proved `Circuit.toDag`. `Dag.lower` (proved once) produces a gate
 graph, and the printers (proved once by parse-after-print round trips) produce
@@ -28,9 +36,13 @@ audited theorem uses only `propext`, `Classical.choice` and `Quot.sound`.
 | RAM (register array) | Read port follows the read-before-write memory for some initial contents; budget | Tree circuit, `toDag` |
 | Toy16 CPU | Retirement refines the ISA from any power-up state; 2-cycle progress; budget | Node graph |
 | Dual-clock FIFO | Model level: queue trace after startup for every sampling oracle; enqueue and dequeue progress from reset | Legacy multi-clock circuit, emitted event-encoded |
+| Toy16 CPU, word level | Retirement refines the ISA after one reset cycle from any power-up store; 2-cycle progress | Word RTL: register file and data memory as RTL memories, ALU as an instantiated module, 13-field register record |
+| RAM, word level | Read port follows the read-before-write RAM for some initial state, any inputs and resets | Word RTL: one RTL memory, one write port |
 
-`scripts/verify.py` audits 28 theorems: the 15 challenge theorems and 13 generic
-framework theorems (emitter, lowering, tree translation, refinement rules).
+`scripts/verify.py` audits 39 theorems: the 17 challenge theorems and 22 generic
+framework theorems (emitter, both lowerings, tree translation, refinement rules,
+bit-blasting, word SystemVerilog round trip, reset, builder, memory and instance rules).
+[Review.md](Review.md) is generated from them by `hdlean review`.
 
 ## Checks
 
@@ -41,32 +53,41 @@ framework theorems (emitter, lowering, tree translation, refinement rules).
   1,200 counter cycles), plus emitter read-back and mutation rejection.
 - `scripts/check_backends.py`: AIGER interpretation, 100 Icarus cycles and Yosys
   RTLIL/SystemVerilog equivalence for every design; a corrupted next state must fail.
+  For word-level designs, Icarus also runs the word SystemVerilog and the
+  bit-blasted netlist side by side against 200 cycles of the Lean trace of
+  `Design.step`, and Yosys elaborates the word-level text (hierarchy, memories).
 - `scripts/check_native_clocks.py`: native multi-domain SV/RTLIL for a two-domain
   fixture, including wrong-clock rejection.
 - `Tests/test_workflow.py`: the audit rejects foreign axioms and agent-defined
   statement constants; a weakened agent theorem breaks the frozen challenge.
 
-## Emitted sizes (width 8, depth 16)
+## Emitted sizes (bit-level formats, width 8)
 
-| Design | Flip-flops | AND gates |
-| --- | --- | --- |
-| Counter | 4 | 594 |
-| FIFO | 18 | 687 |
-| Pipeline | 54 | 2,127 |
-| RAM | 136 | 19,272 |
-| General-depth FIFO | 144 | 92,625 |
-| Toy16 CPU | 4,288 | 107,313 |
+| Design | State bits | AND gates | Logic depth |
+| --- | --- | --- | --- |
+| Counter | 4 | 152 | 15 |
+| FIFO | 18 | 126 | 5 |
+| Pipeline | 54 | 378 | 5 |
+| RAM, register array (16 × 8) | 136 | 4,992 | 38 |
+| RAM, word level (16 × 8) | 136 | 788 | 8 |
+| General-depth FIFO | 144 | 19,180 | 32 |
+| Toy16 CPU, bit level | 4,288 | 62,072 | 54 |
+| Toy16 CPU, word level | 4,312 | 27,825 | 53 |
 
-The proved lowering does no constant folding or sharing beyond what the node graph
-states, and `toDag` does not recover sharing that tree circuits held only in memory.
-Synthesis removes most of the redundancy; the ECP5 reports in `docs/reports/` were
-measured with the previous, optimizing emitter and should be re-run.
+Counted after `Dag.lowerTight`. The word-level designs come from the proved
+bit-blaster; memories are counted as state bits here, and stay memories in the
+word-level SystemVerilog. There is no constant folding beyond the AIG
+constructors' and no retiming; synthesis improves on these numbers. The ECP5
+reports in `docs/reports/` predate both changes and should be re-run.
 
 ## Known gaps
 
 - Dual-clock FIFO hardware still uses the legacy multi-clock model (clock labels,
   deterministic sampling). Its challenge is model-level until it moves to
   `MultiClock.Shared.MultiDag` (milestone R2).
-- Bit-level nodes only, no memory primitive, no module hierarchy: see the scaling
-  milestones in the design.
+- Word-level RTLIL is not printed yet (bit-level RTLIL is); Yosys reads the word
+  SystemVerilog instead.
+- No verified optimisation pass on the word IR yet (constant folding, dead cells).
+- The word IR has one clock domain; multi-clock designs still use the bit-level
+  multi-clock layer.
 - Exact emitted bytes are not kernel-checked; the proved-parser read-back replaces it.

@@ -13,6 +13,7 @@ private def usage : String := "HDLean 0.2.0\n\
   hdlean rtl-emit <rtl-ram|rtl-toy16> <path.sv>        (word-level SystemVerilog, read back)\n\
   hdlean rtl-trace <rtl-ram|rtl-toy16> <path.json> [cycles=100] [seed=1]\n\
   hdlean rtl-metrics <rtl-ram|rtl-toy16>\n\
+  hdlean review <path.md>      (challenge statements, axioms, interfaces, scenarios; run under `lake env`)\n\
 Word-level designs also work with emit/metrics/trace/check: they are bit-blasted by the proved Design.toDag.\n\
 FIFO is a verified two-entry skid buffer. Inputs: valid, ready, payload LSB first, reset.\n\
 Outputs: ready, valid, payload LSB first. Counter inputs: enable, reset. Clock is implicit."
@@ -128,6 +129,10 @@ private def rtlTrace (d : Rtl.Design) (cycles seed : Nat) : Lean.Json := Id.run 
       [("path", .str n), ("depth", Lean.toJson depth)])),
     ("rows", .arr rows)]
 
+private unsafe def enableInitUnsafe : IO Unit := Lean.enableInitializersExecution
+/-- Notation and pretty-printer extensions of imported modules are registered by initializers. -/
+@[implemented_by enableInitUnsafe] private opaque enableInit : IO Unit
+
 private def execute (args : List String) : IO Unit := do
   match args with
   | ["--help"] | ["help"] | [] => IO.println usage
@@ -196,6 +201,12 @@ private def execute (args : List String) : IO Unit := do
     let cycles ← parseNum (rest[0]?.getD "100") 100000
     let seed ← parseNum (rest[1]?.getD "1") 4294967295
     writeFile path (rtlTrace (← rtlDesign design) cycles seed).pretty
+  | ["review", path] =>
+    Lean.initSearchPath (← Lean.findSysroot)
+    enableInit
+    let env ← Lean.importModules #[{ module := `Designs }] {} (trustLevel := 1024) (loadExts := true)
+    writeFile path (← Review.render env)
+    IO.println s!"Wrote {path}."
   | ["rtl-metrics", design] =>
     let d ← rtlDesign design
     let regBits := d.modules.toList.foldl (fun n m => n + (m.regs.toList.map Rtl.Reg.width).sum) 0

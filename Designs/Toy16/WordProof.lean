@@ -1,7 +1,7 @@
 import Designs.Toy16.WordRefinement
 
 /-!
-# Challenge: the word-level Toy16 retires like the ISA
+# Proof: the word-level Toy16 retires like the ISA
 
 The core is the two-module design `Toy16.Word.design` (an ALU and the core,
 with the register file and data memory as RTL memories). Its instruction bus
@@ -14,39 +14,32 @@ cycles.
 namespace HDLean.Toy16.Word
 open HDLean.Rtl HDLean.Rtl.Build
 
-/-- The closed loop: each cycle the instruction bus carries `imem` at the fetch address. -/
-def loop (imem : Addr → Word) : PMachine Store Bool Store := ⟨id, fun st r => design.step st (fetch imem st, r)⟩
-
-/-- The retirement report on the design's outputs at time `t`. -/
-def retireAt (imem : Addr → Word) (s₀ : Store) (rst : Nat → Bool) (t : Nat) : Option Retire :=
-  let st := (loop imem).stateFrom s₀ rst t
-  observe (Bundle.decode CpuOut ((design.output st (fetch imem st)).getD · 0))
-
-theorem correctness (imem : Addr → Word) (s₀ : Store) (rst : Nat → Bool)
+theorem correctness_impl (imem : Addr → Word) (s₀ : Store) (rst : Nat → Bool)
     (hr : rst 0 = true) (hd : ∀ t, 0 < t → rst t = false) :
-    ∃ regs mem, let retire := fun t => retireAt imem s₀ rst (t + 1)
+    ∃ regs mem, let retire := fun t => retireAt design imem s₀ rst (t + 1)
       RetiresLike retire (isaRetire imem (ArchState.atReset regs mem)) ∧ Progress 2 retire Retire.halt := by
-  let s1 := (loop imem).stateFrom s₀ rst 1
+  have hloop : loop design imem = ⟨id, fun st r => design.step st (fetch imem st, r)⟩ := by
+    simp only [loop, fetchOut_eq]
+  let s1 := (loop design imem).stateFrom s₀ rst 1
   let impl : Machine Store Unit (Option Retire) :=
     ⟨s1, fun s => observeRegs (regsOfStore s), fun s _ => design.step s (fetch imem s, false)⟩
   let xs : Nat → Unit := fun _ => ()
-  have hstate : ∀ t, impl.stateAt xs t = (loop imem).stateFrom s₀ rst (t + 1) := by
+  have hstate : ∀ t, impl.stateAt xs t = (loop design imem).stateFrom s₀ rst (t + 1) := by
     intro t
     induction t with
     | zero => rfl
     | succ t ih =>
-      rw [Machine.stateAt_succ, ih, PMachine.stateFrom_succ (t := t + 1), hd (t + 1) (by omega)]
-      rfl
-  have hrun : (fun t => retireAt imem s₀ rst (t + 1)) = impl.run xs := by
+      rw [Machine.stateAt_succ, ih, PMachine.stateFrom_succ (t := t + 1), hd (t + 1) (by omega), hloop]
+  have hrun : (fun t => retireAt design imem s₀ rst (t + 1)) = impl.run xs := by
     funext t
-    simp only [retireAt, Machine.run, observe_out imem, hstate]
+    simp only [retireAt, Machine.run, outputsOf_eq, hstate]
     rfl
   have hs1 := reset_regs s₀ (fetch imem s₀)
   have hs1' : s1 = design.step s₀ (fetch imem s₀, true) := by
-    show design.step s₀ (fetch imem s₀, rst 0) = _; rw [hr]
+    show design.step s₀ (fetchOut design imem s₀, rst 0) = _; rw [hr, fetchOut_eq]
   refine ⟨s1.mem 0 3 16, s1.mem 1 8 16, ?_⟩
   intro retire
-  show RetiresLike (fun t => retireAt imem s₀ rst (t + 1)) _ ∧ Progress 2 (fun t => retireAt imem s₀ rst (t + 1)) _
+  show RetiresLike (fun t => retireAt design imem s₀ rst (t + 1)) _ ∧ Progress 2 (fun t => retireAt design imem s₀ rst (t + 1)) _
   rw [hrun]
   constructor
   · apply retiresLike_of_simulation impl (step imem) _ (effect imem) (Rel imem)

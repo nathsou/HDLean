@@ -1,6 +1,6 @@
 import HDLean.Rtl.Memory
 import HDLean.Rtl.Instance
-import Designs.Toy16.Spec
+import Designs.Toy16Rtl.Interface
 
 /-!
 # Toy16 on word-level RTL
@@ -61,24 +61,6 @@ def aluBody (i : AluIn Sig) (_ : NoFields Sig) : M aluCtx (Step AluOut NoFields)
 def aluModule : Module := aluCtx.module (mealy AluIn AluOut NoFields aluBody)
 
 /-! ## Core -/
-
-hdl_record CpuIn where
-  instr : 16
-
-/-- Fetch address, then the retirement report of the previous cycle. -/
-hdl_record CpuOut where
-  pc : 8
-  valid : 1
-  rpc : 8
-  rinstr : 16
-  rnext : 8
-  wbv : 1
-  wbr : 3
-  wbval : 16
-  stv : 1
-  sta : 8
-  stval : 16
-  halt : 1
 
 hdl_record CpuRegs where
   pc : 8

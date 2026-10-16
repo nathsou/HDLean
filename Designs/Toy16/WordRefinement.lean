@@ -74,15 +74,6 @@ def observeRegs (r : CpuRegs BitVec) : Option Retire :=
            halt := r.rhalt.getLsbD 0 }
   else none
 
-/-- What the design's outputs report, decoded from the output words. -/
-def observe (o : CpuOut BitVec) : Option Retire :=
-  if o.valid.getLsbD 0 then
-    some { pc := o.rpc, instr := o.rinstr, nextPc := o.rnext,
-           wb := if o.wbv.getLsbD 0 then some (o.wbr, o.wbval) else none,
-           store := if o.stv.getLsbD 0 then some (o.sta, o.stval) else none,
-           halt := o.halt.getLsbD 0 }
-  else none
-
 def archOf (st : Store) : ArchState :=
   ⟨(regsOfStore st).pc, st.mem 0 3 16, st.mem 1 8 16, (regsOfStore st).halted.getLsbD 0⟩
 
@@ -261,5 +252,13 @@ theorem reset_regs (st : Store) (ins : Array Nat) :
     (regsOfStore (design.step st (ins, true))).valid.getLsbD 0 = false := by
   rw [step_regs]
   simp [Bundle.reset, resets, Bundle.toVec, Bundle.ofVec, HVec.zipWith, resetField, bv]
+
+theorem fetchOut_eq (imem : Addr → Word) (st : Store) : fetchOut design imem st = fetch imem st := by
+  have h := congrArg CpuOut.pc (output_eq st #[])
+  simp only [fetchOut, fetch, outputsOf, h]
+  rfl
+
+theorem outputsOf_eq (st : Store) : observe (outputsOf design st) = observeRegs (regsOfStore st) :=
+  observe_out (fun _ => 0) st #[]
 
 end HDLean.Toy16.Word

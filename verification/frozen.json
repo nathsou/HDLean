@@ -87,9 +87,11 @@
     "HDLean.Fifo.Circular.Physical.hardware_moore",
     "HDLean.Fifo.hardware",
     "HDLean.Fifo.hardware_moore",
+    "HDLean.RAM.Word.design",
     "HDLean.SkidBuffer.hardware",
     "HDLean.SkidBuffer.hardware_moore",
-    "HDLean.Toy16.DagPhysical.hardware"
+    "HDLean.Toy16.DagPhysical.hardware",
+    "HDLean.Toy16.Word.design"
   ],
   "schema": 2
 }

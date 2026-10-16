@@ -11,6 +11,7 @@ name = "Designs"
 [[lean_exe]]
 name = "hdlean"
 root = "Main"
+supportInterpreter = true
 
 [[lean_exe]]
 name = "tests"

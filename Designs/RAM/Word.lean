@@ -1,5 +1,5 @@
 import HDLean.Rtl.Memory
-import HDLean.Lib.Memory
+import Designs.RAMRtl.Interface
 
 /-!
 # A single-port RAM on the memory primitive
@@ -10,14 +10,6 @@ lemmas only; no bit is mentioned.
 -/
 namespace HDLean.RAM.Word
 open HDLean.Rtl HDLean.Rtl.Build
-
-hdl_record In (a w : Nat) where
-  we : 1
-  addr : a
-  wdata : w
-
-hdl_record Out (w : Nat) where
-  rdata : w
 
 hdl_record Regs (w : Nat) where
   rd : w
@@ -40,11 +32,6 @@ def decRegs (w : Nat) (e : Env) : Regs w BitVec := Bundle.decode (Regs w) (e.st.
 /-- The store as the reference RAM state: memory 0 and register 0. -/
 def decode (a w : Nat) (st : Store) : RAMState (2 ^ a) w :=
   ⟨Vector.ofFn fun i => st.mem 0 a w (BitVec.ofFin i), bv w (st.regs.getD 0 0)⟩
-
-/-- The input words as a reference request. -/
-def request (a w : Nat) (ins : Array Nat) : RAMRequest (2 ^ a) w :=
-  let i := Bundle.decode (In a w) (ins.getD · 0)
-  ⟨i.addr.toFin, if i.we.getLsbD 0 then some i.wdata else none⟩
 
 /-- The write port: enable, address and data straight from the inputs. -/
 def writeSpec (a w : Nat) : WriteSpec a w :=
@@ -128,17 +115,14 @@ theorem design_step (a w : Nat) (ha : 0 < a) (hw : 0 < w) (st : Store) (ins : Ar
     rw [this]
     rfl
 
-/-- The design as a machine over stores, for traces. -/
-def machine (a w : Nat) : PMachine Store (Array Nat × Bool) Store := ⟨id, (design a w).step⟩
-
 /-- From any power-up store and under any input sequence (reset included, which
 the RAM ignores), the decoded state follows the reference RAM cycle for cycle,
 and the read port shows the reference read word. -/
 theorem correctness (a w : Nat) (ha : 0 < a) (hw : 0 < w) (s₀ : Store) (xs : Nat → Array Nat × Bool) (t : Nat) :
-    decode a w ((machine a w).stateFrom s₀ xs t) = (ram (2 ^ a) w).stateFrom (decode a w s₀) (fun n => request a w (xs n).1) t ∧
-    ∀ ins, bv w (((design a w).output ((machine a w).stateFrom s₀ xs t) ins).getD 0 0) =
+    decode a w ((machine (design a w)).stateFrom s₀ xs t) = (ram (2 ^ a) w).stateFrom (decode a w s₀) (fun n => request a w (xs n).1) t ∧
+    ∀ ins, bv w (((design a w).output ((machine (design a w)).stateFrom s₀ xs t) ins).getD 0 0) =
       (ram (2 ^ a) w).runFrom (decode a w s₀) (fun n => request a w (xs n).1) t := by
-  have hs : ∀ t, decode a w ((machine a w).stateFrom s₀ xs t) =
+  have hs : ∀ t, decode a w ((machine (design a w)).stateFrom s₀ xs t) =
       (ram (2 ^ a) w).stateFrom (decode a w s₀) (fun n => request a w (xs n).1) t := by
     intro t
     induction t with
@@ -150,5 +134,10 @@ theorem correctness (a w : Nat) (ha : 0 < a) (hw : 0 < w) (s₀ : Store) (xs : N
   refine ⟨hs t, fun ins => ?_⟩
   rw [(design_step a w ha hw _ ins false).2, hs t]
   rfl
+
+theorem correctness_impl (a w : Nat) (ha : 0 < a) (hw : 0 < w) (s₀ : Store) (xs : Nat → Array Nat × Bool) :
+    ∃ m₀ : RAMState (2 ^ a) w, ∀ t, readWord w (design a w) ((machine (design a w)).stateFrom s₀ xs t) =
+      (ram (2 ^ a) w).runFrom m₀ (fun n => request a w (xs n).1) t :=
+  ⟨decode a w s₀, fun t => (correctness a w ha hw s₀ xs t).2 #[]⟩
 
 end HDLean.RAM.Word
