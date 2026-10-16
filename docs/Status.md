@@ -39,7 +39,7 @@ audited theorem uses only `propext`, `Classical.choice` and `Quot.sound`.
 | Toy16 CPU, word level | Retirement refines the ISA after one reset cycle from any power-up store; 2-cycle progress | Word RTL: register file and data memory as RTL memories, ALU as an instantiated module, 13-field register record |
 | RAM, word level | Read port follows the read-before-write RAM for some initial state, any inputs and resets | Word RTL: one RTL memory, one write port |
 
-`scripts/verify.py` audits 39 theorems: the 17 challenge theorems and 22 generic
+`scripts/verify.py` audits 40 theorems: the 17 challenge theorems and 23 generic
 framework theorems (emitter, both lowerings, tree translation, refinement rules,
 bit-blasting, word SystemVerilog round trip, reset, builder, memory and instance rules).
 [Review.md](Review.md) is generated from them by `hdlean review`.
