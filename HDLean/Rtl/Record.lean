@@ -52,15 +52,23 @@ macro_rules
       access := access.push (← `(HVec.head $cur))
       cur ← `(HVec.tail $cur)
     let ofVec ← `(⟨$access,*⟩)
-    -- pattern .cons _ (.cons _ .nil)
-    let pat ← fNames.foldrM (init := ← `(HVec.nil)) fun _ acc => `(HVec.cons _ $acc)
     `($[$doc:docComment]? structure $name:ident $binders:bracketedBinder* ($F : Nat → Type) where
         $structFields:structSimpleBinder*
       instance $binders:bracketedBinder* : Bundle ($applied) where
         fields := [$fieldList,*]
         toVec := fun $r => $toVec
         ofVec := fun $v => $ofVec
-        ofVec_toVec := fun _ => rfl
-        toVec_ofVec := fun $v => match $v:ident with | $pat => rfl)
+        ofVec_toVec := fun _ => by dsimp only [HVec.head_cons, HVec.tail_cons]
+        toVec_ofVec := fun $v => HVec.rebuild_eq _ $v)
+
+/-- The record with no fields, for modules without registers or inputs. -/
+structure NoFields (F : Nat → Type) where
+
+instance : Bundle NoFields where
+  fields := []
+  toVec := fun _ => .nil
+  ofVec := fun _ => ⟨⟩
+  ofVec_toVec := fun _ => rfl
+  toVec_ofVec := fun v => match v with | .nil => rfl
 
 end HDLean.Rtl

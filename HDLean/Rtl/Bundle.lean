@@ -37,6 +37,15 @@ def tail : HVec F (w :: ws) → HVec F ws
 theorem eta : ∀ (v : HVec F (w :: ws)), v = cons v.head v.tail
   | cons _ _ => rfl
 
+/-- A vector rebuilt from its heads and tails; equal to itself (`rebuild_eq`). -/
+def rebuild : (ws : List Nat) → HVec F ws → HVec F ws
+  | [], _ => nil
+  | _ :: ws, v => cons v.head (rebuild ws v.tail)
+
+theorem rebuild_eq : ∀ (ws : List Nat) (v : HVec F ws), rebuild ws v = v
+  | [], nil => rfl
+  | _ :: ws, cons x xs => by simp [rebuild, rebuild_eq ws xs]
+
 def map (f : ∀ {w}, F w → G w) : HVec F ws → HVec G ws
   | nil => nil
   | cons x xs => cons (f x) (map f xs)
