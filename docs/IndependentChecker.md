@@ -168,3 +168,13 @@ declarations. That closure includes general circular FIFO and physical async FIF
 proofs, finite latency/retiming, reset reassertion, invariant-certificate soundness,
 physical CPU retirement/progress and generic parsed-text semantics. It is separate
 from the exact-byte artifact closures above.
+
+Standalone `replay.py` checks proofs relative to the exported types of the three
+permitted baseline axioms and rejects every other axiom name. It is intended for
+exports produced from the trusted toolchain during development verification. A
+hostile export could give an allowed axiom name a different type; a name allowlist
+alone does not authenticate that foundation. The isolated comparator additionally
+exports all three axioms from the independently approved reference and compares
+their actual declarations, alongside the protected specification closure. Use that
+comparison for adversarial submissions, rather than treating standalone replay as
+independent specification or baseline-axiom approval.

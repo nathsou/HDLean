@@ -12,7 +12,7 @@ import tempfile
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-from independent.replay import audit_export, checker_config, load_tools, sha
+from independent.replay import ALLOWED_AXIOMS, checker_config, load_tools, sha
 try:
     from .canonical import read_export, compare, digest
     from .sandbox import Sandbox, limited_run
@@ -103,7 +103,7 @@ def parse_receipt(path, expected):
         if not isinstance(values, list) or not values or len(set(values)) != len(values) or not all(IDENT.fullmatch(x) for x in values):
             raise ValueError('invalid approved ' + field)
     holes = receipt['implementation_declarations']
-    if not isinstance(holes, list) or len(set(holes)) != len(holes) or not all(IDENT.fullmatch(x) for x in holes) or set(holes) & set(receipt['protected_declarations']):
+    if not isinstance(holes, list) or len(set(holes)) != len(holes) or not all(IDENT.fullmatch(x) for x in holes) or set(holes) & (set(receipt['protected_declarations']) | ALLOWED_AXIOMS):
         raise ValueError('invalid or conflicting approved implementation declarations')
     if not receipt['protected_files'] or not receipt['artifacts']:
         raise ValueError('approval must bind protected source and at least one emitted artifact')
@@ -205,7 +205,7 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
                 extra_modules.append('HDLeanComparatorBindings')
                 bound_roots = extra_roots
             export = output / (tag + '.ndjson')
-            roots = list(dict.fromkeys(receipt['roots'] + receipt['protected_declarations'] + receipt['implementation_declarations'] + extra_roots))
+            roots = list(dict.fromkeys(receipt['roots'] + receipt['protected_declarations'] + receipt['implementation_declarations'] + sorted(ALLOWED_AXIOMS) + extra_roots))
             sandbox.run(stage, ['/tools/exporter', *receipt['modules'], *extra_modules, '--', *roots], export, output=certdir)
             # Both levels require independent authentication: native initializers
             # in an adversarial import must not be able to forge exporter output.
@@ -220,7 +220,7 @@ def run_comparison(reference, candidate, receipt_path, approval_sha256, toolchai
             parse_config = {'audit_roots':receipt['roots'] + extra_roots, 'max_bytes': receipt['limits']['file_mb'] * 1048576,
                             'type_roots':[a['correctness_root'] for a in receipt['artifacts']],
                             'bindings':bindings, 'protect_types':receipt['roots'] if tag == 'reference' else [],
-                            'protect_declarations':(receipt['protected_declarations'] + receipt['implementation_declarations']) if tag == 'reference' else [],
+                            'protect_declarations':(receipt['protected_declarations'] + receipt['implementation_declarations'] + sorted(ALLOWED_AXIOMS)) if tag == 'reference' else [],
                             'implementation_declarations':receipt['implementation_declarations']}
             config_path = output / (tag + '-parse.json')
             config_path.write_text(json.dumps(parse_config))

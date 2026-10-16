@@ -97,6 +97,12 @@ class ComparatorUnitTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'statement differs'):
             compare(reference,candidate,['root'],['Safe'])
 
+    def test_permitted_axiom_name_cannot_change_its_statement(self):
+        reference = {'propext':{'kind':'axiom','type':'propositional extensionality','body':'trusted'}}
+        candidate = {'propext':{'kind':'axiom','type':'False','body':'forged'}}
+        with self.assertRaisesRegex(ValueError, 'protected declaration'):
+            compare(reference,candidate,[],['propext'])
+
     def test_rejects_ambiguous_export_records(self):
         meta = {'meta':{'format':{'version':'3.1.0'},'lean':{'version':'4.34.0'}}}
         with tempfile.TemporaryDirectory() as tmp:
