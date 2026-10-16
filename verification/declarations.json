@@ -26,6 +26,7 @@
     "HDLean.Counter.Challenge.budget": "HDLean.Review.Counter_Challenge_budget",
     "HDLean.Counter.Challenge.correctness": "HDLean.Review.Counter_Challenge_correctness",
     "HDLean.Counter.reset_schedule": "HDLean.Review.Counter_reset_schedule",
+    "HDLean.Dag.Build.run_implements": "HDLean.Review.Dag_Build_run_implements",
     "HDLean.Dag.lower_correct": "HDLean.Review.Dag_lower_correct",
     "HDLean.Dag.lower_gate_count": "HDLean.Review.Dag_lower_gate_count",
     "HDLean.Dag.lower_wellFormed": "HDLean.Review.Dag_lower_wellFormed",
@@ -65,6 +66,10 @@
     "HDLean.Tests.surfaceIncrement_correct": "HDLean.Review.Tests_surfaceIncrement_correct",
     "HDLean.Toy16.Challenge.budget": "HDLean.Review.Toy16_Challenge_budget",
     "HDLean.Toy16.Challenge.correctness": "HDLean.Review.Toy16_Challenge_correctness",
+    "HDLean.Toy16.DagPhysical.decode_next": "HDLean.Review.Toy16_DagPhysical_decode_next",
+    "HDLean.Toy16.DagPhysical.decode_output": "HDLean.Review.Toy16_DagPhysical_decode_output",
+    "HDLean.Toy16.DagPhysical.emit_correct": "HDLean.Review.Toy16_DagPhysical_emit_correct",
+    "HDLean.Toy16.DagPhysical.hardware_correct": "HDLean.Review.Toy16_DagPhysical_hardware_correct",
     "HDLean.Toy16.Physical.decode_next": "HDLean.Review.Toy16_Physical_decode_next",
     "HDLean.Toy16.Physical.decode_output": "HDLean.Review.Toy16_Physical_decode_output",
     "HDLean.Verification.FiniteSystem.check_sound": "HDLean.Review.Verification_FiniteSystem_check_sound",
@@ -10323,6 +10328,195 @@
       "protected": true,
       "type": "1292b275040b0989111a6156245fd445a043833ba4346c1fe1f33a095285e3ad"
     },
+    "HDLean.Dag.Build.Ensures": {
+      "body": "1128f5ce43c143bcfd359a964766fb27c5e805fde6e33c43fa4d3ad9024b792b",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "aae4eb6e89e1f0d7e663ff13c7593254ffb4ccfdfed76b474e2ab91863257808"
+    },
+    "HDLean.Dag.Build.Extends": {
+      "body": "114fc4dc6f8e91d5f28cc34454762f563565106cb6da5a72e4179d1b8246df1b",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "71d7cda4f03f7db0715c3ee047a24cb9ca785c4277c998d9f075c6f964b7e072"
+    },
+    "HDLean.Dag.Build.M": {
+      "body": "5d6ec9c2bd9f28300adbfbc82ebdcd675311e528451ad2186de11ef086a8e1aa",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "2d7a735eeef4a72947c5def05c453b99b1ebb47453af478f8bff8dba91f5f2a4"
+    },
+    "HDLean.Dag.Build.Ref": {
+      "body": "4d47f827c5d765f1b3ef4741e41a30dd0827ea32d1756c892d53570bfe468ddc",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "733e2514046449c42d66e7059d7c0a5fb207a617be198f02230a265f24f85a7c"
+    },
+    "HDLean.Dag.Build.Refines": {
+      "body": "333b18b9063abb2654b195bd317cd6df5a31f08a178b3ce7c60802142352c2d1",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "c1bd77a86ee7148540570ce4148291920b1c555c4d5fb5757603aa166518fd50"
+    },
+    "HDLean.Dag.Build.State": {
+      "body": "53f5eef5b41c009e292587c1e91f0f576d9d0af07b3bae0249dd1be07b5fa7ff",
+      "foundation": false,
+      "kind": "inductive",
+      "protected": true,
+      "type": "6e960839960776bcffe0331f079e62fb2dec5907f9ee366d08d571e993887cad"
+    },
+    "HDLean.Dag.Build.State.count": {
+      "body": "fe1973f53bc3784a077ff91092dcebcfac6d1d33597214fc303d51bffea778f2",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "9c1f58ed6fdf790e2cecdced1ca5af097b757965c704155a57a59f4ec9a22e75"
+    },
+    "HDLean.Dag.Build.State.expression": {
+      "body": "df2a103474364a083da1254cf95bdd22013698a3ffa812b039fde1708d037c76",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "92211068affe234c8364850feeeeb13ee2d8540234965d6a172075f3134aa131"
+    },
+    "HDLean.Dag.Build.State.expressions": {
+      "body": "3f53a0a5a1d8f202265e2ee5f29aacd0a365c2c5da35870e1b9a30cfc08228a0",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "73633bf9c7ad27d5c48f4d9b39c6504797378bbf0de16c4bd1368755b3a5a1bb"
+    },
+    "HDLean.Dag.Build.State.length_eq": {
+      "body": "8656226502377d87be517375cd1c00bb931183aa5ae320b0f94651a1d2aeabdd",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "a8cdef49467a5acdc7465d3743785878475d1786da162e78fef2759c34ed3b35"
+    },
+    "HDLean.Dag.Build.State.mk": {
+      "body": "9f0be3392b86b901d9727fa451c3922a93645fb9989bc7f69fd3eef6c07bec32",
+      "foundation": false,
+      "kind": "constructor",
+      "protected": true,
+      "type": "a4114a45ecb2c96006e700321b721ca71d23667d17cd5c3bc97d0c00d37a85d4"
+    },
+    "HDLean.Dag.Build.State.reversed": {
+      "body": "cdd1ca2099bad22d740fca6acf3b6b041605382ac45817eb38a338cf5244f2fc",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "00dfd9f297bf9d32a2ad17c467da8d5eca807b285714cd490b9b93613a053715"
+    },
+    "HDLean.Dag.Build.State.wf": {
+      "body": "df30bec9f4b9c6589799e6ea8ddee418731ddd9e7de26a33bfb8c5d701c46ef0",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "210cbf0a735ae66e47d072c287a35d49ebefe0991d80f4ba8c3d50a44ca59bef"
+    },
+    "HDLean.Dag.Build.Word": {
+      "body": "ece4d3b711a0555b2a8f4bbae8bf2f2cca32374858678d97d0a91b3078d88715",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "83e41b791fa52ca9c1b805676f5f31693f75d1659c7305a97b6e7d28cafd9623"
+    },
+    "HDLean.Dag.Build.WordRefines": {
+      "body": "ceb5715c759331aef90b596e9f30d5d6b1179d69ffe490cfc463e11eed462c4a",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "06a2f3077dff9b9feb0344128aee4c01adf544a8c73bcf96d0f8281df4073080"
+    },
+    "HDLean.Dag.Build.empty": {
+      "body": "0ce7cad216fb62ca50661c8e05cc457452b242e6fbb0b844101f348b1eef8c16",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "70f6af3e064948374bbfe1ab0ab4cf88f51ee93429072b91066f4bf2236b64dc"
+    },
+    "HDLean.Dag.Build.empty._proof_1": {
+      "body": "1febd903bd0db983df7df48941165c3668a4bcb785e3fb68331a02b173b9a2e2",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "cdc765718e402ed39661a04437e5d26a04dae38a5694c143b8d1530f626e5651"
+    },
+    "HDLean.Dag.Build.expressionFold": {
+      "body": "38add2506c8d5c522197fa255dc21fd320d9ae89751ee1edaccb50f717423ff4",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "1ccbeff412d4a54c7b57090304943e27ca17fc629d80656a02a802b4f53ebdbf"
+    },
+    "HDLean.Dag.Build.expressionRead": {
+      "body": "ac30629a88d2238876bf20605b01b08bb3f3755c4f21d7c9abfde8257541bbdb",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "fb3755ef5264e90380aa5bf103f9705c793fb3f024b1b6c2d7f94cdf90191a10"
+    },
+    "HDLean.Dag.Build.finish": {
+      "body": "93ef130772c8000b358f2df6df4e60154d76dcd53cb5de60ce400939869e9306",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "10f2f6ca62e7b1fe99da676b40fcab7e0da8b49d33b010834d80b5287258f6e3"
+    },
+    "HDLean.Dag.Build.finish._proof_1": {
+      "body": "8a8855b7b1b5871291959b1237523814a75b7c69682dca4909b7db45937d8b66",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "dc6a9c63be163a190c0237de7e57ac0d26da9085cf0ea44f6847c3d045ef7b45"
+    },
+    "HDLean.Dag.Build.finish._proof_2": {
+      "body": "afb08edbae4cf787277c16f0ec8ee37980c31cdadaaed04ff25eb73faef0fb69",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "89aa87117f4e5bee9f74fae2cdc2674929f999d890ae081a2f67161c77d8bc22"
+    },
+    "HDLean.Dag.Build.finish._proof_3": {
+      "body": "9560f620ba47b1c714ae95fe2929ca938a820f85edce72b478ef30bfe1d37367",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "32993e6aeb0ec40666ced5c3e372595ca672ff9c12d59766a52ded7b421d72c3"
+    },
+    "HDLean.Dag.Build.opExpression": {
+      "body": "fb1a5a4e4ec9ad4bc7a33053dbf1fa5b11a92cea9d4800b9d5ec33f0dbc854c6",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "80a23164aa53583e195b99eb4176235911aa62d59101915c8d5478341fa21207"
+    },
+    "HDLean.Dag.Build.opExpression.match_1": {
+      "body": "8c4062b8443a7d1faa246afa609f91307011062aac7f088b10c4cc52cf1c4f88",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "0bac2b18c2b21b3daf4596d55e4c8ea93a11d19da4be61284aaa5ec7a90c0fda"
+    },
+    "HDLean.Dag.Build.run": {
+      "body": "38be35f038d054ff9d4cd8e00c62d291b8184c51e2a61979cfea191673eb5f69",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "59593da3ab9295edc6adadd3c21489a03d69905c8f30f9fda836bcbc147c62ea"
+    },
+    "HDLean.Dag.Build.run.match_1": {
+      "body": "5fecdf081c70ac6876f18c33742deb9281ec471221da8b9a921d0562928c7f9a",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "b78275aa3e232e8ae47a033d89370c3bfccef3931fafd7306f369de7a1c8ee36"
+    },
     "HDLean.Dag.NodesWF": {
       "body": "99c4faa399cfaeebf0e43beeb00faaa9b21ba9a516b59d2fe2a2e23cb2a31edc",
       "foundation": false,
@@ -13550,6 +13744,13 @@
       "protected": false,
       "type": "9659fce9ec0b98fec2f1d40c0c6a619d0c0b33f73a6e25c1970411e7d5bf2737"
     },
+    "HDLean.Review.Dag_Build_run_implements": {
+      "body": "fd0fa6bda474b1d3224beef63045b68f46407930f75509a2d7b493fb1e8d7554",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "6da3bd622b86cc5df7a0441770683cd8c5ffbfbd56f4665febd88d06098abbb9"
+    },
     "HDLean.Review.Dag_lower_correct": {
       "body": "609e2c1a89ef58d3c70d99188b7bad9d2eac6dd920729cb22453e2d7f07ff076",
       "foundation": false,
@@ -13822,6 +14023,34 @@
       "kind": "thm",
       "protected": false,
       "type": "528ff684137f861a9e9e2130fef07f7e862e8e2b0d61c43d2ed215e2626d752f"
+    },
+    "HDLean.Review.Toy16_DagPhysical_decode_next": {
+      "body": "a9375f5ef7603ee2bf68252afc55c652424e9c4debe1bb11af38ca1b4dc81a1c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "4eff24561380cf9c4accc8da43864d80dcfd88781fe9314020bdf454ff648e7c"
+    },
+    "HDLean.Review.Toy16_DagPhysical_decode_output": {
+      "body": "26bb2a41fb4ddfbdcfa9b1055c1db1770845fdb9b27c668a9ddba14c7909ce58",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "5805ddb5ddd786aa8dbf058828aa9ac6153e55fa109c4e57c95986b959987424"
+    },
+    "HDLean.Review.Toy16_DagPhysical_emit_correct": {
+      "body": "06af78c3befcdd7d590290fad21c411d3c58efae4ca85277d3a6f1a91635e816",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "3cae27b94dd0499894a8c3ad36ae3263b0e78fd81f9a824d48b4872555d0e1dc"
+    },
+    "HDLean.Review.Toy16_DagPhysical_hardware_correct": {
+      "body": "aeab405a125984a320fffa9d61bf25cc390ef8bf8cdaa2cbf8ebdf14412e4db4",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "f4f1ae030d3c3c97901d27e4cffcb8a5ac58c147d210154114a2caef28bea1d2"
     },
     "HDLean.Review.Toy16_Physical_decode_next": {
       "body": "7c0c7920df4bfec98e5e45d7f1e09232d1df7674e8832b3c6e09d72b1dc211d2",
@@ -14522,6 +14751,27 @@
       "kind": "constructor",
       "protected": true,
       "type": "1c56c8bb5e1a9d4bc9208f27db301b75a2f3f22cb17a0a13d1306a39b9a2d11c"
+    },
+    "HDLean.Toy16.DagPhysical.emit_correct._proof_1": {
+      "body": "7491dbfd5465bbda4c389f6ba8a2583a3437e6e7818d97eda93105daf5794be8",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "7f63530ef4c3e67c03ba760f1ce39363cc1ccef7ffd6f3363e99f5727f2ed096"
+    },
+    "HDLean.Toy16.DagPhysical.hardware": {
+      "body": "94912e8b259a0aae3e41bc5e89754412f574baf5ecbcefcf5ec26997e24c33c2",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "52a1bd35863be192784fe2879e120df96da769c4e77e28e7d34343bfd3ebe3ae"
+    },
+    "HDLean.Toy16.DagPhysical.machine": {
+      "body": "602d52696f65202d50f46353647b0f5c06d347db06a84d60154ad3f195326212",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "2f1ed00cee321acaf54940ce3a8bae4a95837a1b2f9e079dda7be0380398bcdb"
     },
     "HDLean.Toy16.Physical.E": {
       "body": "496d74455634b678e5ca8013f40ebe96bf42869a22d36ed4e3dfc5f4f1dc0e86",
@@ -23041,6 +23291,13 @@
       "kind": "thm",
       "protected": true,
       "type": "517ac4d27a869cb2d5aafda9f5ca6d3ac8f78008889ca0cd63f243ff818688d9"
+    },
+    "List.length_reverse": {
+      "body": "73969f4b28a01dd21018052d47e243a0a4421a5bf0687b1437ebeb8884b6c49f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "8e632a9c6cf52819d078fd7a694dc8013173b8d640299d63477cf7dc8d45b723"
     },
     "List.length_set": {
       "body": "f014becdb71dea69abf49d2d5e3e87bfc9add554252c23142a54d04eb56e809b",
@@ -62788,6 +63045,7 @@
     "HDLean.Fifo.Circular.Physical.hardware",
     "HDLean.Fifo.hardware",
     "HDLean.SkidBuffer.hardware",
+    "HDLean.Toy16.DagPhysical.hardware",
     "HDLean.Toy16.Physical.hardware"
   ],
   "protected": [
@@ -64252,6 +64510,33 @@
     "HDLean.Counter.wireSpec",
     "HDLean.Counter.wireSpec._proof_1",
     "HDLean.Dag",
+    "HDLean.Dag.Build.Ensures",
+    "HDLean.Dag.Build.Extends",
+    "HDLean.Dag.Build.M",
+    "HDLean.Dag.Build.Ref",
+    "HDLean.Dag.Build.Refines",
+    "HDLean.Dag.Build.State",
+    "HDLean.Dag.Build.State.count",
+    "HDLean.Dag.Build.State.expression",
+    "HDLean.Dag.Build.State.expressions",
+    "HDLean.Dag.Build.State.length_eq",
+    "HDLean.Dag.Build.State.mk",
+    "HDLean.Dag.Build.State.reversed",
+    "HDLean.Dag.Build.State.wf",
+    "HDLean.Dag.Build.Word",
+    "HDLean.Dag.Build.WordRefines",
+    "HDLean.Dag.Build.empty",
+    "HDLean.Dag.Build.empty._proof_1",
+    "HDLean.Dag.Build.expressionFold",
+    "HDLean.Dag.Build.expressionRead",
+    "HDLean.Dag.Build.finish",
+    "HDLean.Dag.Build.finish._proof_1",
+    "HDLean.Dag.Build.finish._proof_2",
+    "HDLean.Dag.Build.finish._proof_3",
+    "HDLean.Dag.Build.opExpression",
+    "HDLean.Dag.Build.opExpression.match_1",
+    "HDLean.Dag.Build.run",
+    "HDLean.Dag.Build.run.match_1",
     "HDLean.Dag.NodesWF",
     "HDLean.Dag.NodesWF._f",
     "HDLean.Dag.NodesWF.match_1",
@@ -64759,6 +65044,9 @@
     "HDLean.Toy16.CoreState.execute",
     "HDLean.Toy16.CoreState.fetched",
     "HDLean.Toy16.CoreState.mk",
+    "HDLean.Toy16.DagPhysical.emit_correct._proof_1",
+    "HDLean.Toy16.DagPhysical.hardware",
+    "HDLean.Toy16.DagPhysical.machine",
     "HDLean.Toy16.Physical.E",
     "HDLean.Toy16.Physical.W",
     "HDLean.Toy16.Physical.decode",
@@ -65976,6 +66264,7 @@
     "List.length_ofFn",
     "List.length_pos_iff",
     "List.length_replicate",
+    "List.length_reverse",
     "List.length_set",
     "List.length_tail",
     "List.length_zipWith",
@@ -71680,6 +71969,7 @@
     "HDLean.Review.Counter_Challenge_budget",
     "HDLean.Review.Counter_Challenge_correctness",
     "HDLean.Review.Counter_reset_schedule",
+    "HDLean.Review.Dag_Build_run_implements",
     "HDLean.Review.Dag_lower_correct",
     "HDLean.Review.Dag_lower_gate_count",
     "HDLean.Review.Dag_lower_wellFormed",
@@ -71719,6 +72009,10 @@
     "HDLean.Review.Tests_surfaceIncrement_correct",
     "HDLean.Review.Toy16_Challenge_budget",
     "HDLean.Review.Toy16_Challenge_correctness",
+    "HDLean.Review.Toy16_DagPhysical_decode_next",
+    "HDLean.Review.Toy16_DagPhysical_decode_output",
+    "HDLean.Review.Toy16_DagPhysical_emit_correct",
+    "HDLean.Review.Toy16_DagPhysical_hardware_correct",
     "HDLean.Review.Toy16_Physical_decode_next",
     "HDLean.Review.Toy16_Physical_decode_output",
     "HDLean.Review.Verification_FiniteSystem_check_sound",

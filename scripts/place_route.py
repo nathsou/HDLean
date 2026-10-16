@@ -67,7 +67,7 @@ def main():
     command([ROOT / '.lake/build/bin/hdlean', 'emit', a.design, 'sv', 'input.sv', a.width],
             work, work / 'emit.log', env)
     module = {'counter':'hd_decade', 'fifo':f'hd_fifo2_w{a.width}',
-              'pipeline':f'hd_pipeline3_w{a.width}', 'ram':f'hd_ram_16x{a.width}', 'toy16':'hd_toy16'}[a.design]
+              'pipeline':f'hd_pipeline3_w{a.width}', 'ram':f'hd_ram_16x{a.width}', 'toy16':'hd_top'}[a.design]
     # Filenames/module identifiers are controlled; no user path enters Yosys source.
     flow = 'synth_ecp5' if a.device == 'ecp5-25k' else 'synth_ice40'
     command([tools['yosys'], '-Q', '-T', '-p',

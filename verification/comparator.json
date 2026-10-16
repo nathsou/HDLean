@@ -11,6 +11,7 @@
     "HDLean.Review.Backend_Proved_Aag_parse_systemVerilog",
     "HDLean.Review.Backend_Proved_emit_correct",
     "HDLean.Review.Circuit_network_correct",
+    "HDLean.Review.Dag_Build_run_implements",
     "HDLean.Review.Dag_lower_correct",
     "HDLean.Review.Dag_lower_gate_count",
     "HDLean.Review.Dag_lower_wellFormed",

@@ -38,7 +38,7 @@ def read_aag(path):
     assert all(cur == init for cur, _, init in regs), 'power-up was initialized'
     for offset, (lhs, a, b) in enumerate(ands):
         assert lhs == 2 * (inputs + latches + offset + 1)
-        assert lhs > a >= b >= 0
+        assert lhs > a >= 0 and lhs > b >= 0
     return inputs, regs, outs, ands
 
 
@@ -56,17 +56,21 @@ def check_aag(path, rows):
         assert [lit(o) for o in outs] == row['outputs'], row['cycle']
 
 
-def testbench(module, rows):
+def testbench(module, rows, buses=False):
     ni, nr, no = len(rows[0]['inputs']), len(rows[0]['state']), len(rows[0]['outputs'])
     lines = ['module tb;', 'reg clk;', f'reg [{ni-1}:0] inputs;', f'wire [{no-1}:0] outputs;']
-    ports = ['.clk(clk)'] + [f'.in_{k}(inputs[{k}])' for k in range(ni)] + [f'.out_{k}(outputs[{k}])' for k in range(no)]
+    ports = (['.clk(clk)', ".ins({1'b0,inputs})",'.outs(outputs_padded)'] if buses else
+             ['.clk(clk)'] + [f'.in_{k}(inputs[{k}])' for k in range(ni)] + [f'.out_{k}(outputs[{k}])' for k in range(no)])
+    if buses:
+        lines += [f'wire [{no}:0] outputs_padded;',f'assign outputs = outputs_padded[{no-1}:0];']
     lines += [f'{module} dut({", ".join(ports)});']
     if nr:
-        packed = ', '.join(f'dut.n{ni+k+1}' for k in reversed(range(nr)))
+        packed = ', '.join((f'dut.state[{k}]' if buses else f'dut.n{ni+k+1}') for k in reversed(range(nr)))
         lines += [f'wire [{nr-1}:0] state_bits = {{{packed}}};']
     lines += ['initial begin', 'clk = 0;']
     for k, b in enumerate(rows[0]['state']):
-        lines.append(f'dut.n{ni+k+1} = 1\'b{int(b)};')
+        target = f'dut.state[{k}]' if buses else f'dut.n{ni+k+1}'
+        lines.append(f'{target} = 1\'b{int(b)};')
     for row in rows:
         v = sum(int(b) << k for k, b in enumerate(row['inputs']))
         out = sum(int(b) << k for k, b in enumerate(row['outputs']))
@@ -90,9 +94,9 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
     rows = json.loads(tracepath.read_text())
     check_aag(paths['aiger'], rows)
     module = {'fifo': f'hd_fifo2_w{width}', 'counter': 'hd_decade',
-              'pipeline': f'hd_pipeline3_w{width}', 'ram': f'hd_ram_16x{width}', 'ring':f'hd_fifo_ring_d16_w{width}', 'toy16':'hd_toy16'}[design]
+              'pipeline': f'hd_pipeline3_w{width}', 'ram': f'hd_ram_16x{width}', 'ring':f'hd_fifo_ring_d16_w{width}', 'toy16':'hd_top'}[design]
     tb = work / f'{name}_tb.sv'
-    tb.write_text(testbench(module, rows))
+    tb.write_text(testbench(module, rows, buses=(design == 'toy16')))
     options = ['-B', ivl_base] if ivl_base else []
     binary = work / f'{name}.vvp'
     run([iverilog, *options, '-g2012', '-s', 'tb', '-o', binary, paths['sv'], tb])
@@ -119,7 +123,8 @@ def check_design(work, design, width, iverilog, vvp, yosys, ivl_base):
         assert len(registers) == nr
         assert all(c['type'] in ('$dff', '$and', '$not') for c in parsed['cells'].values())
         for k in range(nr):
-            q = parsed['netnames'][f'n{ni + k + 1}']['bits']
+            q = (parsed['netnames']['state']['bits'][k:k+1] if design == 'toy16' else
+                 parsed['netnames'][f'n{ni + k + 1}']['bits'])
             drivers = [c for c in registers if c['connections']['Q'] == q]
             assert len(drivers) == 1, f'state bit {k} has no unique driver'
             cell = drivers[0]

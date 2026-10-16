@@ -4,11 +4,16 @@
   "theorem_names": [
     "HDLean.Review.Toy16_Challenge_budget",
     "HDLean.Review.Toy16_Challenge_correctness",
+    "HDLean.Review.Toy16_DagPhysical_decode_next",
+    "HDLean.Review.Toy16_DagPhysical_decode_output",
+    "HDLean.Review.Toy16_DagPhysical_emit_correct",
+    "HDLean.Review.Toy16_DagPhysical_hardware_correct",
     "HDLean.Review.Toy16_Physical_decode_next",
     "HDLean.Review.Toy16_Physical_decode_output"
   ],
   "definition_names": [
-    "HDLean.Toy16.Physical.hardware"
+    "HDLean.Toy16.Physical.hardware",
+    "HDLean.Toy16.DagPhysical.hardware"
   ],
   "permitted_axioms": [
     "propext",

@@ -2474,4 +2474,374 @@ theorem AsyncFifo_read_progress_queue :
                   (@Eq.{1} Bool (@HDLean.AsyncFifo.pop k w (@HDLean.AsyncFifo.stateFrom k w s xs u) (xs u)) Bool.true) :=
   @HDLean.AsyncFifo.read_progress_queue
 
+/-- Frozen statement of `HDLean.Toy16.DagPhysical.hardware_correct`. -/
+theorem Toy16_DagPhysical_hardware_correct :
+    ∀ (imem : HDLean.Toy16.Addr → HDLean.Toy16.Word)
+  (s₀ :
+    Fin
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))) →
+      Bool)
+  (rst : Nat → Bool),
+  @Eq.{1} Bool (rst (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))) Bool.true →
+    (∀ (t : Nat),
+        @LT.lt.{0} Nat instLTNat (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))) t →
+          @Eq.{1} Bool (rst t) Bool.false) →
+      @Exists.{1} (HDLean.Toy16.Reg → HDLean.Toy16.Word) fun (regs : HDLean.Toy16.Reg → HDLean.Toy16.Word) =>
+        @Exists.{1} (HDLean.Toy16.Addr → HDLean.Toy16.Word) fun (mem : HDLean.Toy16.Addr → HDLean.Toy16.Word) =>
+          have retire := fun (t : Nat) =>
+            HDLean.Toy16.Physical.observe
+              (@HDLean.PMachine.runFrom
+                (Fin
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))) →
+                  Bool)
+                Bool (Fin (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) → Bool)
+                (HDLean.Toy16.DagPhysical.machine imem) s₀ rst
+                (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) t
+                  (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))));
+          And
+            (@HDLean.RetiresLike.{0} HDLean.Toy16.Retire retire
+              (HDLean.Toy16.isaRetire imem (HDLean.Toy16.ArchState.atReset regs mem)))
+            (@HDLean.Progress.{0} HDLean.Toy16.Retire (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
+              retire HDLean.Toy16.Retire.halt) :=
+  @HDLean.Toy16.DagPhysical.hardware_correct
+
+/-- Frozen statement of `HDLean.Toy16.DagPhysical.emit_correct`. -/
+theorem Toy16_DagPhysical_emit_correct :
+    ∀ (f : HDLean.Backend.Proved.Format) (imem : HDLean.Toy16.Addr → HDLean.Toy16.Word)
+  (s :
+    Vector.{0} Bool
+      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+  (rst : Bool),
+  @Eq.{1} (Option.{0} (Prod.{0, 0} (Array.{0} Bool) (Array.{0} Bool)))
+    (HDLean.Backend.Proved.Format.meaning f
+      (@HDLean.Backend.Proved.Format.emit (@OfNat.ofNat.{0} HDLean.Domain (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+        (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) f (HDLean.Toy16.DagPhysical.hardware imem))
+      (@List.toArray.{0} Bool (@List.cons.{0} Bool rst (@List.nil.{0} Bool)))
+      (@Vector.toArray.{0} Bool
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+        s))
+    (@Option.some.{0} (Prod.{0, 0} (Array.{0} Bool) (Array.{0} Bool))
+      (@Prod.mk.{0, 0} (Array.{0} Bool) (Array.{0} Bool)
+        (@Vector.toArray.{0} Bool
+          (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+            (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+            (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+          (@Vector.ofFn.{0}
+            (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+              (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+              (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+            Bool
+            (@HDLean.Circuit.next (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+              (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+              (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+              (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) (HDLean.Toy16.Physical.hardware imem)
+              (fun
+                  (k :
+                    Fin
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))) =>
+                @GetElem.getElem.{0, 0, 0}
+                  (Vector.{0} Bool
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                  (Fin
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                  Bool
+                  (fun
+                      (xs :
+                        Vector.{0} Bool
+                          (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                            (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                            (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                      (i :
+                        Fin
+                          (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                            (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                            (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))) =>
+                    @LT.lt.{0} Nat instLTNat
+                      (@Fin.val
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                        i)
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                  (@Fin.instGetElemFinVal.{0, 0}
+                    (Vector.{0} Bool
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    Bool
+                    (fun
+                        (x :
+                          Vector.{0} Bool
+                            (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                              (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                              (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                        (i : Nat) =>
+                      @LT.lt.{0} Nat instLTNat i
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                    (@Vector.instGetElemNatLt.{0} Bool
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))))
+                  s k
+                  (@Decidable.byContradiction
+                    (@LT.lt.{0} Nat instLTNat
+                      (@Fin.val
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                        k)
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    (Nat.decLt
+                      (@Fin.val
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                        k)
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    fun
+                      (a :
+                        Not
+                          (@LT.lt.{0} Nat instLTNat
+                            (@Fin.val
+                              (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                                (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                                (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                              k)
+                            (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                              (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                              (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))) =>
+                    HDLean.Toy16.DagPhysical.emit_correct._proof_1 k a))
+              (@Prod.mk.{0, 0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))) → Bool) Bool
+                (@Fin.elim0.{1} Bool) rst))))
+        (@Vector.toArray.{0} Bool (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79)))
+          (@Vector.ofFn.{0} (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) Bool
+            (@HDLean.Circuit.evalOutput (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+              (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+              (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+              (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) (HDLean.Toy16.Physical.hardware imem)
+              (fun
+                  (k :
+                    Fin
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))) =>
+                @GetElem.getElem.{0, 0, 0}
+                  (Vector.{0} Bool
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                  (Fin
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                  Bool
+                  (fun
+                      (xs :
+                        Vector.{0} Bool
+                          (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                            (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                            (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                      (i :
+                        Fin
+                          (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                            (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                            (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))) =>
+                    @LT.lt.{0} Nat instLTNat
+                      (@Fin.val
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                        i)
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                  (@Fin.instGetElemFinVal.{0, 0}
+                    (Vector.{0} Bool
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    Bool
+                    (fun
+                        (x :
+                          Vector.{0} Bool
+                            (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                              (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                              (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                        (i : Nat) =>
+                      @LT.lt.{0} Nat instLTNat i
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                      (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                    (@Vector.instGetElemNatLt.{0} Bool
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))))
+                  s k
+                  (@Decidable.byContradiction
+                    (@LT.lt.{0} Nat instLTNat
+                      (@Fin.val
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                        k)
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    (Nat.decLt
+                      (@Fin.val
+                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                        k)
+                      (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                        (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                        (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))
+                    fun
+                      (a :
+                        Not
+                          (@LT.lt.{0} Nat instLTNat
+                            (@Fin.val
+                              (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                                (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                                (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+                              k)
+                            (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                              (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+                              (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))))) =>
+                    HDLean.Toy16.DagPhysical.emit_correct._proof_1 k a))
+              (@Fin.elim0.{1} Bool)))))) :=
+  @HDLean.Toy16.DagPhysical.emit_correct
+
+/-- Frozen statement of `HDLean.Toy16.DagPhysical.decode_next`. -/
+theorem Toy16_DagPhysical_decode_next :
+    ∀ (imem : HDLean.Toy16.Addr → HDLean.Toy16.Word)
+  (s :
+    Fin
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))) →
+      Bool)
+  (rst : Bool),
+  @Eq.{1} HDLean.Toy16.CoreState
+    (HDLean.Toy16.Physical.decode
+      (@HDLean.Dag.nextState (@OfNat.ofNat.{0} HDLean.Domain (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+        (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) (HDLean.Toy16.DagPhysical.hardware imem) s
+        (@Prod.mk.{0, 0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))) → Bool) Bool
+          (@Fin.elim0.{1} Bool) rst)))
+    (@HDLean.PMachine.next HDLean.Toy16.CoreState Bool (Option.{0} HDLean.Toy16.Retire) (HDLean.Toy16.core imem)
+      (HDLean.Toy16.Physical.decode s) rst) :=
+  @HDLean.Toy16.DagPhysical.decode_next
+
+/-- Frozen statement of `HDLean.Toy16.DagPhysical.decode_output`. -/
+theorem Toy16_DagPhysical_decode_output :
+    ∀ (imem : HDLean.Toy16.Addr → HDLean.Toy16.Word)
+  (s :
+    Fin
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16)))) →
+      Bool),
+  @Eq.{1} (Option.{0} HDLean.Toy16.Retire)
+    (HDLean.Toy16.Physical.observe
+      (@HDLean.Dag.evalOutput (@OfNat.ofNat.{0} HDLean.Domain (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+          (@OfNat.ofNat.{0} Nat (nat_lit 268) (instOfNatNat (nat_lit 268)))
+          (@OfNat.ofNat.{0} Nat (nat_lit 16) (instOfNatNat (nat_lit 16))))
+        (@OfNat.ofNat.{0} Nat (nat_lit 79) (instOfNatNat (nat_lit 79))) (HDLean.Toy16.DagPhysical.hardware imem) s
+        (@Fin.elim0.{1} Bool)))
+    (@HDLean.PMachine.out HDLean.Toy16.CoreState Bool (Option.{0} HDLean.Toy16.Retire) (HDLean.Toy16.core imem)
+      (HDLean.Toy16.Physical.decode s)) :=
+  @HDLean.Toy16.DagPhysical.decode_output
+
+/-- Frozen statement of `HDLean.Dag.Build.run_implements`. -/
+theorem Dag_Build_run_implements :
+    ∀ {d i r o : Nat} (c : HDLean.Circuit d i r o)
+  (program :
+    HDLean.Dag.Build.M d i r (Prod.{0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) (Vector.{0} HDLean.Dag.Build.Ref o))),
+  (@HDLean.Dag.Build.Ensures d i r (Prod.{0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) (Vector.{0} HDLean.Dag.Build.Ref o))
+      (@HDLean.Dag.Build.empty d i r) program
+      fun (p : Prod.{0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) (Vector.{0} HDLean.Dag.Build.Ref o))
+        (t : HDLean.Dag.Build.State d i r) =>
+      And
+        (∀ (k : Fin r),
+          @HDLean.Dag.Build.Refines d i r t
+            (@GetElem.getElem.{0, 0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) (Fin r) HDLean.Dag.Build.Ref
+              (fun (xs : Vector.{0} HDLean.Dag.Build.Ref r) (i : Fin r) => @LT.lt.{0} Nat instLTNat (@Fin.val r i) r)
+              (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) HDLean.Dag.Build.Ref
+                (fun (x : Vector.{0} HDLean.Dag.Build.Ref r) (i : Nat) => @LT.lt.{0} Nat instLTNat i r) r
+                (@Vector.instGetElemNatLt.{0} HDLean.Dag.Build.Ref r))
+              (@Prod.fst.{0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) (Vector.{0} HDLean.Dag.Build.Ref o) p) k
+              (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r) (Nat.decLt (@Fin.val r k) r)
+                fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r)) => @HDLean.Dag.Build.finish._proof_1 r k a))
+            (@HDLean.Register.next d i r
+              (@GetElem.getElem.{0, 0, 0} (Vector.{0} (HDLean.Register d i r) r) (Fin r) (HDLean.Register d i r)
+                (fun (xs : Vector.{0} (HDLean.Register d i r) r) (i : Fin r) =>
+                  @LT.lt.{0} Nat instLTNat (@Fin.val r i) r)
+                (@Fin.instGetElemFinVal.{0, 0} (Vector.{0} (HDLean.Register d i r) r) (HDLean.Register d i r)
+                  (fun (x : Vector.{0} (HDLean.Register d i r) r) (i : Nat) => @LT.lt.{0} Nat instLTNat i r) r
+                  (@Vector.instGetElemNatLt.{0} (HDLean.Register d i r) r))
+                (@HDLean.Circuit.state d i r o c) k
+                (@Decidable.byContradiction (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r) (Nat.decLt (@Fin.val r k) r)
+                  fun (a : Not (@LT.lt.{0} Nat instLTNat (@Fin.val r k) r)) =>
+                  @HDLean.Dag.Build.finish._proof_1 r k a))))
+        (@HDLean.Dag.Build.WordRefines d i r o t
+          (@Prod.snd.{0, 0} (Vector.{0} HDLean.Dag.Build.Ref r) (Vector.{0} HDLean.Dag.Build.Ref o) p)
+          (@HDLean.Circuit.output d i r o c))) →
+    @Exists.{1} (HDLean.Dag d i r o) fun (dag : HDLean.Dag d i r o) =>
+      And
+        (@Eq.{1} (Option.{0} (HDLean.Dag d i r o))
+          (@HDLean.Dag.Build.run r d i o (@HDLean.Circuit.name d i r o c)
+            (@Vector.map.{0, 0} (HDLean.Register d i r) HDLean.ResetKind r
+              (fun (x : HDLean.Register d i r) => @HDLean.Register.reset d i r x) (@HDLean.Circuit.state d i r o c))
+            program)
+          (@Option.some.{0} (HDLean.Dag d i r o) dag))
+        (And
+          (∀ (s : Fin r → Bool) (xs : Prod.{0, 0} (Fin i → Bool) Bool),
+            @Eq.{1} (Fin r → Bool) (@HDLean.Dag.nextState d i r o dag s xs) (@HDLean.Circuit.next d i r o c s xs))
+          (∀ (s : Fin r → Bool) (xs : Fin i → Bool),
+            @Eq.{1} (Fin o → Bool) (@HDLean.Dag.evalOutput d i r o dag s xs)
+              (@HDLean.Circuit.evalOutput d i r o c s xs))) :=
+  @HDLean.Dag.Build.run_implements
+
 end HDLean.Review

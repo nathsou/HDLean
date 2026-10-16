@@ -90,6 +90,12 @@ theorem join_eq_intercalate (separator : String) (words : List String) :
       simp only [join,String.intercalate_cons_cons] at *
       rw [ih]
 
+/-- The compiled printer uses the standard library's buffer-oriented path. This
+rewrite is proved; the logical definition remains suitable for pure kernel replay. -/
+@[csimp] theorem join_eq_intercalate_fn : join = String.intercalate := by
+  funext separator words
+  exact join_eq_intercalate separator words
+
 /-- A file always ends in a newline; empty files are represented by one newline. -/
 def render (lines : List Line) : String :=
   join "\n" (lines.map Line.render ++ [""])

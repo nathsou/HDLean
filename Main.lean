@@ -3,7 +3,7 @@ import Designs
 import Lean
 open HDLean HDLean.Backend HDLean.Verification
 
-private def usage : String := "HDLean 0.1.0\n\
+private def usage : String := "HDLean 0.2.0\n\
   hdlean emit <fifo|counter|pipeline|ram|ring|toy16> <sv|aiger|rtlil> <path> [width=8]\n\
   hdlean emit-async <sv|rtlil|aiger> <path> [width=8] [log2depth=4]\n\
   hdlean metrics <fifo|counter|pipeline|ram|ring|toy16> [width=8]\n\
@@ -49,7 +49,7 @@ private def writeFile (path : String) (content : String) : IO Unit := do
 private def execute (args : List String) : IO Unit := do
   match args with
   | ["--help"] | ["help"] | [] => IO.println usage
-  | ["--version"] => IO.println "HDLean 0.1.0 (Lean 4.34.0)"
+  | ["--version"] => IO.println "HDLean 0.2.0 (Lean 4.35.0)"
   | "emit-async" :: format :: path :: rest =>
     if rest.length > 2 then throw (IO.userError usage)
     let width ← parseNum (rest[0]?.getD "8") 64
@@ -69,6 +69,17 @@ private def execute (args : List String) : IO Unit := do
         | .ok a => pure a | .error e => throw (IO.userError e)
       writeFile path artifact.text
       IO.println s!"Wrote {path} with native clk_0 and clk_1 ports."
+  | "emit" :: "toy16" :: format :: path :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let _ ← parseNum (rest.headD "8") 64
+    let f ← match format with
+      | "sv" => pure Proved.Format.systemVerilog
+      | "aiger" => pure Proved.Format.aiger
+      | "rtlil" => pure Proved.Format.rtlil
+      | _ => throw (IO.userError s!"unknown format: {format}; expected sv, aiger, rtlil")
+    let c := Toy16.DagPhysical.hardware Toy16.sumProgram
+    writeFile path (f.emit c)
+    IO.println s!"Wrote {path} ({c.lower.latches} flip-flops, {c.lower.gates.size} AND gates; generic proved emitter)."
   | "emit" :: design :: format :: path :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64

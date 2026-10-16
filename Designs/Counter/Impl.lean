@@ -4,7 +4,7 @@ import Designs.Counter.Spec
 namespace HDLean.Counter
 
 /-- Four-bit decade counter with enable and synchronous reset. Invalid power-up values are allowed. -/
-def hardware : Circuit 0 1 4 4 := circuit do
+def hardware : Circuit 0 1 4 4 := treeCircuit do
   let count : WordExpr 0 1 4 4 := WordExpr.registers 0 (by decide)
   let en : Expr 0 1 4 := .input 0
   let atNine := WordExpr.eq count (WordExpr.literal 9)

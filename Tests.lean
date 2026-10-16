@@ -9,3 +9,5 @@ import Designs.AsyncFifo.Challenge
 import Tests.Dag
 import Tests.BackendProved
 import Tests.MultiDag
+import Tests.DagBuilder
+import Tests.Allocate

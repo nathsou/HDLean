@@ -136,3 +136,20 @@ it produces the original bytes, and native fixture files compare byte-for-byte.
 The updated emitter/module roots passed independent replay (7,142 declarations).
 The full existing executable simulation suite also passes, including physical
 CPU retirement, RAM collisions, circular queues and asynchronous oracle traces.
+
+The shared Toy16 implementation now proves exact next-state and retirement-bus
+agreement with the full-ISA physical reference for every instruction ROM.
+`Toy16.DagPhysical.hardware_correct` gives retirement and two-cycle progress from
+arbitrary storage after reset; `emit_correct` covers all three proved text formats.
+Four CPU roots passed independent replay (8,364 declarations), at 1.77 GiB peak
+RSS. Construction has 31,483 source nodes and 4,288 state bits. The CPU CLI now
+uses this proved emitter. Exact concrete byte binding remains a separate measured
+obligation: a direct whole-string kernel check exceeded its 6,000 MiB RSS budget.
+
+`circuit do` now runs a node/register allocator. `regR`, `regN`, and their word
+variants return handles; `drive` assigns a single next-state source. Missing,
+duplicate, and excess allocations fail closed. Register capacity is stated in
+the result type, while physical offsets are allocated internally. The original
+expression-tree syntax remains available explicitly as `treeCircuit do`.
+All 16 state/input/reset combinations of the two-register example are checked
+by kernel reduction. The frozen audit candidate contains 98 headline statements.

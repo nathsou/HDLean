@@ -16,3 +16,4 @@ import Designs.AsyncFifo.Hardware
 import Designs.Fifo.CircularHardware
 import Designs.Fifo.CircularRefinement
 import Designs.AsyncFifo.Progress
+import Designs.Toy16.DagRefinement

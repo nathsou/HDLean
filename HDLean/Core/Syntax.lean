@@ -1,5 +1,6 @@
 import HDLean.Core.Circuit
 import HDLean.Core.Word
+import HDLean.Core.Allocate
 import Lean
 
 namespace HDLean
@@ -47,9 +48,17 @@ private partial def hardwareSyntax (stx : Lean.Syntax) : Lean.MacroM Lean.Syntax
 /-- `if`, equality and Boolean operators inside `circuit do` construct hardware.
 Widths, clock domains and every register driver remain explicit in the result type.
 Static propositions can use ordinary dependent `if h : proposition then ...`. -/
-syntax "circuit" " do " doSeq : term
-macro_rules | `(circuit do $body) => do
+syntax "treeCircuit" " do " doSeq : term
+macro_rules | `(treeCircuit do $body) => do
   let expanded : Lean.TSyntax ``Lean.Parser.Term.doSeq := ⟨← hardwareSyntax body⟩
   `(Id.run do $expanded)
+
+/-- Each monadic binding allocates shared nodes or storage. Register handles
+supply the physical index, and finalization rejects missing or duplicate drivers. -/
+syntax "circuit" " do " doSeq : term
+syntax "circuit" str " do " doSeq : term
+macro_rules
+  | `(circuit do $body) => `(Dag.Allocate.run "circuit" do $body)
+  | `(circuit $name:str do $body) => `(Dag.Allocate.run $name do $body)
 
 end HDLean

@@ -27,3 +27,4 @@ import HDLean.Lib.MemoryCircuit
 import HDLean.MultiClock.Backend
 import HDLean.Backend.DagEmit
 import HDLean.MultiClock.Dag
+import HDLean.Core.DagBuilder

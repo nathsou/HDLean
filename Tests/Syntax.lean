@@ -2,7 +2,7 @@ import HDLean.Core.Syntax
 
 namespace HDLean.Tests
 
-def surfaceIncrement : WordExpr 0 1 4 4 := circuit do
+def surfaceIncrement : WordExpr 0 1 4 4 := treeCircuit do
   let enable : Expr 0 1 4 := .input 0
   let count : WordExpr 0 1 4 4 := WordExpr.registers 0 (by decide)
   return if enable then (if count == 9 then 0 else count + 1) else count

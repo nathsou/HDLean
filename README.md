@@ -179,3 +179,21 @@ contains kernel certificates, behavioral regressions, and rejection tests.
 The [renamed design proposal](docs/Design.md), [decision log](docs/Decisions.md),
 and [current status](docs/Status.md) distinguish the original goals from what is
 implemented. MIT licensed.
+
+The shared allocator supports resettable and arbitrary-power-up storage without
+manual register offsets:
+
+```lean
+open HDLean.Dag.Allocate
+
+def toggle : Option (HDLean.Dag 0 1 1 1) := circuit "toggle" do
+  let enable ← input 0
+  let count ← regR
+  let next ← xor count.value enable
+  drive count next
+  pure #v[count.value]
+```
+
+Each binding allocates the explicitly requested nodes or register handles.
+Finalization rejects missing or duplicate drivers and invalid node references.
+The older expression-tree syntax is named `treeCircuit do`.
