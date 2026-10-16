@@ -1,12 +1,12 @@
 # HDLean: a Lean 4–embedded HDL for LLM agents
 
-Design specification v0.1 · Oct 15, 2026 · @Nathan
+Design specification v0.2 · Oct 16, 2026 · @Nathan
 
-This is the renamed design proposal supplied for implementation, not a description of completed guarantees. The current implementation and explicit gaps are tracked in [Status.md](Status.md). RTLIL replaces the originally proposed word-level model-checker backend at the user’s request.
+This file mirrors the shared design document. Implementation status is tracked in [Status.md](Status.md) and implementation choices in [Decisions.md](Decisions.md).
 
 ## 1. Status, scope and how to read this spec
 
-HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.1: it fixes the guiding principles and sketches a first design that implementation is free to change. "HDLean" is a working name.
+HDLean is a hardware description language embedded in Lean 4. LLM agents write the hardware and its proofs; humans review only short, readable specifications. This is version 0.2: it keeps the principles of v0.1 and revises the design after reviewing the first implementation (nathsou/HDLean PR #1). Section 15.5 records what that review found; sections 4.4, 5, 12, 13 and 16 carry the resulting changes. The project was first drafted as "Proofwire".
 
 Design statements carry one of three markers:
 
@@ -59,25 +59,35 @@ HDLean separates who writes, who reads and who checks into three layers. Only th
 
 An agent writes a circuit in do-notation, which elaborates into the core AST. `denote` maps the AST to a machine, and proofs relate that machine to the spec machine. Comparator checks those proofs against the trusted challenge file; only then does the same AST go through the verified lowering to the netlist IR and its printers.
 
-&#91;embedded content: HDLean pipeline · writing, checking, emitting\]
+```mermaid
+flowchart LR
+  spec["Spec + challenge<br/>reviewer-owned, frozen"] --> comp
+  circuit["Circuit<br/>written by the agent"] --> ast["Core graph<br/>typed by width and domain"] --> proofs["Proofs<br/>relate denote to the spec"] --> comp["Comparator<br/>Lean kernel + bundled kernels"]
+  ast --> lower["Verified lowering<br/>runs on the term the theorem names"]
+  comp -. only after acceptance .-> lower
+  lower --> netlist["Netlist IR"] --> printers["Printers<br/>SystemVerilog, AIGER, RTLIL"]
+```
 
 The agent's code reaches a netlist only through the verified lowering, and only after comparator has accepted its proofs against the frozen challenge.
 
 **Decision: repository layout.**
 
 ```
-hdlean/                       framework, owned by maintainers
-  HDLean/Semantics/           Machine, PMachine, Synth, clock domains, refinement theorems
-  HDLean/Core/                Expr, Circuit, denote, CircuitM (do-notation)
-  HDLean/Lib/                 verified primitives: RAMs, synchronizers, async FIFO, arbiters
-  HDLean/Tactics/             circuit_simp, simulation, hw_step, invariant?, compose, ...
-  HDLean/Netlist/             netlist IR, verified lowering, structural metrics
-  HDLean/Backend/             SystemVerilog, AIGER, RTLIL printers (CIRCT planned for v2)
-designs/<block>/                 one directory per hardware block
-  Spec.lean                      reviewer-owned, frozen
-  Challenge.lean                 headline statements with holes, reviewer-owned
+HDLean/                          framework, owned by maintainers
+  Semantics/                     Machine, PMachine, Synth, reset, clocks, composition, retirement
+  Core/                          Expr, Circuit, Word, Network, `circuit do` syntax
+  Lib/                           verified primitives: memories, delays, pipes, streams, networks
+  MultiClock/                    multi-domain circuits, synchronizers, multi-clock backends
+  Netlist/                       semantic IR, proved lowering, proved rewrites
+  Backend/                       graph, validators, SystemVerilog / AIGER / RTLIL printers and parsers
+  Tactics/, Verification/        tactics, invariant search, simulation diagnostics
+Designs/<Block>/                 one directory per hardware block
+  Spec.lean                      reference machine, reviewer-owned, frozen
+  Interface.lean                 observation and input maps, reviewer-owned, frozen
+  Challenge.lean                 headline statements with holes, reviewer-owned, frozen
   Scenarios.lean                 pinned example traces, agent-written, reviewer-read
-  Impl.lean, Proof/*.lean        agent-owned
+  Hardware.lean, Proof.lean      agent-owned
+verification/frozen.json         hashes of every reviewer-owned and framework file
 ```
 
 ## 4. Semantics
@@ -150,9 +160,13 @@ A design that reads a register before writing it produces outputs that depend on
 
 ### 4.4 Clock domains
 
-Every signal belongs to exactly one clock domain. A run is a sequence of global steps; at each step an oracle chooses which domains have a clock edge. Within one domain, `Machine` semantics applies unchanged.
+Every signal belongs to exactly one clock domain, and the hardware AST enforces it: logic in domain d reads only domain d's registers, inputs and synchronizer outputs. A per-register clock label on otherwise unrestricted logic is not enough, because it lets one domain read another's multi-bit register directly (finding F1 in 15.5).
 
-The first flop of a synchronizer that samples a signal changing at that step gets, for each bit independently, the old or the new value, chosen by an oracle. Headline theorems quantify over all edge and sampling oracles.
+A run is a sequence of global steps; at each step an oracle chooses which domains have a clock edge. Within one domain, `Machine` semantics applies unchanged.
+
+**Principle: the emitted hardware's semantics carries the sampling oracle, not only an abstract model of it.** When a synchronizer's first flop samples a source that changes on the same step, each bit independently takes the old or the new value, chosen by an oracle. This must be part of the semantics of the circuit that is lowered and emitted. If only a hand-written model has the oracle and the hardware is linked to it with a fixed choice ("always old"), metastability has been assumed away. Headline theorems about multi-clock hardware quantify over all edge and sampling oracles.
+
+**Decision: crossings only through `Sync2`.** A synchronizer primitive is the only expression that reads another domain. Its proof obligation is temporal and stated per use: between two destination edges the source changes in at most one bit. A single bit, or a Gray-coded counter that advances by one per source edge, discharges it. A type tag alone cannot, because a Gray-encoded value that jumps is still unsafe.
 
 **Principle.** One physical assumption stays outside the logic: a two-flop synchronizer resolves metastability. It is a single named assumption of the framework and appears in every sign-off report.
 
@@ -164,26 +178,31 @@ The semantics has no X or Z values, no latches, no multiple drivers, no `initial
 
 ## 5. Core language
 
-**Decision: a deep, intrinsically typed embedding.** Circuits are values of an AST indexed by clock domain and type, and `denote` gives them a `PMachine` semantics. The AST is what gets compiled, and it is where structural guarantees are enforced.
+**Decision (revised in v0.2): an explicitly shared core.** A circuit is a list of numbered nodes. Each node applies one operator to earlier nodes, inputs or registers of its own domain; each register names the node that computes its next state. v0.1 used expression trees. The first implementation showed why that fails at scale (finding F6): sharing that exists in memory is lost when the kernel reduces a tree, so the CPU needed an untrusted hash-consing compiler plus a per-design validator, and the kernel could not re-run that validator.
 
-**Open alternative:** a shallow embedding, where agents write plain Lean step functions, plus proof-producing reification. A metaprogram would build the AST and a kernel-checked proof that `denote ast = f`. Switch if proofs through `denote` turn out too costly.
+With explicit nodes, lowering to gates is a single pass that maps node k to a fixed gate pattern at an offset computed from k. It needs no lookups and no cache, its correctness is one induction over the node list (proved once for every circuit), and a concrete design's lowering costs the kernel linear time.
 
-### 5.1 The AST (sketch, not yet checked)
+### 5.1 The core graph (sketch, not yet checked)
 
 ```lean
-inductive Ty | bool | bits (n : Nat) | gray (n : Nat) | vec (t : Ty) (n : Nat) | prod (a b : Ty)
+inductive Op (inputs regs : Nat) where
+  | lit (b : Bool) | input (k : Fin inputs) | reg (k : Fin regs)
+  | not (a : Nat) | and (a b : Nat) | xor (a b : Nat) | mux (s a b : Nat)
 
-inductive Expr : Domain → Ty → Type
-  | const : Ty.denote τ → Expr d τ
-  | input : PortId d τ → Expr d τ
-  | reg   : RegId d τ → Expr d τ                 -- current value of a register
-  | unop  : UnOp τ₁ τ → Expr d τ₁ → Expr d τ
-  | binop : BinOp τ₁ τ₂ τ → Expr d τ₁ → Expr d τ₂ → Expr d τ
-  | mux   : Expr d .bool → Expr d τ → Expr d τ → Expr d τ
-  | sync2 {d₁ d₂ τ} [CdcSafe τ] : Expr d₁ τ → Expr d₂ τ   -- the only cross-domain edge
+/-- One clock domain's logic. Node k may refer only to nodes < k. -/
+structure Dag (inputs regs outputs : Nat) where
+  nodes : List (Op inputs regs)
+  next  : Vector Nat regs          -- next-state node of each register
+  out   : Vector Nat outputs
+  wf    : WellFormed nodes next out   -- every reference points backwards
+
+/-- Several domains; the only cross-domain edges are synchronizers (4.4). -/
+structure MultiDag (domains : Nat) where
+  logic : (d : Fin domains) → Dag (inputsOf d) (regsOf d) (outputsOf d)
+  syncs : List Sync2Spec           -- source register, target domain, width
 ```
 
-A module is a set of registers, each with a reset kind and a next-state expression, plus output expressions. Submodules are instantiated by name, and names survive lowering so tools can point back to source.
+Every register also declares its reset kind (resettable with a value, held, or non-resettable). Submodules are instances of other `Dag`s, so a memory of 256 identical words is one proved module instantiated, not 256 unrolled copies (13.3). Names and source locations are carried as metadata.
 
 ### 5.2 Structural rules
 
@@ -205,7 +224,9 @@ def decade : Circuit Bool (Fin 10 × Bool) := circuit do
   return (c, wrap)
 ```
 
-**Open:** whether the custom elaborator stays small enough to trust, or the reification route above replaces it.
+**Decision:** `circuit do` is a state monad that allocates nodes and registers. Each `let` creates one node, so the sharing the agent writes is exactly the sharing the kernel sees, and register offsets are never computed by hand. The first implementation had no register syntax, and its CPU state was a flat 4,288-bit vector indexed manually.
+
+**Open:** whether the monad's elaboration stays small enough to trust, or a proof-producing reification from plain Lean step functions replaces it.
 
 ## 6. Bug classes ruled out
 
@@ -217,7 +238,7 @@ Each bug class is ruled out by one of three mechanisms, preferred in this order 
 | Multiple drivers, latches, undriven outputs | One expression per signal; state only in declared registers | Types | None |
 | Width mismatch, silent truncation | Widths are type indices; narrowing is an explicit operator | Types | Occasional casts |
 | Out-of-bounds indexing | `Fin n` indices into vectors and memories | Types | None |
-| Clock-domain crossing | Domain-indexed expressions; `sync2` accepts only `CdcSafe` types; multi-bit data through verified primitives (10.2) | Types and framework theorem | None, unless writing a new primitive |
+| Clock-domain crossing | Domain-indexed logic; `Sync2` is the only crossing, with a per-use obligation that the source changes in at most one bit between destination edges; sampling oracle in the hardware semantics (4.4) | Types and framework theorem | None, unless writing a new primitive |
 | Uninitialized or pre-reset reads | Headline theorems quantify over the power-up state (4.3) | Obligation, inside the headline proof | Part of the main proof |
 | Overflow | `BitVec` wraps; refinement against a `Nat`-valued spec exposes unintended wrap | Obligation, inside the headline proof | Part of the main proof |
 | Wrong-cycle reads, fixed latency | Latency-indexed `Pipe n` combinators (10.3) | Types | Insert delays; `omega` closes index arithmetic |
@@ -617,7 +638,7 @@ example : let a : BitVec 4 := 7; let b : BitVec 4 := 8; let m : BitVec 4 := 0b01
     (a &&& m) ||| (b &&& ~~~m) = 15 := by decide
 ```
 
-This is why `CdcSafe` admits Gray-coded types and single bits but not plain bit-vectors. Two notes:
+This is why a crossing's obligation is temporal: between two destination edges, the source may change in at most one bit. Single bits and Gray counters that advance by one per source edge discharge it; plain bit-vectors do not, and neither does a Gray-coded value that jumps. Two notes:
 
 - `#print axioms gray_one_bit` lists a native-evaluation axiom introduced by `bv_decide`. Section 12 says when that is acceptable.
 - The width-generic versions need proofs by induction. They are framework work, done once.
@@ -647,15 +668,17 @@ The agent should never do induction over time. Framework theorems turn every hea
 
 ### 11.1 Framework theorems
 
-| Theorem | Status in the prototype | Used for |
+| Theorem | Status after the first implementation | Used for |
 | --- | --- | --- |
-| `Machine.refines_of_simulation` | Proved, checked | Lockstep refinement of specs |
-| `refinesAfterReset_of_simulation` | Proved, checked | Every block with reset (4.3) |
-| k-induction variant | Planned | Relations that are not inductive on their own |
-| Latency-shifted refinement | Planned | `Pipe` combinators, fixed pipelines |
-| Stuttering refinement with flushing | Planned | Pipelined cores (9.5) |
-| Assume-guarantee composition | Planned | Raw valid/ready networks (10.1) |
-| Product-machine non-interference | Planned | Power-up independence, information leaks |
+| `Machine.refines_of_simulation` | Proved | Lockstep refinement of specs |
+| `refinesAfterReset_of_simulation` | Proved | Every block with reset (4.3) |
+| `refinesResetSchedule_of_simulation` | Proved | Reset re-asserted at any cycle |
+| `k_induction` | Proved | Relations that are not inductive on their own |
+| Latency-shifted refinement (`Delay.latency`, `Delay.retime`) | Proved | `Pipe` combinators, fixed pipelines |
+| `retiresLike_of_simulation` | Proved | Cores; serialized Toy16 so far, flushing for pipelines still planned |
+| `compose_contracts` | Proved | Raw valid/ready networks (10.1) |
+| `reset_noninterference` | Proved | Power-up independence |
+| Node-to-gate lowering and printer round-trip | Planned (R3) | `emit_correct` (13.2) |
 
 The reset theorem as checked; its proof is about 15 lines:
 
@@ -722,31 +745,33 @@ A block is accepted only when comparator accepts the submission against the froz
 
 ### 12.1 What remains trusted
 
-- Lean's logic, and its kernel cross-checked by the independent nanoda checker.
-- The framework: semantics, primitive specifications, generic theorems and the formalized semantics of each output format.
+- Lean's logic. Every proof is replayed by Lean's kernel and, since Lean 4.35.0, by the independent kernels bundled with the toolchain: `lean4lean`, `nanoda`, `con-leche` and `con-ron`, plus `leanchecker-paranoid`. What remains trusted is that no bug affects all of them at once.
+- The framework: semantics, primitive specifications, generic theorems, and each output format's parser, which is that format's formal semantics (13.2).
 - One physical assumption: two-flop synchronizers resolve metastability (4.4).
-- Comparator's plumbing and sandbox.
-- At assurance levels L1 and L2 only: Lean's compiler, through the native-evaluation axioms that `bv_decide` introduces.
-- The challenge files, as approved by the reviewer.
+- The sandboxes of `lake check` and `lake comparator` and their plumbing.
+- The challenge files and observation maps, as approved by the reviewer.
+
+**Decision (revised in v0.2): no native-evaluation axioms at any assurance level.** Since Lean 4.35.0, `native_decide` and `bv_decide` introduce one axiom per native computation, and the external kernels cannot replay them. The first implementation already met this bar for all 77 audited theorems.
 
 ### 12.2 Checks
 
-1. **Frozen spec.** `Spec.lean` and `Challenge.lean` are hash-pinned and owner-protected; the agent has no write access.
-2. **Comparator.** It builds the submission in a sandbox, confirms the proved statements match the challenge, and replays the proofs through Lean's kernel and nanoda.
-3. **Axiom report.** `#print axioms` on every headline theorem. Always allowed: `propext`, `Classical.choice`, `Quot.sound`. Native-evaluation axioms only as the assurance level allows.
-4. **Notation and instances.** A spec elaborates only with framework notation and instances, so agent code cannot change what a statement means.
-5. **Code generation.** The trusted pipeline lowers exactly the term named in the challenge. Agents never hand over netlists.
-6. **Continuous re-checking.** Every change re-runs the pipeline; a framework version bump re-checks every block.
+1. **Frozen spec, pinned by an outside anchor.** Reviewer-owned files are hash-pinned in a manifest. CI reads the approved manifest digest from a protected repository variable, and branch protection requires code-owner review of specs, interfaces, challenges and CI configuration. A manifest stored in the repository is never its own anchor (finding F4).
+2. **Statements, not names.** Every theorem the project claims is stated in a frozen challenge file with the implementation as a hole. The check compares the solution's statement with the challenge's, not just its name and axioms (finding F2).
+3. **`lake comparator`.** Each block ships a `comparator.json` naming its challenge module, solution module, theorems, definition holes and permitted axioms. The tool builds the solution in a `bubblewrap` sandbox with no network, exports it, checks that statements match, and replays the export with the selected kernels.
+4. **`lake check --paranoid`** on the whole project, so that framework lemmas outside any challenge are also replayed by all bundled kernels.
+5. **Notation and instances.** A spec elaborates only with framework notation and instances, so agent code cannot change what a statement means.
+6. **Code generation and byte binding.** The trusted pipeline lowers exactly the term named in the challenge; agents never hand over netlists. Byte binding (13.4) ties the emitted file to that term.
+7. **Continuous re-checking.** Every change re-runs the pipeline; a framework or toolchain bump re-checks every block.
 
 ### 12.3 Assurance levels
 
-| Level | Used for | Native evaluation (`bv_decide`) | Checkers |
-| --- | --- | --- | --- |
-| L1 Development | Agent iteration | Allowed | Lean kernel |
-| L2 Review | Merged blocks | Allowed; each axiom listed in the report | Comparator, Lean kernel |
-| L3 Sign-off | Tape-out, critical blocks | Not allowed: kernel-checkable proofs only | Comparator, Lean kernel and nanoda |
+| Level | Used for | Statement check | Kernels | Byte binding |
+| --- | --- | --- | --- | --- |
+| L1 Development | Agent iteration | Names and axioms; frozen-file hashes | Lean kernel (`lake check`) | None |
+| L2 Review | Merged blocks | `lake comparator` against the frozen challenge | Lean kernel and nanoda | Generic emitter theorem; bytes computed by compiled code and cross-checked |
+| L3 Sign-off | Tape-out, critical blocks | `lake comparator --paranoid` | All five bundled kernels | Kernel-checked, in chunks (13.4) |
 
-L3 forbids native evaluation because external checkers cannot replay it. **Open:** whether bit-blasting proofs can be made kernel-checkable at useful sizes, or whether L3 blocks rely on per-cone decomposition.
+The first implementation built its own comparator, with features `lake comparator` lacks: exact byte binding and authentication of the kernel's built-in primitive definitions (a forged `Nat.add` body that a checker's native arithmetic would not notice). **Decision:** use the bundled tools as the default path and keep those two features as small add-ons, upstreamed where possible. **Open:** whether `lake comparator` already rejects forged primitive definitions; if it does, the add-on can go.
 
 ### 12.4 Sign-off report
 
@@ -754,19 +779,51 @@ Each accepted block produces a report: headline theorems with their axiom lists,
 
 ## 13. Backends
 
+Every emitted file is justified by theorems proved once for all circuits; per design, only the bytes still need binding, which is pure linear computation (13.4).
+
+### 13.1 Netlist IR and targets
+
 **Decision.** One verified lowering takes the core AST to a netlist IR with a formal semantics in Lean. Every external format is a thin printer from that IR (principle 9).
 
 The netlist IR holds bit-vector operations in SSA form, registers grouped by clock domain with their reset kind, memory primitives and module instances. It preserves names and source locations, so a timing report or counterexample can point back to a line of Lean.
 
-| Target | Priority | What it unlocks | How it is trusted |
+| Target | Status | What it unlocks | How it is trusted |
 | --- | --- | --- | --- |
-| SystemVerilog subset: continuous assigns, `always_ff` with non-blocking assignments, no X, no `initial` | v1 | Every simulator and synthesis tool | Printer proved against a formalized semantics of the subset |
-| AIGER (bit-level) | v1 | Model checkers as oracles, ABC, a golden reference | Trivial semantics: printer and parser both verified |
-| CIRCT core dialects (hw, comb, seq) | v2 | Equivalence and bounded model checking (`circt-lec`, `circt-bmc`), fast simulation (arcilator), its own SystemVerilog export | Printer, plus equivalence checks of CIRCT's own lowering |
-| Yosys RTLIL | v1 | Direct entry into open synthesis and place-and-route flows | Translation validation through AIGER |
+| SystemVerilog subset: one module, gate-level continuous assigns, one `always_ff` with non-blocking assignments, no X, no `initial` | Implemented | Every simulator and synthesis tool | Generic theorem: parsing the printed text gives back the graph |
+| AIGER | Implemented | Model checkers as oracles, ABC, a golden reference | Same generic theorem; trivial semantics |
+| Yosys RTLIL | Implemented (replaced BTOR2 at the owner's request) | Direct entry into open synthesis and place-and-route flows | Same generic theorem |
+| CIRCT core dialects (hw, comb, seq) | Later | Equivalence and bounded model checking (`circt-lec`, `circt-bmc`), fast simulation (arcilator) | Printer theorem, plus equivalence checks of CIRCT's own lowering |
 | FIRRTL | On demand | Interop with Chisel generators | Adds firtool's optimizations to the trust chain |
 
-**Translation validation through AIGER.** Because AIGER's semantics is trivial, its parser can be verified too. An external optimizer such as ABC or Yosys can then rewrite the design freely. The result is dumped as AIGER, parsed back into Lean, and proved equivalent to the verified lowering. With a one-to-one register correspondence this reduces to one combinational check per register's input logic, which `bv_decide` handles at moderate sizes. The proof chain then extends through logic synthesis, not only through HDLean's own printers.
+### 13.2 What is proved once, and what runs per design
+
+**Principle: prove the translator, not each translation.** The first implementation proved only its first stage (tree lowering) once for all circuits. Sharing and printing were untrusted; proved validators checked their output for each design. In everyday emission those validators ran as compiled code, and the proof attached to the result was erased at runtime, so no theorem about a concrete design reached the kernel. Only the optional byte certificate re-ran the validators inside the kernel, and that is the step the CPU could not finish (finding F6).
+
+| Stage | v0.1 implementation | v0.2 design |
+| --- | --- | --- |
+| Circuit → gates | Tree lowering proved once; untrusted hash-consing compiler; proved validator run per design | Node-to-gate lowering proved once for every circuit (5.1); no validator |
+| Gates → text | Untrusted printer; text parsed back and compared per design | Generic theorem: parsing what the printer prints gives back the graph |
+| Whole emitter | No theorem; per-design evidence only | `theorem emit_correct : ∀ c, Format.Correct (emit c) c` |
+| These exact bytes | Optional per-design certificate re-running both validators in the kernel | Byte binding only: the file equals `emit c` (13.4) |
+
+A format's parser is its formal semantics, so it stays in the trusted base. The subsets are flat gate lists, which keeps each parser small enough to audit; Yosys and Icarus equivalence runs remain as independent evidence that the parsers match the real languages.
+
+### 13.3 Hierarchy
+
+**Decision.** The SystemVerilog and RTLIL printers emit one module per `Dag` and instantiate submodules, with a generic theorem that instantiating correct modules yields a correct whole. A proved generic memory is emitted once and instantiated, instead of being unrolled; in the Toy16 CPU, 4,096 of the 4,288 state bits are one 256-word memory. AIGER has no hierarchy and stays flat.
+
+### 13.4 Byte binding and the CPU roadblock
+
+With 13.2 in place, the semantic question for a concrete design is answered by instantiating `emit_correct`, with no evaluation. What is left is whether the file on disk equals `emit c`.
+
+- **L2:** compute `emit c` with compiled code and with Lean's interpreter, and compare hashes. The two execution paths share no code generator, and Yosys equivalence against the circuit's simulation is independent evidence.
+- **L3:** the kernel evaluates `emit c` in chunks. A generic lemma states that `emit c` is the concatenation of its chunks, and each chunk equation is its own small declaration, so kernel memory per declaration stays bounded.
+
+**Why this fixes the roadblock.** The first implementation's CPU artifact is 744,329 bytes of AIGER with 40,745 AND gates. Its lexical stage already passed in 705 chunks across 23 modules; the graph and validator stage exceeded 11.5 GiB. Under v0.2 that stage disappears: lowering is linear arithmetic over node indices, printing is linear, and nothing symbolic runs per design. Hierarchy (13.3) shrinks the flat work further. This is a design argument, not yet a measurement; milestone R3 (16) measures it.
+
+### 13.5 Optimization after the trusted point
+
+External optimizers such as ABC or Yosys may rewrite the netlist freely. Their output is parsed back and checked equivalent to the unoptimized netlist, by SAT-based equivalence per register cone when registers correspond one to one. Such checks typically rely on native SAT certificate checking, so an optimized netlist carries L2 evidence; the L3 claim stays on the unoptimized netlist that the proved emitter produces.
 
 **Open:** sequential equivalence after retiming, where registers no longer correspond one to one; it needs an invariant, found by k-induction or IC3.
 
@@ -830,14 +887,15 @@ A change must keep every principle. Prefer moving complexity into the framework,
 
 | Area | Current decision | Alternative | Switch when |
 | --- | --- | --- | --- |
-| Embedding | Deep AST with a custom `circuit` elaborator | Plain Lean step functions plus proof-producing reification | Proofs through `denote` cost too much, or the elaborator is too big to trust |
+| Core representation | Explicitly shared node graph with a node-allocating `circuit do` (v0.2) | Proof-producing reification from plain Lean step functions | The monad's elaborator is too big to trust |
 | Module feedback | Every loop needs a Moore side | Per-port dependency sorts (Wire Sorts) | Legitimate designs are rejected |
 | Machine model | Separate `Machine` (specs) and `PMachine` (implementations) | One relational semantics | Nondeterministic specs become common |
-| Reset | Synchronous, asserted once at start | Re-assertable; asynchronous with a reset synchronizer | The first block that needs it |
-| Memories | Primitives with function semantics | Arrays of registers | Primitive proofs get in the way |
+| Reset | Synchronous; re-assertion supported for single-clock blocks | Asynchronous reset with a reset synchronizer | The first block that needs it |
+| Memories | Generic proved module, emitted once and instantiated (13.3) | Vendor RAM macros as audited primitives | Area matters more than proof uniformity |
 | Interfaces | Guarded methods over valid/ready | Raw ports with contracts only | The method layer is hard to verify |
-| `bv_decide` policy | Allowed up to L2 | Kernel-checkable proofs everywhere | Trust requirements tighten |
-| Multi-clock model | Interleaved global steps chosen by an oracle | Per-domain time with explicit frequency ratios | Throughput proofs need ratios |
+| Native evaluation | Forbidden at every level | Allowed up to L2 with per-computation axioms | A block needs SAT-scale proofs that kernels cannot replay |
+| Multi-clock model | Domain-indexed logic, `Sync2` only crossing, sampling oracle in hardware semantics (4.4) | Per-domain time with explicit frequency ratios | Throughput proofs need ratios |
+| Checking tools | `lake check` and `lake comparator` (Lean 4.35.0), plus byte-binding and primitive-authentication add-ons | Fully custom comparator | Upstream tools cannot express a needed check |
 
 ### 15.3 Decision log
 
@@ -845,6 +903,14 @@ Newest first.
 
 | Date | Decision | Change | Reason |
 | --- | --- | --- | --- |
+| 2026-10-16 | Toolchain | Lean 4.34.0 to 4.35.0 | Bundled independent kernels, `lake check` and `lake comparator`; the implementation builds unchanged |
+| 2026-10-16 | Native evaluation | Forbidden at every level | External kernels cannot replay it; the implementation already complied |
+| 2026-10-16 | Translation | Prove lowering and printers once; per design only bind bytes | The per-design validator could not be re-run in the kernel for the CPU (F6) |
+| 2026-10-16 | Core representation | Expression trees to an explicitly shared node graph | Trees lose sharing under kernel reduction (F6) |
+| 2026-10-16 | Multi-clock | Domain-indexed logic; sampling oracle in hardware semantics | Raw multi-bit crossings type-checked; metastability was fixed to "always old" (F1) |
+| 2026-10-16 | Statement checks | Every claimed theorem in a frozen challenge; statements compared | Weakened statements passed L1 (F2) |
+| 2026-10-15 | Backends | RTLIL replaces BTOR2 | Owner's request, during implementation |
+| 2026-10-15 | Name | Proofwire renamed HDLean | Owner's request, during implementation |
 | 2026-10-15 | All | Initial decisions of v0.1 | First draft |
 
 ### 15.4 Open questions
@@ -856,27 +922,54 @@ Newest first.
 - Can scenario tables and waveforms be generated from specs automatically for review?
 - How are vendor blocks (PLLs, SerDes, DSP slices) represented: as axiomatized contracts with an audit trail?
 
+### 15.5 Findings from the first implementation
+
+The first implementation (nathsou/HDLean PR #1, commit `87b803c`) builds, passes its simulation suites and uses only the three standard axioms across 77 audited theorems, with no `sorry`. Its counter, two-entry FIFO, three-stage pipeline and Toy16 CPU have trace-level headline theorems that quantify over every power-up state. The review found six gaps, which v0.2 addresses.
+
+| # | Finding | Severity | Addressed in |
+| --- | --- | --- | --- |
+| F1 | Clock-domain crossing not ruled out in emitted hardware: any register could read another domain's register, and the hardware semantics fixed metastable sampling to "always old" | High | 4.4, 5.1 |
+| F2 | About half of the audited theorems were stated outside frozen files; a theorem weakened to `True` still passed L1 | High | 12.2 |
+| F3 | The CPU's observation map lived in an agent-owned file | Medium | 3 (`Interface.lean`), 12.2 |
+| F4 | CI checked the manifest against itself, with no outside digest | Medium | 12.2 |
+| F5 | General-depth and dual-clock FIFOs were checked against bit-level algorithm models and single-cycle invariants, not against the reviewed queue spec | Medium | 16 (R4) |
+| F6 | Exact-byte certification of the CPU exceeded 11.5 GiB in the graph and validator stage | Roadblock | 5.1, 13.2 to 13.4 |
+
+Smaller points: budgets were set equal to the implementations' exact counts, so they recorded the design rather than constrained it; the reviewer now sets budgets first, with slack or as formulas.
+
 ## 16. Roadmap
 
-Seven milestones, each with an exit test. M0 is done in the prototype that accompanies this spec.
+The first implementation delivered all seven v0.1 milestones, with the gaps listed in 15.5. Five remediation milestones follow, in this order: R0 and R1 are small and close the trust surface; R3 comes before R2 because domain-indexed logic builds on the node graph.
 
-0. **Core semantics.** `Machine`, `PMachine`, `RefinesAfterReset` and the two simulation theorems. *Done when:* the FIFO challenge elaborates and both theorems are proved. **Done.**
-1. **First end-to-end block.** AST and `denote` for the FIFO's constructs; SystemVerilog and AIGER printers. *Done when:* comparator accepts `fifo_correct` at L2, and the emitted SystemVerilog matches Lean's simulation on random traces.
-2. **Tactics and workflow.** `circuit_simp`, `simulation`, `hw_step`, `refute_small`, counterexamples as waveforms. *Done when:* an agent proves a new block, such as the skid buffer, without human help.
-3. **Interfaces and composition.** `Stable` contracts, guarded methods, assume-guarantee composition. *Done when:* a three-stage valid/ready pipeline of verified blocks is proved by composition alone.
-4. **Cores.** Toy16 single-cycle, then pipelined; stuttering refinement and `Progress`. *Done when:* `core_correct` is proved for the pipelined core.
-5. **Multiple clocks.** Clock domains, `sync2`, the async FIFO primitive. *Done when:* the async FIFO is proved against the oracle semantics of 4.4.
-6. **Performance loop.** Structural metrics, the verified rewriting library, the synthesis and timing flow. *Done when:* a sign-off report is produced for the pipelined core.
+| v0.1 milestone | State after the first implementation |
+| --- | --- |
+| M0 Core semantics | Done |
+| M1 First end-to-end block | Done: counter and two-entry FIFO, with exact-byte certificates |
+| M2 Tactics and workflow | Partly: thin tactic macros; invariant search by finite reachability |
+| M3 Interfaces and composition | Done: three-stage pipeline proved by composition |
+| M4 Cores | Done, serialized: Toy16 retires within 2 cycles; no pipelined core |
+| M5 Multiple clocks | Partly: dual-clock FIFO proved against a model, not with the hardware's own sampling oracle (F1) |
+| M6 Performance loop | Done: structural metrics; CPU placed and routed on ECP5 at 47.0 MHz |
+
+Remediation milestones:
+
+- **R0 Toolchain.** Move to Lean 4.35.0; run `lake check --paranoid` in CI. *Done when:* all five bundled kernels accept the whole project.
+
+  Status 2026-10-16: the project builds unchanged on 4.35.0. Over the whole project (166,866 declarations), `leanchecker-paranoid`, `lean4lean`, `con-leche`, `con-ron` and Lean's kernel accept. nanoda was killed at 6 GB on a 7 GB machine, so its whole-project run needs a larger CI runner.
+- **R1 Trust surface (F2 to F4).** Challenge files and `comparator.json` for every claimed block, including the circular FIFO, RAM and dual-clock FIFO; Toy16 `Interface.lean`; audit by statement; manifest digest from a protected CI variable; branch protection. *Done when:* weakening any claimed statement, or editing an observation map, fails CI.
+- **R3 Shared core and proved emitter (F6).** Node graph and node-allocating `circuit do`; node-to-gate lowering and printer round-trip proved once; hierarchical SystemVerilog and RTLIL. *Done when:* `emit_correct` is proved, and the Toy16 byte binding passes at L3 within 6 GiB.
+- **R2 Clock domains (F1).** Domain-indexed logic, `Sync2` as the only crossing, sampling oracle in the hardware semantics; dual-clock FIFO re-proved. *Done when:* a raw multi-bit crossing is rejected at elaboration, and the dual-clock FIFO's headline quantifies over the sampling oracle.
+- **R4 Queue specs (F5).** General-depth FIFO refines `Fifo.spec (2^k)`; dual-clock FIFO gets a relational queue spec with bounded progress under edge fairness. *Done when:* both headline theorems sit in challenge files.
 
 ## 17. Prior art and glossary
 
 ### 17.1 Prior art
 
-Linked entries were checked on 2026-10-15; unlinked ones are cited from memory.
+Linked entries were checked on 2026-10-15 and 2026-10-16; unlinked ones are cited from memory. The [Lean 4.35.0 release notes](https://lean-lang.org/doc/reference/4.35.0/releases/v4.35.0/) describe `lake check`, `lake comparator` and the bundled kernels; the first implementation is [nathsou/HDLean PR #1](https://github.com/nathsou/HDLean/pull/1).
 
 | Work | What HDLean takes from it |
 | --- | --- |
-| [Validating a Lean proof](https://lean-lang.org/doc/reference/4.35.0-rc2/ValidatingProofs/) | Comparator, nanoda, axiom reports, the native-evaluation caveat (section 12) |
+| [Validating a Lean proof](https://lean-lang.org/doc/reference/4.35.0-rc2/ValidatingProofs/) | Comparator, external kernels, axiom reports, the native-evaluation caveat (section 12) |
 | [`bv_decide`](https://lean-lang.org/doc/reference/latest/releases/v4.12.0/) | SAT-based bit-vector proofs with LRAT certificates checked in Lean |
 | [Sparkle HDL](https://reservoir.lean-lang.org/@Verilean/sparkle) | Closest existing Lean 4 HDL: simulation, Verilog generation, proofs |
 | [CircuitProver](https://arxiv.org/pdf/2607.27259) | Chisel designs as Lean transition systems for agentic proving |
@@ -908,6 +1001,6 @@ Linked entries were checked on 2026-10-15; unlinked ones are cited from memory.
 | Scenario | A concrete input trace and the spec's outputs, pinned by `decide` |
 | Mutation test | A known-bad design the agent must prove the spec rejects |
 | Oracle | An untrusted tool, or a universally quantified input modeling nondeterminism |
-| `CdcSafe` | Types that may cross clock domains through `sync2`: single bits and Gray codes |
+| `Sync2` | The only cross-domain primitive: a two-flop synchronizer whose every use proves the source changes in at most one bit between destination edges |
 | Moore, Mealy | Outputs depend on state only, or also on current inputs |
 | Assurance level | L1 to L3: which axioms and checkers a block's proofs must pass |

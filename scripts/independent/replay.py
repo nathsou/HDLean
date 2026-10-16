@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import resource
 import subprocess
 from datetime import datetime, timezone
 
@@ -104,9 +105,16 @@ def checker_config(export_path):
             'pp_declars': [], 'print_axioms': False, 'print_success_message': True}
 
 
+def large_stack():
+    """The bundled nanoda recurses deeply on large closures and overflows the default
+    8 MiB stack (Lean 4.35.0's nanoda 0.4.19 on HDLean's 77 headline roots)."""
+    soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
+    resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
+
+
 def checked_run(command, cwd, log, timeout):
     result = subprocess.run(list(map(str, command)), cwd=cwd, text=True,
-                            capture_output=True, timeout=timeout)
+                            capture_output=True, timeout=timeout, preexec_fn=large_stack)
     Path(log).write_text(result.stdout + result.stderr)
     if result.returncode or 'uncaught exception:' in result.stdout + result.stderr:
         raise RuntimeError(f'proof check failed; see {log}')

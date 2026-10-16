@@ -42,6 +42,8 @@ def limited_run(command, log, limits, cwd=None, writable_tree=None):
         resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
         resource.setrlimit(resource.RLIMIT_NPROC, (128, 128))
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+        # Deep recursion in the bundled nanoda overflows the default 8 MiB stack.
+        resource.setrlimit(resource.RLIMIT_STACK, (resource.getrlimit(resource.RLIMIT_STACK)[1],) * 2)
     with Path(log).open('wb') as output:
         process = subprocess.Popen(list(map(str, command)), cwd=cwd, stdin=subprocess.DEVNULL,
                                    stdout=output, stderr=subprocess.STDOUT, start_new_session=True,
