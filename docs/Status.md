@@ -31,17 +31,23 @@ kernel/nanoda replay and byte-for-byte artifact binding. Every native emission
 also requires the generic graph and final-text semantic validators.
 
 A full concrete CPU artifact certificate remains a **real resource roadblock**.
-Its 744,329-byte AIGER file has 40,745 AND gates and 4,288 physical state bits. Both
+Its 744,329-byte AIGER file has 40,745 AND gates and 4,288 physical state bits. Single-module
 per-line and chunked exact-byte proofs exceeded the 6 GiB Lean allocation cap;
-a graph-only concrete reduction also reached over 7 GiB process memory before
-being stopped. No CPU byte-certificate success was emitted. The generic semantic
+a further attempt with separate 64 GiB address-space and 12 GiB resident/managed
+memory limits also failed during lexical checking. A graph-only concrete reduction
+reached over 7 GiB process memory before being stopped. Staging lexical proofs
+across 23 modules checked all 705 chunks, but the complete parser/graph certificate
+has not passed. No CPU byte-certificate success was emitted. The generic semantic
 proofs and independently replayed physical CPU theorems do not erase this gap.
 
 The isolated comparator is implemented, with approved implementation holes,
 transitive specification-body comparison and independent byte authentication.
-Successful namespace isolation must be demonstrated on CI: this managed workspace does not permit
-creating nested user/network namespaces. No L2/L3 success is inferred from a
-failed or skipped sandbox test. A reviewer-approved receipt is always external
+Genuine namespace integration passed on GitHub Actions, including acceptance
+of changed correct implementations and rejection of altered statements, hidden
+axioms, weakened compiled specifications and mismatched bytes. This managed
+workspace does not permit nested user/network namespaces; local skips grant no
+assurance. CI also checks the additional primitive-definition authentication
+against the independently approved reference. A reviewer-approved receipt is always external
 input; a candidate manifest or fixture approval never approves this project.
 
 The pinned physical CPU run meets **12 MHz** on ECP5-25K and reports **47.02 MHz**

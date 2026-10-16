@@ -129,6 +129,8 @@ are checked with `decide +kernel`; no native evaluation axiom is introduced.
 The final theorem is `Format.Correct bytes <the selected circuit>`, covering
 all pre-edge states, inputs, and reset values of that circuit instance.
 
+Artifacts with more than 8,192 lines automatically use separate checked modules for graph data, groups of 32 lexical chunks (64 lines each), lexical composition, graph validation, parser validation and the final theorem. `--staged` also enables this on smaller artifacts. Each compilation starts a fresh Lean process so conversion caches do not accumulate across lexical chunks. The certificate report records every module's source digest, dependency order and compilation time; the final theorem's complete imported closure is independently replayed. `--timeout` bounds each stage separately. Staging does not bypass a failed graph or parser certificate.
+
 `certify_artifact.py` builds a content-addressed module, executes its compiled
 byte definition, compares every byte with the input artifact, independently
 replays both theorem roots, and checks that artifacts and generated source did
@@ -158,9 +160,11 @@ FIFO and Toy16 constructors. Files over 8,192 lines use compositional 64-line
 lexical chunks and bounded graph-array literals. Support in a generator does not
 mean every generated certificate fits available checker resources. The six
 counter/FIFO8 format certificates passed kernel and nanoda replay; the full CPU
-AIGER attempt exceeded a 6 GiB allocation cap during lexical checking and emitted
-no success report. A separate CPU graph-only kernel attempt reached over 7 GiB
-process memory. Native local validation, generic soundness and replayed hardware
+AIGER single-module attempts exceeded 6 GiB and 12 GiB allocation caps during
+lexical checking and emitted no success report. Staging the 705 lexical chunks
+across 23 separately checked modules removes that particular obstacle, while
+the complete parser/graph certificate is still under investigation. A separate
+CPU graph-only kernel attempt reached over 7 GiB process memory. Native local validation, generic soundness and replayed hardware
 proofs are not labeled as a successful concrete CPU byte certificate.
 
 All 77 current headline roots have independently replayed in nanoda over 6,680

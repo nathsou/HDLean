@@ -28,10 +28,10 @@ class ByteReplayTests(unittest.TestCase):
             subprocess.run([executable, 'emit', 'counter', fmt, self.folder / ('counter.' + fmt)],
                            cwd=ROOT, check=True, capture_output=True)
 
-    def certify(self):
+    def certify(self, staged=None):
         return checker.certify(ROOT, LAKE, TOOLS, self.folder / 'certificate',
                                self.folder / 'counter.sv', self.folder / 'counter.aiger',
-                               'counter', 8, 'sv')
+                               'counter', 8, 'sv', staged=staged)
 
     def test_valid_certificate_and_independent_statement_binding(self):
         report = self.certify()
@@ -59,12 +59,22 @@ class ByteReplayTests(unittest.TestCase):
             report = self.certify()
         self.assertTrue(report['exact_byte_binding'])
 
+    def test_staged_certificate_replays_and_binds_all_sources(self):
+        report = self.certify(staged=True)
+        self.assertTrue(report['exact_byte_binding'])
+        self.assertGreater(len(report['module_order']), 5)
+        self.assertEqual(list(report['source_sha256_by_module']), report['module_order'])
+        for module, digest in report['source_sha256_by_module'].items():
+            source = self.folder / 'certificate' / (module + '.lean')
+            self.assertEqual(checker.sha(source.read_bytes()), digest)
+        self.assertEqual(set(report['kernel_stage_seconds']), set(report['module_order']))
+
     def test_valid_proof_for_different_bytes_fails_binding(self):
-        original = checker.generate
-        def wrong_bytes(artifact, *args):
+        original = checker.generate_modules
+        def wrong_bytes(artifact, *args, **kwargs):
             # Blank lines preserve parsed semantics but are different final bytes.
-            return original(b'\n' + artifact, *args)
-        with patch.object(checker, 'generate', wrong_bytes):
+            return original(b'\n' + artifact, *args, **kwargs)
+        with patch.object(checker, 'generate_modules', wrong_bytes):
             with self.assertRaisesRegex(RuntimeError, 'exact artifact bytes'):
                 self.certify()
         self.assertFalse((self.folder / 'certificate/certificate.json').exists())

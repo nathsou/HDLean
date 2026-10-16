@@ -131,7 +131,7 @@ def encode_chunks(lines, size=64):
     return out
 
 
-def generate(artifact, graph_aiger, design, width, format, namespace):
+def generate(artifact, graph_aiger, design, width, format, namespace, chunked=False):
     if not IDENTIFIER.fullmatch(namespace):
         raise ValueError('invalid Lean namespace')
     if design not in ('counter', 'fifo', 'pipeline', 'ram', 'toy16', 'circular', 'ring') or type(width) is not int or not 0 <= width <= 64:
@@ -159,7 +159,7 @@ def generate(artifact, graph_aiger, design, width, format, namespace):
   rw [List.map_cons, ← List.singleton_append, List.filter_append]
   rfl''']
     lines = artifact[:-1].split(b'\n')
-    out.extend(encode_chunks(lines) if len(lines) > 8192 else encode_lines(lines))
+    out.extend(encode_chunks(lines) if chunked or len(lines) > 8192 else encode_lines(lines))
     out.extend([
         'def bytes : String := asciiText (rawLines.flatMap (fun l => l ++ [10])) lines_ascii',
         f'''theorem graph_correct : candidate.Equivalent {circuit} := by
@@ -185,6 +185,54 @@ def generate(artifact, graph_aiger, design, width, format, namespace):
     return source, manifest
 
 
+def generate_modules(artifact, graph_aiger, design, width, format, namespace,
+                     staged=None, chunks_per_module=32):
+    """Generate modules in dependency order, resetting kernel caches between stages.
+
+    Large certificates separate literal data, bounded lexical proofs, their generic
+    composition, graph validation, parser validation, and the final semantic proof.
+    Staging changes resource use only: every stage remains a checked Lean module.
+    """
+    if staged is None:
+        staged = artifact.count(b'\n') > 8192
+    if type(chunks_per_module) is not int or not 1 <= chunks_per_module <= 128:
+        raise ValueError('invalid lexical module chunk bound')
+    source, manifest = generate(artifact, graph_aiger, design, width, format, namespace, chunked=staged)
+    if not staged:
+        return {namespace: source}, manifest
+    text = source.decode()
+    begin = text.index('private def rawChunk0')
+    end = text.index('private def rawLines', begin)
+    chunks = re.split(r'(?=private def rawChunk\d+ : List)', text[begin:end])[1:]
+    header = text[:text.index('def candidate : Graph')]
+    data = text[text.index('def candidate : Graph'):text.index('private theorem normalize_cons')]
+    options = 'open HDLean HDLean.Backend\nnamespace ' + namespace + '\nset_option maxRecDepth 1000000\nset_option maxHeartbeats 16000000\nset_option linter.unusedSimpArgs false\n'
+    def module(imports, body):
+        return ('\n'.join('import ' + m for m in imports) + '\n' + options +
+                body.replace('private def', 'def').replace('private theorem', 'theorem') +
+                '\nend ' + namespace + '\n').encode()
+    modules = {namespace + '_Data': (header + data + '\nend ' + namespace + '\n').encode()}
+    lexers = []
+    for i in range(0, len(chunks), chunks_per_module):
+        name = namespace + '_Lexer' + str(i // chunks_per_module)
+        lexers.append(name)
+        modules[name] = module(['HDLean.Backend.Parse'], '\n'.join(chunks[i:i + chunks_per_module]))
+    graph_start = text.index('theorem graph_correct', end)
+    parsed_start = text.index('private theorem tokens_valid', graph_start)
+    final_start = text.index('theorem text_correct', parsed_start)
+    normalize = text[text.index('private theorem normalize_append'):begin]
+    modules[namespace + '_Bytes'] = module(lexers, normalize + text[end:graph_start])
+    modules[namespace + '_Graph'] = module([namespace + '_Data'], text[graph_start:parsed_start])
+    modules[namespace + '_Parsed'] = module([namespace + '_Data', namespace + '_Bytes'], text[parsed_start:final_start])
+    modules[namespace] = ('import ' + namespace + '_Graph\nimport ' + namespace + '_Parsed\n' +
+                          options + text[final_start:]).encode()
+    manifest['source_sha256'] = sha(modules[namespace])
+    manifest['source_sha256_by_module'] = {name: sha(data) for name, data in modules.items()}
+    manifest['module_order'] = list(modules)
+    manifest['lexical_chunks_per_module'] = chunks_per_module
+    return modules, manifest
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--artifact', type=Path, required=True)
@@ -194,11 +242,15 @@ def main():
     p.add_argument('--format', choices=FORMATS, required=True)
     p.add_argument('--namespace', required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--staged', action='store_true', default=None, help='stage even small artifacts; large artifacts stage automatically')
     args = p.parse_args()
-    source, manifest = generate(args.artifact.read_bytes(), args.graph_aiger.read_bytes(),
-                                args.design, args.width, args.format, args.namespace)
+    sources, manifest = generate_modules(args.artifact.read_bytes(), args.graph_aiger.read_bytes(),
+                                         args.design, args.width, args.format, args.namespace, staged=args.staged)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(source)
+    for name, source in sources.items():
+        path = args.output if name == args.namespace else args.output.parent.joinpath(*name.split('.')).with_suffix('.lean')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(source)
     args.output.with_suffix('.manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 
 

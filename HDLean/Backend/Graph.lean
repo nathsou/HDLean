@@ -95,10 +95,11 @@ def Graph.wellFormed (g : Graph) : Bool := Id.run do
   if g.inputNames.size != g.inputs || g.stateNames.size != g.latches ||
       g.sources.size != g.latches || g.outputNames.size != g.outputs.size then return false
   let mut v := g.inputs + g.latches + 1
-  for gate in g.gates do
+  -- List traversal also reduces linearly in the logical Array representation.
+  for gate in g.gates.toList do
     if gate.lhs != v || gate.a / 2 ≥ v || gate.b / 2 ≥ v then return false
     v := v + 1
-  return g.next.all (fun l => l / 2 < v) && g.outputs.all (fun l => l / 2 < v)
+  return g.next.toList.all (fun l => l / 2 < v) && g.outputs.toList.all (fun l => l / 2 < v)
 
 /-- A certificate ties a shared graph to the exact circuit for every state, input and reset. -/
 def Graph.Equivalent (g : Graph) (c : Circuit d i r o) : Prop :=

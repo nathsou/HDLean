@@ -25,6 +25,17 @@ class ByteCertificateTests(unittest.TestCase):
         self.assertIn('Format.tokenize_ascii_lines', text)
         self.assertNotIn('native_decide', text)
 
+    def test_large_artifacts_stage_automatically(self):
+        modules, manifest = cert.generate_modules(b'line\n' * 8193, AIG, 'counter', 8, 'aiger', 'Fixture')
+        self.assertEqual(manifest['module_order'], list(modules))
+        self.assertIn('Fixture_Lexer4', modules)
+        self.assertEqual(manifest['source_sha256'], cert.sha(modules['Fixture']))
+        self.assertNotIn('rawChunk0 :', modules['Fixture'].decode())
+        self.assertIn('import Fixture_Graph', modules['Fixture'].decode())
+        self.assertIn('Graph.validateLocal_sound', modules['Fixture_Graph'].decode())
+        with self.assertRaises(ValueError):
+            cert.generate_modules(AIG, AIG, 'counter', 8, 'aiger', 'Fixture', chunks_per_module=0)
+
     def test_reject_unsupported_bytes_and_identifiers(self):
         for data in [b'', b'no final newline', b'\xff\n']:
             with self.assertRaises(ValueError):
