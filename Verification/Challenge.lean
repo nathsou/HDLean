@@ -2405,4 +2405,73 @@ theorem Fifo_Circular_Physical_hardware_refines_queue :
     (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) :=
   @HDLean.Fifo.Circular.Physical.hardware_refines_queue
 
+/-- Frozen statement of `HDLean.AsyncFifo.trace_refines_queue`. -/
+theorem AsyncFifo_trace_refines_queue :
+    ∀ {k w : Nat} (s : HDLean.AsyncFifo.State k w) (xs : Nat → HDLean.AsyncFifo.Input k w) (release : Nat),
+  @HDLean.AsyncFifo.Startup k w xs release →
+    (∀ (t : Nat),
+        @LE.le.{0} Nat instLENat release t →
+          And (@Eq.{1} Bool (@HDLean.AsyncFifo.Input.writeReset k w (xs t)) Bool.false)
+            (@Eq.{1} Bool (@HDLean.AsyncFifo.Input.readReset k w (xs t)) Bool.false)) →
+      have inputs := fun (t : Nat) =>
+        @HDLean.AsyncFifo.queueInput k w
+          (xs (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) release t));
+      have outputs := fun (t : Nat) =>
+        @HDLean.AsyncFifo.observe k w
+          (@HDLean.AsyncFifo.stateFrom k w s xs
+            (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) release t));
+      @HDLean.AsyncFifo.QueueSpec.Trace (BitVec w)
+        (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
+          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) k)
+        inputs outputs (@HDLean.AsyncFifo.QueueSpec.run (BitVec w) inputs outputs) :=
+  @HDLean.AsyncFifo.trace_refines_queue
+
+/-- Frozen statement of `HDLean.AsyncFifo.write_progress_queue`. -/
+theorem AsyncFifo_write_progress_queue :
+    ∀ {k w : Nat} {s : HDLean.AsyncFifo.State k w} {gap : Nat} {q : List.{0} (BitVec w)},
+  @HDLean.AsyncFifo.QueueRelation k w s q →
+    ∀ (xs : Nat → HDLean.AsyncFifo.Input k w),
+      (∀ (t : Nat),
+          And (@Eq.{1} Bool (@HDLean.AsyncFifo.Input.writeReset k w (xs t)) Bool.false)
+            (@Eq.{1} Bool (@HDLean.AsyncFifo.Input.readReset k w (xs t)) Bool.false)) →
+        (HDLean.AsyncFifo.QueueSpec.EdgeFair gap fun (t : Nat) => @HDLean.AsyncFifo.Input.writeEdge k w (xs t)) →
+          @LT.lt.{0} Nat instLTNat (@List.length.{0} (BitVec w) q)
+              (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
+                (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) k) →
+            (∀ (t : Nat),
+                @LT.lt.{0} Nat instLTNat t
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 3) (instOfNatNat (nat_lit 3))) gap) →
+                  @Eq.{1} Bool (@HDLean.AsyncFifo.Input.valid k w (xs t)) Bool.true) →
+              @Exists.{1} Nat fun (u : Nat) =>
+                And
+                  (@LT.lt.{0} Nat instLTNat u
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 3) (instOfNatNat (nat_lit 3))) gap))
+                  (@Eq.{1} Bool (@HDLean.AsyncFifo.push k w (@HDLean.AsyncFifo.stateFrom k w s xs u) (xs u)) Bool.true) :=
+  @HDLean.AsyncFifo.write_progress_queue
+
+/-- Frozen statement of `HDLean.AsyncFifo.read_progress_queue`. -/
+theorem AsyncFifo_read_progress_queue :
+    ∀ {k w : Nat} {s : HDLean.AsyncFifo.State k w} {gap : Nat} {q : List.{0} (BitVec w)},
+  @HDLean.AsyncFifo.QueueRelation k w s q →
+    ∀ (xs : Nat → HDLean.AsyncFifo.Input k w),
+      (∀ (t : Nat),
+          And (@Eq.{1} Bool (@HDLean.AsyncFifo.Input.writeReset k w (xs t)) Bool.false)
+            (@Eq.{1} Bool (@HDLean.AsyncFifo.Input.readReset k w (xs t)) Bool.false)) →
+        (HDLean.AsyncFifo.QueueSpec.EdgeFair gap fun (t : Nat) => @HDLean.AsyncFifo.Input.readEdge k w (xs t)) →
+          @Ne.{1} (List.{0} (BitVec w)) q (@List.nil.{0} (BitVec w)) →
+            (∀ (t : Nat),
+                @LT.lt.{0} Nat instLTNat t
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 3) (instOfNatNat (nat_lit 3))) gap) →
+                  @Eq.{1} Bool (@HDLean.AsyncFifo.Input.ready k w (xs t)) Bool.true) →
+              @Exists.{1} Nat fun (u : Nat) =>
+                And
+                  (@LT.lt.{0} Nat instLTNat u
+                    (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
+                      (@OfNat.ofNat.{0} Nat (nat_lit 3) (instOfNatNat (nat_lit 3))) gap))
+                  (@Eq.{1} Bool (@HDLean.AsyncFifo.pop k w (@HDLean.AsyncFifo.stateFrom k w s xs u) (xs u)) Bool.true) :=
+  @HDLean.AsyncFifo.read_progress_queue
+
 end HDLean.Review

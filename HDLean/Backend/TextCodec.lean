@@ -72,9 +72,27 @@ private theorem no_newline_join (words : List Word) :
 @[simp] theorem Line.no_newline (line : Line) : '\n' ∉ line.render.toList :=
   no_newline_join line.words
 
+/-- Right recursion copies each short fragment once in logical kernel reduction.
+The standard library's accumulator implementation repeatedly copies the growing prefix. -/
+def join (separator : String) : List String → String
+  | [] => ""
+  | [word] => word
+  | word::next::rest => word ++ separator ++ join separator (next::rest)
+
+theorem join_eq_intercalate (separator : String) (words : List String) :
+    join separator words = String.intercalate separator words := by
+  induction words with
+  | nil => rfl
+  | cons word words ih =>
+    cases words with
+    | nil => rfl
+    | cons next rest =>
+      simp only [join,String.intercalate_cons_cons] at *
+      rw [ih]
+
 /-- A file always ends in a newline; empty files are represented by one newline. -/
 def render (lines : List Line) : String :=
-  String.intercalate "\n" (lines.map Line.render ++ [""])
+  join "\n" (lines.map Line.render ++ [""])
 
 def splitLines (text : String) : List String :=
   ((text.split '\n').toList.map (·.copy)).dropLast
@@ -94,7 +112,9 @@ def tokenize (text : String) : List (List String) := (splitLines text).map split
   have hs : String.singleton '\n' = "\n" := by decide +kernel
   have ht := congrArg List.dropLast (String.toList_split_intercalate h)
   rw [hs] at ht
-  simpa [splitLines, render, hn] using ht
+  unfold render
+  rw [join_eq_intercalate]
+  simpa [splitLines, hn] using ht
 
 @[simp] theorem tokenize_render (lines : List Line) :
     tokenize (render lines) = lines.map Line.tokens := by

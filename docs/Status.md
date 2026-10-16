@@ -119,3 +119,20 @@ oracle, and generic lowering preserves every choice. Three roots passed independ
 replay (2,523 declarations); focused tests distinguish old/new coincident-edge
 outcomes and verify that the second stage always samples the old first stage.
 Native hierarchical printing and full asynchronous-FIFO integration remain open.
+
+The asynchronous reference now specifies full mathematical list contents,
+conservative ready/valid flags, and every accepted transfer. Its reset-prefix
+trace theorem quantifies over arbitrary physical model state, independent edges
+and every sampling mask. Both enqueue and dequeue progress are proved within
+three receiving-clock fairness windows, with arbitrary activity in the other
+domain. These are model-level theorems; the new native oracle/hierarchy link is
+still required. The audit candidate now contains **93 headline statements**.
+The three async model roots passed independent replay (2,950 declarations).
+
+Named SystemVerilog and RTLIL module decoders have generic prefix round-trip
+proofs, so complete modules can be composed without revalidating their bodies.
+The file renderer now uses right recursion; a generic equivalence theorem proves
+it produces the original bytes, and native fixture files compare byte-for-byte.
+The updated emitter/module roots passed independent replay (7,142 declarations).
+The full existing executable simulation suite also passes, including physical
+CPU retirement, RAM collisions, circular queues and asynchronous oracle traces.

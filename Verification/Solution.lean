@@ -10,6 +10,10 @@ open Lean Elab Command
 are compiled separately, without importing this module. -/
 run_cmd liftTermElabM do
   for (target, source) in #[
+    (`HDLean.Review.AsyncFifo_trace_refines_queue, `HDLean.AsyncFifo.trace_refines_queue),
+    (`HDLean.Review.AsyncFifo_write_progress_queue, `HDLean.AsyncFifo.write_progress_queue),
+    (`HDLean.Review.AsyncFifo_read_progress_queue, `HDLean.AsyncFifo.read_progress_queue),
+
     (`HDLean.Review.Dag_lower_correct, `HDLean.Dag.lower_correct),
     (`HDLean.Review.Dag_lower_wellFormed, `HDLean.Dag.lower_wellFormed),
     (`HDLean.Review.Dag_lower_gate_count, `HDLean.Dag.lower_gate_count),

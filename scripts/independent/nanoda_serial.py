@@ -16,6 +16,7 @@ import tempfile
 
 CHECKER = '@HDLEAN_CHECKER@'
 CHECKER_SHA256 = '@HDLEAN_CHECKER_SHA256@'
+REJECT_UNUSED_AXIOMS = True
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
     permitted = config.get('permitted_axioms')
     if not isinstance(permitted, list) or set(permitted) - {'propext', 'Classical.choice', 'Quot.sound'}:
         raise ValueError('nonstandard axiom policy')
-    config.update(num_threads=1, unpermitted_axiom_hard_error=True,
+    config.update(num_threads=1, unpermitted_axiom_hard_error=REJECT_UNUSED_AXIOMS,
                   unsafe_permit_all_axioms=False, print_success_message=True,
                   print_axioms=False, pp_declars=[])
     soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
@@ -41,8 +42,13 @@ def main():
     sys.stderr.write(result.stderr)
     if result.returncode:
         return result.returncode if result.returncode > 0 else 1
-    if not re.fullmatch(r'Checked [1-9][0-9]* declarations with no errors\n?', result.stdout):
-        raise ValueError('nanoda did not report unconditional successful replay')
+    success = re.fullmatch(r'Checked [1-9][0-9]* declarations with no errors(?:, skipping exported but unpermitted axioms (\[[^\n]*\]))?\n?', result.stdout)
+    if not success or (REJECT_UNUSED_AXIOMS and success.group(1)):
+        raise ValueError('nanoda did not report successful replay under the required axiom policy')
+    if success.group(1):
+        skipped = json.loads(success.group(1))
+        if not isinstance(skipped,list) or not all(isinstance(name,str) for name in skipped):
+            raise ValueError('invalid unused axiom declaration report')
     return 0
 
 

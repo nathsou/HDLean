@@ -18,6 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE_AXIOMS = {'propext', 'Classical.choice', 'Quot.sound'}
 NATIVE_AXIOMS = set()
 EXPECTED_THEOREMS = {
+    'HDLean.AsyncFifo.trace_refines_queue',
+    'HDLean.AsyncFifo.write_progress_queue',
+    'HDLean.AsyncFifo.read_progress_queue',
+
     'HDLean.Dag.lower_correct',
     'HDLean.Dag.lower_wellFormed',
     'HDLean.Dag.lower_gate_count',

@@ -7,6 +7,10 @@ import Tests.Invariant
 open Lean in
 run_cmd do
   let names := #[
+    ``HDLean.AsyncFifo.trace_refines_queue,
+    ``HDLean.AsyncFifo.write_progress_queue,
+    ``HDLean.AsyncFifo.read_progress_queue,
+
     ``HDLean.Dag.lower_correct,
     ``HDLean.Dag.lower_wellFormed,
     ``HDLean.Dag.lower_gate_count,

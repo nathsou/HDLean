@@ -22,9 +22,9 @@ private def ilGatesRow : Row Nat :=
   before [⟨"wire", by decide, by decide⟩, ⟨"width", by decide, by decide⟩] (after natural [⟨"\\gates", by decide, by decide⟩])
 private def ilGates : Block Nat := line ilGatesRow (by intro a; simp [ilGatesRow, before, after, pair, Grammar.map, fixed, natural])
 
-private def ilStart  : Block Unit := fixed [
+private def ilStart (moduleName : Word) : Block Unit := fixed [
   ⟨[⟨"autoidx", by decide, by decide⟩, ⟨"1", by decide, by decide⟩], by simp⟩,
-  ⟨[⟨"module", by decide, by decide⟩, ⟨"\\hd_top", by decide, by decide⟩], by simp⟩,
+  ⟨[⟨"module", by decide, by decide⟩, moduleName], by simp⟩,
   ⟨[⟨"wire", by decide, by decide⟩, ⟨"input", by decide, by decide⟩, ⟨"1", by decide, by decide⟩, ⟨"\\clk", by decide, by decide⟩], by simp⟩]
 
 private def ilHeader : Block Header :=
@@ -109,19 +109,26 @@ private def ilGate (k : Nat) : Block Gate :=
     (fun g => ((),(g.a,(g.b,((),2*g.lhs))))) (by intro g; cases g; simp)
 
 /-- Standard RTLIL cells, with explicit scalar widths and no initial state constraints. -/
-def Aag.ilLines (g : Aag) : List Line :=
+def Aag.ilLinesNamed (moduleName : Word) (g : Aag) : List Line :=
   let h : Header := ⟨g.inputs,g.next.length,g.outputs.length,g.gates.length⟩
-  ilStart.encode () ++ ilHeader.encode h ++ (ilConstants h).encode () ++
+  (ilStart moduleName).encode () ++ ilHeader.encode h ++ (ilConstants h).encode () ++
   repeatEncode ilInput 0 (List.replicate g.inputs ()) ++
   repeatEncode (ilState g.inputs) 0 (List.replicate g.next.length ()) ++
   repeatEncode ilInv 1 (List.replicate (g.inputs+g.next.length+g.gates.length) ()) ++
   repeatEncode ilGate 0 g.gates ++ repeatEncode ilOutput 0 g.outputs ++
   repeatEncode ilNext 0 g.next ++ ilEnd.encode ()
 
+private def topWord : Word := ⟨"\\hd_top",by decide,by decide⟩
+private def numberedWord (id : Nat) : Word := prefixed ⟨"\\hd_m_",by decide,by decide⟩ id
+
+def Aag.ilLines (g : Aag) : List Line := g.ilLinesNamed topWord
+
 def Aag.rtlil (g : Aag) : String := Text.render g.ilLines
 
-private def parseILTokens (tokens : List (List String)) : Option Aag := do
-  let (_,rest) ← ilStart.decode tokens
+def Aag.rtlilNamed (id : Nat) (g : Aag) : String := Text.render (g.ilLinesNamed (numberedWord id))
+
+private def readILTokens (moduleName : Word) (tokens : List (List String)) : Option (Aag × List (List String)) := do
+  let (_,rest) ← (ilStart moduleName).decode tokens
   let (h,rest) ← ilHeader.decode rest
   let (_,rest) ← (ilConstants h).decode rest
   let (_,rest) ← repeatDecode ilInput h.inputs 0 rest
@@ -131,14 +138,20 @@ private def parseILTokens (tokens : List (List String)) : Option Aag := do
   let (os,rest) ← repeatDecode ilOutput h.outputs 0 rest
   let (ns,rest) ← repeatDecode ilNext h.latches 0 rest
   let (_,rest) ← ilEnd.decode rest
-  if rest.isEmpty then return ⟨h.inputs,ns,os,gs⟩ else none
+  return (⟨h.inputs,ns,os,gs⟩,rest)
 
-def Aag.parseRTLIL (text : String) : Option Aag := parseILTokens (Text.tokenize text)
+private def parseILTokens (moduleName : Word) (tokens : List (List String)) : Option Aag := do
+  let (g,rest) ← readILTokens moduleName tokens
+  if rest.isEmpty then return g else none
 
-theorem Aag.parse_rtlil (g : Aag) : Aag.parseRTLIL g.rtlil = some g := by
-  unfold Aag.parseRTLIL Aag.rtlil
-  rw [Text.tokenize_render]
-  simp only [Aag.ilLines, List.map_append, List.append_assoc, parseILTokens, Grammar.roundtrip]
+def Aag.parseRTLIL (text : String) : Option Aag := parseILTokens topWord (Text.tokenize text)
+
+def Aag.parseRTLILNamed (id : Nat) (text : String) : Option Aag :=
+  parseILTokens (numberedWord id) (Text.tokenize text)
+
+private theorem il_read_roundtrip (moduleName : Word) (g : Aag) (tail : List (List String)) :
+    readILTokens moduleName ((g.ilLinesNamed moduleName).map Line.tokens ++ tail) = some (g,tail) := by
+  simp only [Aag.ilLinesNamed, List.map_append, List.append_assoc, readILTokens, Grammar.roundtrip]
   dsimp only [Bind.bind, Option.bind]
   rw [Grammar.roundtrip]
   dsimp only [Bind.bind, Option.bind]
@@ -160,11 +173,32 @@ theorem Aag.parse_rtlil (g : Aag) : Aag.parseRTLIL g.rtlil = some g := by
   dsimp only [Bind.bind, Option.bind]
   rw [repeat_roundtrip]
   dsimp only [Bind.bind, Option.bind]
-  have he := ilEnd.roundtrip () []
-  simp only [List.append_nil] at he
+  have he := ilEnd.roundtrip () tail
   rw [he]
   cases g
   rfl
+
+private theorem il_roundtrip (moduleName : Word) (g : Aag) :
+    parseILTokens moduleName (Text.tokenize (Text.render (g.ilLinesNamed moduleName))) = some g := by
+  rw [Text.tokenize_render]
+  unfold parseILTokens
+  have h := il_read_roundtrip moduleName g []
+  simp only [List.append_nil] at h
+  rw [h]
+  rfl
+
+def Aag.rtlilModuleLines (id : Nat) (g : Aag) : List Line := g.ilLinesNamed (numberedWord id)
+def Aag.readRTLILModule (id : Nat) : List (List String) → Option (Aag × List (List String)) :=
+  readILTokens (numberedWord id)
+
+theorem Aag.read_rtlilModule (id : Nat) (g : Aag) (tail : List (List String)) :
+    Aag.readRTLILModule id ((g.rtlilModuleLines id).map Line.tokens ++ tail) = some (g,tail) :=
+  il_read_roundtrip (numberedWord id) g tail
+
+theorem Aag.parse_rtlil (g : Aag) : Aag.parseRTLIL g.rtlil = some g := il_roundtrip topWord g
+
+theorem Aag.parse_rtlilNamed (id : Nat) (g : Aag) :
+    Aag.parseRTLILNamed id (g.rtlilNamed id) = some g := il_roundtrip (numberedWord id) g
 
 theorem rtlil_print_correct (g : Graph) (hn : g.next.size = g.latches) (inputs state : Array Bool) :
     (Aag.parseRTLIL (Aag.ofGraph g).rtlil).map

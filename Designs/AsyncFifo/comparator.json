@@ -8,10 +8,13 @@
     "HDLean.Review.AsyncFifo_Physical_output_ready",
     "HDLean.Review.AsyncFifo_Physical_output_valid",
     "HDLean.Review.AsyncFifo_Physical_storage_bits",
+    "HDLean.Review.AsyncFifo_read_progress_queue",
     "HDLean.Review.AsyncFifo_reset_establishes_queue",
     "HDLean.Review.AsyncFifo_reset_progress",
     "HDLean.Review.AsyncFifo_step_refines_queue",
-    "HDLean.Review.AsyncFifo_ungray_gray"
+    "HDLean.Review.AsyncFifo_trace_refines_queue",
+    "HDLean.Review.AsyncFifo_ungray_gray",
+    "HDLean.Review.AsyncFifo_write_progress_queue"
   ],
   "definition_names": [
     "HDLean.AsyncFifo.Physical.hardware"

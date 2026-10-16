@@ -1,108 +1,35 @@
-import Designs.AsyncFifo.Hardware
+import Designs.AsyncFifo.Progress
+
 namespace HDLean.AsyncFifo.Challenge
-/-- Frozen obligation; trace-level queue refinement is added in milestone R4. -/
-theorem correctness :
-∀ (k w : Nat)
-  (s :
-    Fin
-        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat) (HDLean.AsyncFifo.Physical.entries k)
-          (HDLean.AsyncFifo.Physical.bankWidth k w)) →
-      Bool)
-  (xs :
-    Fin
-        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-          (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w) →
-      Bool)
-  (rst : Bool) (edge : Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) → Bool)
-  (g : HDLean.AsyncFifo.Ghost) (history : Nat → BitVec w),
-  HDLean.AsyncFifo.Ghost.Safe g
-      (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-        (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) k) →
-    @HDLean.AsyncFifo.Ghost.Controls k w g (HDLean.AsyncFifo.Physical.decode k w s) →
-      @HDLean.AsyncFifo.Ghost.Memory k w g history (HDLean.AsyncFifo.Physical.decode k w s) →
-        @Eq.{1} Bool
-            (xs
-              (@Fin.mk
-                (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                  (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w)
-                (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
-                (@Decidable.byContradiction
-                  (@LT.lt.{0} Nat instLTNat (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
-                    (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                      (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w))
-                  (Nat.decLt (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
-                    (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                      (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w))
-                  fun
-                    (a :
-                      Not
-                        (@LT.lt.{0} Nat instLTNat (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
-                          (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                            (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w))) =>
-                  HDLean.AsyncFifo.Physical.writeReset._proof_1 w a)))
-            Bool.false →
-          @Eq.{1} Bool
-              (xs
-                (@Fin.mk
-                  (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                    (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w)
-                  (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))
-                  (@Decidable.byContradiction
-                    (@LT.lt.{0} Nat instLTNat (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))
-                      (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                        (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w))
-                    (Nat.decLt (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))
-                      (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                        (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w))
-                    fun
-                      (a :
-                        Not
-                          (@LT.lt.{0} Nat instLTNat (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))
-                            (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                              (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w))) =>
-                    HDLean.AsyncFifo.Physical.readReset._proof_1 w a)))
-              Bool.false →
-            @Exists.{1} HDLean.AsyncFifo.Ghost fun (g' : HDLean.AsyncFifo.Ghost) =>
-              And
-                (HDLean.AsyncFifo.Ghost.Safe g'
-                  (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@instPowNat.{0} Nat instNatPowNat))
-                    (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) k))
-                (And
-                  (@HDLean.AsyncFifo.Ghost.Controls k w g'
-                    (HDLean.AsyncFifo.Physical.decode k w
-                      (@HDLean.MultiClock.Circuit.next (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
-                        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                          (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w)
-                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
-                          (HDLean.AsyncFifo.Physical.entries k) (HDLean.AsyncFifo.Physical.bankWidth k w))
-                        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) w)
-                        (HDLean.AsyncFifo.Physical.hardware k w) s
-                        (@Prod.mk.{0, 0}
-                          (Fin
-                              (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                                (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w) →
-                            Bool)
-                          Bool xs rst)
-                        edge)))
-                  (@HDLean.AsyncFifo.Ghost.Memory k w g'
-                    (@HDLean.AsyncFifo.Ghost.record k w g history (HDLean.AsyncFifo.Physical.decode k w s)
-                      (HDLean.AsyncFifo.Physical.decodeInput k w xs edge))
-                    (HDLean.AsyncFifo.Physical.decode k w
-                      (@HDLean.MultiClock.Circuit.next (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
-                        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                          (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w)
-                        (@HMul.hMul.{0, 0, 0} Nat Nat Nat (@instHMul.{0} Nat instMulNat)
-                          (HDLean.AsyncFifo.Physical.entries k) (HDLean.AsyncFifo.Physical.bankWidth k w))
-                        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                          (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) w)
-                        (HDLean.AsyncFifo.Physical.hardware k w) s
-                        (@Prod.mk.{0, 0}
-                          (Fin
-                              (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
-                                (@OfNat.ofNat.{0} Nat (nat_lit 4) (instOfNatNat (nat_lit 4))) w) →
-                            Bool)
-                          Bool xs rst)
-                        edge)))) :=
-  @HDLean.AsyncFifo.Physical.hardware_preserves_queue
+
+/-- Complete queue behavior after real reset edges in both independent domains,
+for every arbitrary power-up, clock interleaving and per-bit sampling oracle. -/
+theorem correctness (s : State k w) (xs : Nat → Input k w) (release : Nat)
+    (hstart : Startup xs release)
+    (htraffic : ∀ t, release ≤ t → (xs t).writeReset = false ∧ (xs t).readReset = false) :
+    let inputs := fun t => queueInput (xs (release+t))
+    let outputs := fun t => observe (stateFrom s xs (release+t))
+    QueueSpec.Trace (2^k) inputs outputs (QueueSpec.run inputs outputs) :=
+  trace_refines_queue s xs release hstart htraffic
+
+/-- Every offered write with credit completes within three fair destination-clock windows. -/
+theorem enqueue_progress {s : State k w} {q : List (BitVec w)} (hqueue : QueueRelation s q)
+    (xs : Nat → Input k w)
+    (hr : ∀ t, (xs t).writeReset = false ∧ (xs t).readReset = false)
+    (hf : QueueSpec.EdgeFair gap (fun t => (xs t).writeEdge))
+    (hcredit : q.length < 2^k)
+    (hoffer : ∀ t, t < 3*gap → (xs t).valid = true) :
+    ∃ u, u < 3*gap ∧ push (stateFrom s xs u) (xs u) = true :=
+  write_progress_queue hqueue xs hr hf hcredit hoffer
+
+/-- Every pending queue head can be consumed within three fair read-clock windows. -/
+theorem dequeue_progress {s : State k w} {q : List (BitVec w)} (hqueue : QueueRelation s q)
+    (xs : Nat → Input k w)
+    (hr : ∀ t, (xs t).writeReset = false ∧ (xs t).readReset = false)
+    (hf : QueueSpec.EdgeFair gap (fun t => (xs t).readEdge))
+    (hdata : q ≠ [])
+    (hoffer : ∀ t, t < 3*gap → (xs t).ready = true) :
+    ∃ u, u < 3*gap ∧ pop (stateFrom s xs u) (xs u) = true :=
+  read_progress_queue hqueue xs hr hf hdata hoffer
+
 end HDLean.AsyncFifo.Challenge

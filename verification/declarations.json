@@ -7,10 +7,13 @@
     "HDLean.AsyncFifo.Physical.output_ready": "HDLean.Review.AsyncFifo_Physical_output_ready",
     "HDLean.AsyncFifo.Physical.output_valid": "HDLean.Review.AsyncFifo_Physical_output_valid",
     "HDLean.AsyncFifo.Physical.storage_bits": "HDLean.Review.AsyncFifo_Physical_storage_bits",
+    "HDLean.AsyncFifo.read_progress_queue": "HDLean.Review.AsyncFifo_read_progress_queue",
     "HDLean.AsyncFifo.reset_establishes_queue": "HDLean.Review.AsyncFifo_reset_establishes_queue",
     "HDLean.AsyncFifo.reset_progress": "HDLean.Review.AsyncFifo_reset_progress",
     "HDLean.AsyncFifo.step_refines_queue": "HDLean.Review.AsyncFifo_step_refines_queue",
+    "HDLean.AsyncFifo.trace_refines_queue": "HDLean.Review.AsyncFifo_trace_refines_queue",
     "HDLean.AsyncFifo.ungray_gray": "HDLean.Review.AsyncFifo_ungray_gray",
+    "HDLean.AsyncFifo.write_progress_queue": "HDLean.Review.AsyncFifo_write_progress_queue",
     "HDLean.Backend.Format.correct_of_validated": "HDLean.Review.Backend_Format_correct_of_validated",
     "HDLean.Backend.Format.validates_sound": "HDLean.Review.Backend_Format_validates_sound",
     "HDLean.Backend.Graph.validateLocal_sound": "HDLean.Review.Backend_Graph_validateLocal_sound",
@@ -7373,12 +7376,124 @@
       "protected": true,
       "type": "1823b4bb23898e42594b1a1c13b8ed3af084ea32206df3ea75099176febe1b13"
     },
+    "HDLean.AsyncFifo.QueueRelation": {
+      "body": "f1310f91d6e5391aeeeb64f49b594982f8e8b7b679a1050acbdc71a7e70f06fb",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "b503b0f6df9ba852efaebcdf2783d777f98a7be9fe5a9c88eb7d9346084992b0"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Allowed": {
+      "body": "0479f05c514f8e4dfeaf638f3f5eb99bc3054982899ad07f2db3e54a1d6d12e3",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "580ea57236758e3926e13ddace103c4c7df47e128e75c2fa7eeb7e3b75ec631e"
+    },
+    "HDLean.AsyncFifo.QueueSpec.EdgeFair": {
+      "body": "907e58a1fc4719dfec985255146c179e5e38caea3103d953641768861625f84c",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "eb7962c6343aeac4ecc9aec1e8ffa3a67fb2caae4fec243c370faf384b6d1c21"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input": {
+      "body": "e8c3f87de0e5d9e379afae1eeffd25c36ac54eb586ba45ca4cd5838a60fe22c3",
+      "foundation": false,
+      "kind": "inductive",
+      "protected": true,
+      "type": "12a0c7ec7c4b180cdfabc72f7af51ec81ae89b49b012b8ed2eb7961dbb47b747"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input.data": {
+      "body": "d17ebc0d3f078b975cb4d3ebee3090b21605d9958d5e107f669099198258cf93",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "80e25a08374140d8f5cf661d6e5fb9f9c37268fb1fbdfc1e0eeea65fb8099ab3"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input.mk": {
+      "body": "bbdd804ff3e836bd1ba2ac7a4e260f873ce8fa5746dab9d3eb637841a051b9da",
+      "foundation": false,
+      "kind": "constructor",
+      "protected": true,
+      "type": "8a080cd2bba3180c24aea6e9e5830edb56b9fe553293d158e44ea31ef60366ed"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input.readEdge": {
+      "body": "0440ca36831d3474909677c3520379eae60240c6329302aeafc976f02a8ce45e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bb42ef4a3e8590ae9ee751ff31d9db4026c334164c250d0587571aa07458de5d"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input.ready": {
+      "body": "f518063aa1280538b3af92cb0e7e665834d996abea44c3435f9b8cd03dd37e30",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bb42ef4a3e8590ae9ee751ff31d9db4026c334164c250d0587571aa07458de5d"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input.valid": {
+      "body": "c3a668965b6d1215f7de5f6098d98cc75e0ce7f5fd758dd6351e4558c9f4701e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bb42ef4a3e8590ae9ee751ff31d9db4026c334164c250d0587571aa07458de5d"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Input.writeEdge": {
+      "body": "1987819749e422cc4a7d486f8bd02ce3787a6d3305e201d2e988aa44dc0d595d",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "bb42ef4a3e8590ae9ee751ff31d9db4026c334164c250d0587571aa07458de5d"
+    },
+    "HDLean.AsyncFifo.QueueSpec.Trace": {
+      "body": "6ebb48c347254062687af97e03ddd84252d1b5f8b724455f1aed5d39457b03d2",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "83df26f628397723a98767059a59dc2832d6c904c74f40008ec7f8a1f22e5dd7"
+    },
+    "HDLean.AsyncFifo.QueueSpec.next": {
+      "body": "8f9286e5415455fd7e880113a424d276b1b4bf6c967d4acd811cfadfcd72df2b",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "3e901610fa7fb1acbc30e17599203d696e2479a281a0e9fe9cfdb8f0864521bb"
+    },
+    "HDLean.AsyncFifo.QueueSpec.run": {
+      "body": "02b2dc24226e877bd40b29523a3713a8f97652e45357812d6016ab4d089c3c9e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "2f8ea633fc777230877e256f7ebf482073d011ce10c81e5f46f566ce74d764fd"
+    },
+    "HDLean.AsyncFifo.QueueSpec.run._f": {
+      "body": "04864d1fb521b8269123f48c569e7d273a08292268c3f40846a44f56252a3314",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "15ec71694cfda9e2f8019cfd2ac6ed0b394385c3cd2ee509ddb90ebf103cf78d"
+    },
+    "HDLean.AsyncFifo.QueueSpec.run.match_1": {
+      "body": "f78b5638ea9a3cc18f00cb789e67de3ec84cf46d78dfdb01eae6eea9179d957e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "513df0e658d7ef9ac0d1b974e56ee7217fd6a756d264eb7ce47d814b207049fe"
+    },
     "HDLean.AsyncFifo.ResetProgress": {
       "body": "a5010ad5140d776cec5c101d06555c19840696b2a75951b1cadf8c1f3c369978",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "b222e10caa23bec2a12e15cc5691d52a14468b411d29cbb6502cf8236e44dab4"
+    },
+    "HDLean.AsyncFifo.Startup": {
+      "body": "8b031eb87a1570cf40edf4338b0b2eb0348cc99e0e85f91d3f88d365a7612ed2",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "a4c7bf7aeede89205f24c2103805305616642d204cc638feea62477234980c6b"
     },
     "HDLean.AsyncFifo.State": {
       "body": "493e3e3d83204c778dc3cbb112612bc4862572c6fddd599448efdb6d81d8418f",
@@ -7457,6 +7572,13 @@
       "protected": true,
       "type": "da1580b24f2a2218f1502fddab4e730ec0a9dd5895aa66b9e2422f9d787cc9bd"
     },
+    "HDLean.AsyncFifo.observe": {
+      "body": "e57688622fdf3bcfd544ff5e392c7ae6fabff38a37dfd860f8901d3d0f0ef4c6",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "d3d9a45202a148dc63f2dfc05de005d52550c8ab06ef5a8a97bc0730938eb24f"
+    },
     "HDLean.AsyncFifo.pop": {
       "body": "9c932c21226e42658e5fcb71abd210f94b2120bf560db4b379dbbfa161f13899",
       "foundation": false,
@@ -7470,6 +7592,69 @@
       "kind": "def",
       "protected": true,
       "type": "fb8ba7e2ff406135593b89e8b56f042e785008fd1e225d3864f21692a6d62bae"
+    },
+    "HDLean.AsyncFifo.queue": {
+      "body": "c8fe350aab19728ef5c87ae313d568738398f1d63ec09a05ef1471abf597a592",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "4adcd48c37914562c1266ce0a2c2fc5f22c8608b89883b5102837817a79e81f3"
+    },
+    "HDLean.AsyncFifo.queueInput": {
+      "body": "ffa8cd798fc4286d22796bb8cde976f8e2dc017d628bdec67f50bdae6f57c6f7",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "15016883345bd8116971b39b0267d06721c2413527696e4149416156f78938af"
+    },
+    "HDLean.AsyncFifo.seenRead": {
+      "body": "3d58761c9695fe3b7c56f73606a329869d6f412ed0eb3299aa72cba51c2e468e",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "a383f6ab82ac7d20b0b636636217aedfe9b2e6e5766cf0425fef85dd8c9408db"
+    },
+    "HDLean.AsyncFifo.seenRead._f": {
+      "body": "5b5c836c5bba8a8aa6d661bf3f2a82f6a480358e420ac725b59a6a06df16e6af",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "4bf770d69eb361e5f7bba7d27e85b9b6e2af45dec15b55c365c18aab03c5f2e5"
+    },
+    "HDLean.AsyncFifo.seenWrite": {
+      "body": "6c44c13bcfd39dc21ec425ebb151e4442dca20b3047f3ddd66a3dec7dfec6866",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "a383f6ab82ac7d20b0b636636217aedfe9b2e6e5766cf0425fef85dd8c9408db"
+    },
+    "HDLean.AsyncFifo.seenWrite._f": {
+      "body": "2875c5a12f39ea1895d5a3d801f0ff89b813ab9b4a5bcd16cbf5338fd4bd7622",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "4bf770d69eb361e5f7bba7d27e85b9b6e2af45dec15b55c365c18aab03c5f2e5"
+    },
+    "HDLean.AsyncFifo.stateFrom": {
+      "body": "d38535d4038e076cfb95112d35a541a9f5d72d4cda4a54037dab991c94e0c0d3",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "fe17b3fb14355c0e13734d27f5fcb2dbdb858e41a71f999d68430c50834c3d73"
+    },
+    "HDLean.AsyncFifo.stateFrom._f": {
+      "body": "ddc1a9160507b8735b3c35975f1a4680a7089085ecf09bd9db63955ab56864e7",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "87f6a59742b3fba156ebc1826cae88057bbdf76a50e1cad1c6bdf51238829af8"
+    },
+    "HDLean.AsyncFifo.stateFrom.match_1": {
+      "body": "c679f40821cf12cf7a938571b5ff974a31c70be450a693870f18b75bc9ebd979",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "513df0e658d7ef9ac0d1b974e56ee7217fd6a756d264eb7ce47d814b207049fe"
     },
     "HDLean.AsyncFifo.ungray": {
       "body": "dec97e8a8bf753d98613d1b284bb75d689489b13443e7ed4cf1bc6e6982e0061",
@@ -8865,11 +9050,18 @@
       "type": "cadc4ace1260e80ce621ff8d4dacc87fa3b7c67d6d65c4fb140208a6a0b8633e"
     },
     "HDLean.Backend.Proved.Aag.ilLines": {
-      "body": "d011e7dadf9dbd9c9289f15e8227a13d2d9e107356c63cb1c389fb86a1ab581a",
+      "body": "254c4709965bf119ebe6dd63106e7c5869b7e7d48f4c46fdb9e7fd7ea128769a",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "327f7cc27e72d6a83a30bb3b80d67a386a944e961312ee5405b9ac2219f16ef2"
+    },
+    "HDLean.Backend.Proved.Aag.ilLinesNamed": {
+      "body": "40d57465fbdf6c692109147b6d7eb527b3c303d26cdbe1915200073ed85021bf",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "ca63fe0bf51dcef9da25cb74abdb0ba61ae477d868adff43eb56f52cec8c69a8"
     },
     "HDLean.Backend.Proved.Aag.inputs": {
       "body": "7f80b612af33c11a6a297c79c7c533c377a8e4037bf855dff29cd3f78cb48b83",
@@ -8921,14 +9113,14 @@
       "type": "3997bec2b0b594db18d7dfb36c36c832c474a16f08665448cea3b90ab84d99e4"
     },
     "HDLean.Backend.Proved.Aag.parseRTLIL": {
-      "body": "4154ae207ab4010d7ce7eed63a433e6c1c6ab1b959034cc1297c60d5e1e2aa8b",
+      "body": "bf9f46648dafd79c0bea001c81402f4eac2816c40a791e6d58b03e4e2497c949",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "3997bec2b0b594db18d7dfb36c36c832c474a16f08665448cea3b90ab84d99e4"
     },
     "HDLean.Backend.Proved.Aag.parseSystemVerilog": {
-      "body": "5c0b5d52b69923f706c6467a80b40e75ddbf880b4016fbaaf992a9bf641c621e",
+      "body": "791cffa9f0431c8b909a996637337bd6c54af2f2c3783352fe0aebcfddc96b06",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -8949,11 +9141,18 @@
       "type": "e1b0e696438d76239b2b1dd81115e12d0b1113b0d68cb3562c8b3587da5bbe69"
     },
     "HDLean.Backend.Proved.Aag.svLines": {
-      "body": "a7c9a85fba76a006985c49122979da2ae6e027860c5270ec3146a8e35b003d7a",
+      "body": "4be9a750cb4f0e7f66d2a3808be0592acb57d867252d4c871127db8795c5a597",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "327f7cc27e72d6a83a30bb3b80d67a386a944e961312ee5405b9ac2219f16ef2"
+    },
+    "HDLean.Backend.Proved.Aag.svLinesNamed": {
+      "body": "132325f2e57c5bee106962a64110e34b69891a87987eb535d1c39bda25a3117d",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "ca63fe0bf51dcef9da25cb74abdb0ba61ae477d868adff43eb56f52cec8c69a8"
     },
     "HDLean.Backend.Proved.Aag.systemVerilog": {
       "body": "2025d57ed18a854b370c0054b96f9664579e57051e1fea5d67499e633506a2ed",
@@ -9403,6 +9602,27 @@
       "protected": true,
       "type": "4749e72dee86e648c3f887437faf25fa85a00d61b86f1f8d4eaa10e38bc75534"
     },
+    "HDLean.Backend.Text.join": {
+      "body": "f2eb375c84c415c38bd7e8cb2164c3ded7e5d4b46f77af710f15dd3cb2827be3",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "fd33d8d13eb95bf698d74fd0a33d6d6f562d337bfc4fa2712439e81854cfa329"
+    },
+    "HDLean.Backend.Text.join._f": {
+      "body": "8b2e4c5b305f2dd3e2f1ae2cac70c2ce5a56c316340d26c4354df4688bb4ab2d",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "9532319a6990b21b96d45f691b54949a9e2495a30958d7f986454a17e8dc1297"
+    },
+    "HDLean.Backend.Text.join.match_1": {
+      "body": "8bf3f654dbb6d7a91b4db36b3fa01454377c2eed582c18773f5156fb7a95cd9a",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "8185f7f9d7401b70dbfd50b1db9b33c13f78ee2123a87688c545fb01d7b2ff10"
+    },
     "HDLean.Backend.Text.numeral": {
       "body": "a3cb64d76a1419eadec69e821c7c4cc8dc23ae9d02775a0c219edab90a7acfaa",
       "foundation": false,
@@ -9453,7 +9673,7 @@
       "type": "aaf9b0ee8a3710dce05c4b0f8a2e241f0b954e8627fc610053167d05e2a758ef"
     },
     "HDLean.Backend.Text.render": {
-      "body": "7121dc147e2e53f3ac18672a42ce75f18ac94e36b2a84bcdf178607ef2255267",
+      "body": "15ee2c7326927857416db587ea203c36091dd1ce16757093767d226567eea817",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -13197,6 +13417,13 @@
       "protected": false,
       "type": "cf22fb255d8b71dcdc45cd4ab43bcd1f505904f19ab6846703461f2cd0b41fcc"
     },
+    "HDLean.Review.AsyncFifo_read_progress_queue": {
+      "body": "8ee235cd7ab50909f2e04a8fdececb8d75423e8351f2822c3c771a7941504fb6",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "ab4664e13592ead77fc1addd3b5f164554af030363684a85743f997cbe01f08f"
+    },
     "HDLean.Review.AsyncFifo_reset_establishes_queue": {
       "body": "de175bd0f13333a345282099e90db023a2bbb218d691bd7b79c72acc2178978d",
       "foundation": false,
@@ -13218,12 +13445,26 @@
       "protected": false,
       "type": "39421bee6d8ac86cb2b71f63719343bfecb72f9fdc9e484e28b236160ab66923"
     },
+    "HDLean.Review.AsyncFifo_trace_refines_queue": {
+      "body": "bc45f6d0f33f1dc442b8c30494d8a226fd8381275521fdbe503f6908c03c9f0f",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "27641a1a49555a555b5f40be43918db430296c49fcb25af0e1625d41600bcdc6"
+    },
     "HDLean.Review.AsyncFifo_ungray_gray": {
       "body": "8c14acf89a9f8d77b3ad23b75d66548a2757880b875126364a7f730e10c942ed",
       "foundation": false,
       "kind": "thm",
       "protected": false,
       "type": "c766a2a0f2cce296c3a0a736e5cbaa1dd49ced69411d0db26c6639d5bf98fd64"
+    },
+    "HDLean.Review.AsyncFifo_write_progress_queue": {
+      "body": "24352ddb050b5584a557ed9f2c4a187d15f2e081a9a253ef4eb7e065085d01b1",
+      "foundation": false,
+      "kind": "thm",
+      "protected": false,
+      "type": "9c88493decd7159eb8e15b2c5a40c5d3e475841964e1ff74e77a4cc0f732ed4a"
     },
     "HDLean.Review.Backend_Format_correct_of_validated": {
       "body": "8d9978218931906e3bdf51759b1c20c5b338f86cf8fe022a0c05884db32003c2",
@@ -23367,6 +23608,27 @@
       "kind": "def",
       "protected": true,
       "type": "45d58b6804263bb1ec08620bf4902972da7ad26e562b5dc41307ac47c876ca3d"
+    },
+    "List.range'": {
+      "body": "0c3feaa650debd79456b30a46ae2027b8b25b50a66466da27b0a8445cd11b260",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "c56d4571d43650e681097b130301fb0a39955c03e87a039825ece7ed420ac5fe"
+    },
+    "List.range'._f": {
+      "body": "4b2b1844cf7d6eb2259c9cf960505347c53e5a8c829398b0ee2b93ec18a34514",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "43090e0f8b66ee818a48d23cbc67c29c5ffcf78b6a0ce8b4058db87c24505170"
+    },
+    "List.range'.match_1": {
+      "body": "686511dbbe25194b9cc9b047f7e8a9138c3fc7a6dd4cab676f51f819d2ea96b1",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "13821de220d255ade2373215e020ef22e62f0c8f06d507016547f0f1b56c60ef"
     },
     "List.range.loop": {
       "body": "7573d4024abcf683ef63d5a5c0f20ac74100e87b1626156d7f870bcba205f893",
@@ -46406,7 +46668,7 @@
       "type": "d34200c2c230e739dbbfaf645f88c9858627ce1a5393ead568e395316b5f2d06"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilNextStart": {
-      "body": "efd48930fa12b181422737eeec616c0b19b80ce7c976121829ca0fd45488099a",
+      "body": "33f1e824c46d3ac8a4a485c39e852c30a5d86eb2d9178ce50afa96f6c3b7eb9a",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -46448,11 +46710,11 @@
       "type": "307c75c2bab55aa57c08ee4c756b14e004a3c2d7d8699d31b4be9acf5cbafe2e"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilNextStart._proof_14": {
-      "body": "1583a9e1bcf720d8bfa72bccd8f373d71f3f48575afc0c1b2d84b2044a2ad997",
+      "body": "edda49fcad70a3219c8243826b529f9bdc8c37fe812ee21d4060adb59bcc6c5d",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "175732820dcc07330898107669f8aa582241e7a90be63900b5dc17cf93860e33"
+      "type": "00003e482a2ec11816ceb110ab91c712aba2ecefa7943764816fd5db6ab9cc74"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilNextStart._proof_2": {
       "body": "c337692da53844847fafc91580442eecc12f2256d060b7b3d89ac77f18b54d2f",
@@ -46630,11 +46892,11 @@
       "type": "a14d36b73e8f2d95a1feae9dfb0ac349297dae134c1cfd3aa77962180d6efa9d"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart": {
-      "body": "9526b8e3fee51ba079a118154c39dfb362e793c149af45907d0a0fd80374cbe0",
+      "body": "c15349c45ccf7f684e7f3c6b54de4c9e19ecaac43791bc8f4b4dc9b153035a3c",
       "foundation": false,
       "kind": "def",
       "protected": true,
-      "type": "b525e82e98eeac73f20ec0dc38a3f043811798e0b39e106595175fbd6141d33e"
+      "type": "eae6979b07ea9d03b29868484c0f4a941c1b098d409ad3ee5f478364ca5f2fcc"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_1": {
       "body": "ffea90b5b8605777d9b5ea4e1cd0c112a46e05013cc9351cc2db80b0ecab6e1c",
@@ -46644,32 +46906,18 @@
       "type": "0874199da263e228b25e4cf56b855f68fd2c729d98ab4ef6735c846c126cf46c"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_10": {
-      "body": "132aae103d9ea7d562075555b323b691908f330d1601a62e9a436e27b516d28a",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "0073906d97fe5bb2962896bb0f50c88404494853d313e3985ba286c1e5d00e39"
-    },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_11": {
-      "body": "54517df0de17cc41e21c3842b6f9bc3b73392a698fb72979d87db71ef98f36f2",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "11ea94e3477302a89fc174299c453654e4d322c10d4a8db5f2a380fd50c09f1d"
-    },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_12": {
-      "body": "ba545ecbc3d96370b11ff3ee120c619fbc7657d9b2c3afa2608cac3454c03c10",
+      "body": "4b42cf05e6abc438f38b04e3ff97e963be3de1d5fcc162aed5f972005251ff1a",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "c1224939343e8f6c4c2688d6bc448222444102b0f4e17dad8d65c49faf13e812"
     },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_13": {
-      "body": "f3bd0ac97139ec3ac4fb676b3d84c491d3f7de05f753d4797299dce5397bfc16",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_11": {
+      "body": "809e2aab1dda6c21dcb6b9d173a22207561109be03fe367dc3853495f9ad83ed",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "d641899b7c8150ba5b85fccb98bccb6d16ebee061cf177ebbf45cfde15622836"
+      "type": "546210da98897945f743d3f903032ffc228891c523a3f683679eb2e3fcc010ab"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_2": {
       "body": "5fe40fd73d3e263deadbbb8da9569796c99f34b7f23a26e178452d4f2f16963e",
@@ -46714,18 +46962,18 @@
       "type": "123e87170c4fcd5959503745fb2c460f4a70a017bb93e62ee148001afd182617"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_8": {
-      "body": "dbb9a556767231237bf487cd3d825a428e2aa4ca457ce65987de3220647b3b12",
+      "body": "98dcf1f9b34d5f770c7a0b2aeb2c0c9ea5df4182a4d923ef951f2efa43d17b01",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "346fa5d78df04e510fa27b6dfddc27238dd83685dcd3ddbaf8732a0db5242db6"
+      "type": "a601b40a78e9ccb804b53cd4968b5e11dfac62c0a1fc896dc9cf2d225adb8ffe"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_9": {
-      "body": "453cadc26bf8b73db747dbdc05aecff2a63dd8ad9f48e31660759d0aa4abc7b2",
+      "body": "8a0c99006f5eb3d4ad1b9b8d8bca25953783dfb462bf117239c158c0d2efbc6b",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "18372cf8ef4b8e7f08d045e799e085319474cb0435acf8821f89cd99ce9d6aa3"
+      "type": "11ea94e3477302a89fc174299c453654e4d322c10d4a8db5f2a380fd50c09f1d"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilState": {
       "body": "813d08913852640526581fa087730b3218ce8feeb2d0efb91b0d9464064c3d52",
@@ -46742,46 +46990,81 @@
       "type": "7b95dbdf963fa7b6fc00ddc1f9df820ff55f0c5f554a2d190fb49455528e6ec4"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens": {
-      "body": "7446a4266e16f2b0d6b95b2e2a7b38bc0c92a29871414e9125498eb370e37cb6",
+      "body": "9cf311f47e90ee0f443ce27c202739a3bc771629eaf26057c6850409d677ccc3",
       "foundation": false,
       "kind": "def",
       "protected": true,
-      "type": "be9821a3a1a538e61832c6537207849fcb7e3fe5535164745aec9f7a68c0acf0"
+      "type": "b1783499b8f1df1da7434a8657cc10942ad3f335f026509fa7dfa289eed6536c"
     },
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_1": {
-      "body": "1a5e6d9e3edb727bdf723d32c81539c6db8b6a1f1e97bf637941ed6d6f931d8c",
+      "body": "c8b8bb3e155199730dc718cb245f056fac28efd9fc6e97469e12acee24350e8b",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "e131b42c7981e3c229530818ed9f76574131fef26d3d58cd1b9ebef99f9f3343"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens": {
+      "body": "977fba1fcd3ff34d985919b64693ecc6f3e900b6de940c90fc69559d533778dd",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "20add246eccadd3afb20183475a708896ab993aae6aabb651fd1f5eb655271cd"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_1": {
+      "body": "61ceaf2622db3d12be77520479bbb7c780b41de545b4291cb143faa8da09e7d6",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "524bc93a3c0f0b79c2f8658c157b4f109d4bb6d5de74fa1b58bb81b9ad40b401"
     },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_3": {
-      "body": "0496f5be18774b7a5d20927d13a24f5326cd14c1d7e4e954ee917c09044ac709",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_3": {
+      "body": "d469d3fb0843daaf1376829b796f6faaf649f19771655fba977f8c4701914e6a",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "40466091aa340d9379bd652e6c1ffa7b768d1e06f1dbc43276e1069cae9445d5"
     },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_5": {
-      "body": "7ddbf74e16bcece4a7f1529c5c7bb348e8e3407bd48709bcea9aedb2daffde46",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_5": {
+      "body": "cd4f311cd9d100fdd678cae92dfc2249ec8834a1506a743a8d5a9c45abcb052d",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "3c3ea5c37dafb2277749c0dcc8d59f3975021e6007b6e37d143de0184573f622"
     },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_7": {
-      "body": "ffb516c038db580c7e4f4f8072fa359ae126c8c29b4efb8e0801bfd3f96dbc24",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_7": {
+      "body": "38c4fa1109bbfaca97ba52aac394e3dbef022f33db6b38124fd5d16d7c8ffe2e",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "28024d7b3940279053adc06623194b3f6187a184ee29ed7f0bc974a842584a49"
     },
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_9": {
-      "body": "280e35f23795df61f410c270cca0d8c00f732c2d55a917cc035bab3791c901ce",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_9": {
+      "body": "2684613f5bc6e0ac9045b070d82e26fafd66b3dd00fc2fe3bdfb06367c418650",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "12abd6325465243eed46d769c59a0878c263d0b2e57c5f282a524894083f8783"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord": {
+      "body": "edad0e5aa9d5d033b173db12c37ee79d4fbed281f028eb79879982a1a23a21ec",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "0c786c2dc748637a2b2027a66a6415733520c10533b4054b7f09d41121e5db88"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord._proof_1": {
+      "body": "d12daaca9164e034f5a3e518eb91fca3de2562b491bb3a9dd3c10ff8539ab742",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "346fa5d78df04e510fa27b6dfddc27238dd83685dcd3ddbaf8732a0db5242db6"
+    },
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord._proof_2": {
+      "body": "7d719de1ad327314f910fa8d84e9698d0d5f97693f33d0293807d3ad39f9739d",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "18372cf8ef4b8e7f08d045e799e085319474cb0435acf8821f89cd99ce9d6aa3"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.Block": {
       "body": "36476375c9e085950bd387e4261e2066e523db1c69a4a8ee93484ca111593d56",
@@ -46791,67 +47074,81 @@
       "type": "12a0c7ec7c4b180cdfabc72f7af51ec81ae89b49b012b8ed2eb7961dbb47b747"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens": {
-      "body": "5399c914b99c1cd72c69cddcb94c1d3a1f8b810ac61e021baad4e4d370c53469",
+      "body": "d48ab496d5158859835936edef9502d519090c972da6b0d5c0f0c229fd805692",
       "foundation": false,
       "kind": "def",
       "protected": true,
-      "type": "be9821a3a1a538e61832c6537207849fcb7e3fe5535164745aec9f7a68c0acf0"
+      "type": "b1783499b8f1df1da7434a8657cc10942ad3f335f026509fa7dfa289eed6536c"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_1": {
-      "body": "c607898588ba29f59ed74c6984fdffaa71cb95dd5da97b3551fc5df2aa57e821",
+      "body": "4c59e571147134a0fc8627ef8dc80ec4c2e075f6f28583b2c968c4f5bb69b757",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "e131b42c7981e3c229530818ed9f76574131fef26d3d58cd1b9ebef99f9f3343"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens": {
+      "body": "ad372ffebeafe768334823a3e17d26a6d05d7da0c28881f17128f2405ce06e41",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "20add246eccadd3afb20183475a708896ab993aae6aabb651fd1f5eb655271cd"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_1": {
+      "body": "396cb8323dfc3d772d877a4f5f01fa74003ed8a86c02964637baa8668df05a59",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "524bc93a3c0f0b79c2f8658c157b4f109d4bb6d5de74fa1b58bb81b9ad40b401"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_3": {
-      "body": "556fc271dfc74e14b0fde99be28a5bebaa72d79be23ceb05623c94d271bd58b6",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_3": {
+      "body": "62e53c33a73f5fca14860246e9010bdfe5c842e70057ff348823876219dea6c9",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "40466091aa340d9379bd652e6c1ffa7b768d1e06f1dbc43276e1069cae9445d5"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_5": {
-      "body": "6ca2acb0a07f2ec7a4c198f83c22149668d5ee368f509f1d50e45b520760c5d3",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_5": {
+      "body": "ba98c7a1d2e15999df687a6147baecfd16ccdab97a63416c4b51c3a97957088a",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "3c3ea5c37dafb2277749c0dcc8d59f3975021e6007b6e37d143de0184573f622"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_7": {
-      "body": "bcb6b5c557732a3a8de10187eca3403e90a58a58eac03b524c2f34c77ab00f7e",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_7": {
+      "body": "614d467b7d90db49527022766089d1f4100b12cf81a81d874690cec0ad0e6741",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "28024d7b3940279053adc06623194b3f6187a184ee29ed7f0bc974a842584a49"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_9": {
-      "body": "3a4076e292eb669e181a59045e0bb36df465245ceafc47a302c95d6e034e466e",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_9": {
+      "body": "d196e416eb2a018f8f75842e4827eade52f1d3a86c3bdf6d160f74e882549095",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "12abd6325465243eed46d769c59a0878c263d0b2e57c5f282a524894083f8783"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants": {
-      "body": "c93132eb567dcb3e4ae32460d7ab247dbd9468e9807d5a3b8f72f3fe25edd449",
+      "body": "8ba1082ff24bb6335131701c93970a6fc16da74a3aeb9b848f5c0a1599dbb0c6",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "b8a1a2fdb0bcfe6396f41ba7de14145990306ee0c368a7fae7a6f8876d1158df"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_1": {
-      "body": "803a8a0eb0f609447fa43ce2ebb62f95a3c3640d9b45cadbe7358591f85c3da6",
+      "body": "8f7a0b10424c50b5dd1f12aca89420f8188eb28d65c8ae5f4961458689b5d07f",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "d437a359af6e4270c91e5edaceb25a36b8f60c988083a708df4c8639201a6e08"
+      "type": "688676de82d73acb04f631932c4d0652aa1a082d96e953e43378312f6b118056"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_10": {
-      "body": "2546d6f340f65eaeeab80a89992a66b2e27602cc4516deb2936ad3adc7837edd",
+      "body": "0b2b958b15338d449e060937bc6b9c8dfd90242f9dbf367f7842663552ea6839",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "7ce24b5315fb6add2f47b0be42e941240f41a636679bf5abe221e791a253d65b"
+      "type": "570d6bd845e0edb024f874896df2999226ceb35ea88edf78f35804c65b565221"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_2": {
       "body": "13f6e9b4e85ae123712dc9560e68db4b8a930132beb7ba2d8a771587195954b1",
@@ -46868,11 +47165,11 @@
       "type": "53db07e7a56390cc57b92f7e957763ffb23fa39b6c02c71980d9f448376ded23"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_4": {
-      "body": "64b1e7333b584c04342e223cd512e48e3a1fce3c4901c1c0a9a9b0bee387a679",
+      "body": "9e83b74f4528752a3fae0416b22e6a59e4300fb80ae7d8d92dba4a1eeb57db57",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "8c21f993c1a7b43bba7182fc8e87e87194cb970d8845f7e8a149e7a0930e034a"
+      "type": "141df3092aeb7435a59f925656058f4f7c3230bbd8c71cf7985f5d639295ec6d"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_5": {
       "body": "6363bbb720c231e10146ca90d6cbe0597d2b4d1290d306dc464691559aa44500",
@@ -46903,11 +47200,11 @@
       "type": "09536419b77f9f3cd4622e8c50bde8bfbc942d423f420431e09b56d9ca8a6db3"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_9": {
-      "body": "b26b2d526f9895a30e5e3e3414ae217fd6b90b8ca6dbc20c529ed063c34715a9",
+      "body": "ddd6fb8950b3824dea98f70117d08695495a32d2cf4e873e2123fbdedb7816e7",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "b1805bb3c3422a6b03308f78f178df2e389e211d218e66bc05be1f93d9a12089"
+      "type": "41db1c725e1cccd44684ae3584ed8d06475d61f1f1ab2429a89b7743235000fc"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svEnd": {
       "body": "dac721d5e7951fc989cc1cb28bb3eb67276c52959e8ed18c963d1669df7a95a4",
@@ -46945,14 +47242,14 @@
       "type": "ac1863bb282b405aa5a489e4e10121914d67c718835e533462f92ce63364c656"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGate._proof_1": {
-      "body": "be39df9ce2b8f4cd94afc3c3e4042e3cf6cda6a81c8f900a53f1b73afdf5f328",
+      "body": "5932acab10deccc6025146593e672984d06a37cb240338a7acd4156a5c6a8c60",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "bdaea4be061c66a142ab2dbdef5f920f76f2ce27c80dc3d11d737a362c44ec6e"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGate._proof_2": {
-      "body": "a20ac15653a2ed9ba5d0af16c218538f5d9c2b7da0597d6421c3aacb73cc2dff",
+      "body": "5e5c029fd970677ec053d329ecb7bdcda7b4f706b02bd638660b1ba862500ac9",
       "foundation": false,
       "kind": "thm",
       "protected": true,
@@ -46966,7 +47263,7 @@
       "type": "aeda7cedc5949fa1ffdf8787371fcba5f734dc342bda02333e6f99669913e11f"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGateRow": {
-      "body": "1a177849416c2846468c9872ed21727f201dddeef92060dccd676b6e2b94cef4",
+      "body": "2aa46af906af1e2e6d55cedf445863d611fde510872b48848fd141690a13cb7a",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -46987,7 +47284,7 @@
       "type": "4bd0ef279b4b2389c812caa5627bfdae06aa748d4367c003079d411b9902a8cd"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGateTargetRow": {
-      "body": "d25cffee215b8d6172b10738e8aad3b4d61ba9e6fd065f9b631b4f3bca3b92c8",
+      "body": "3ceca364e04cab8e15fff294bb7555dfc1111cc504108e103de90468570bdf1e",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47001,14 +47298,14 @@
       "type": "249a5f1efc3c54f77c3039039da47b2ac43c6e38b3d6634ffa827332ee6599b2"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGates._proof_1": {
-      "body": "a5f8e6a14da062ded6de4f2429b25ce62ba5b5d2685de48dafc2135b7618709f",
+      "body": "8daa2a9a1037de76e8d8dd94aa691b9a8cda32435f537712a56b978372069092",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "4e8453fdd61bdbf28e73e277a614dc634e38e923eeed795012a75ff92c2dfa56"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svGatesRow": {
-      "body": "9ce65d2227e7747264bd5eb5aefd3288bad617f49376c8300e62176f100f3104",
+      "body": "7cd4a226804a1785ff137f543c888cdf1da7832ca759d210aa09c4f8d14190fc",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47029,11 +47326,11 @@
       "type": "ba1b385469f00b6cdd68adcfa83ba565f053d6c7f94b90811217de40a5b620fe"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svHeader": {
-      "body": "524307f9c10106ec7f2935cdb9ac01651494738195186580ee279b28c230a83b",
+      "body": "e342dda4f0906b65b351e05ae1fc2ff209c83de3751930724ed1c6035ec0a03e",
       "foundation": false,
       "kind": "def",
       "protected": true,
-      "type": "49bdb0379102f841ee3ff86d55951ceab28a78cef17bb7b8c7721930ad8f28f7"
+      "type": "b1f4486d45d416bc98d80dbdcb18e99df609f71bccfee793d38bcb6b1f01ad38"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svHeader._proof_1": {
       "body": "8ef10e24ae633cb8c033a66aafb24dc93bdf4d559777cfba053960e6a901f35a",
@@ -47050,14 +47347,14 @@
       "type": "a4dd3fd6745e58c81caf2e3c3bc1acc64c59276c393dc357589dd594cfb315c6"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInput._proof_1": {
-      "body": "c83d5418f8abc83ccddaa7325d7f5ae1a36958d092de0e036197b8f1b82b7671",
+      "body": "4df85e90dcb7b87e64b00ea8c7d52feddf9d1027cdea655cf06fd2d494affe22",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "0c58afa4a29ab3fbd71efb8736db6d0d992084b90f3cee7eeb9be15ecbebc550"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInputRow": {
-      "body": "9db30cb131dfdc88baad905a1eec9ff3ea1632ea17541d48581fe38add95293e",
+      "body": "b48e08860908677371992105b30906a85e795a4e9bc605155516720c7279024f",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47071,14 +47368,14 @@
       "type": "a4dd3fd6745e58c81caf2e3c3bc1acc64c59276c393dc357589dd594cfb315c6"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInv._proof_1": {
-      "body": "d045345657149d5cfd22429656f5a459220abe642e58becf3b99b1a4121827e8",
+      "body": "92afaba8dbc9a2bd019f1aa96e109b741b2b463fbed2b123fe6602c30b37fe86",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "7f4e376236cf85b77b2508662bedca7516752fd73e07a8eb232b1748577dbeee"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svInvRow": {
-      "body": "06082a9f02c4ec63e3726d5273703365b89b45e8d8c0b57702646c163993dac8",
+      "body": "c909f41b8fd2d31888a6b98cb9e7bdfb5b7d20f3e6cc7ca86cfdb1f2b76f3c77",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47148,14 +47445,14 @@
       "type": "bfa8a78c0cd2b868617b480d54f527d83901e205afbc14ea91eaf37ef79f7479"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNext._proof_1": {
-      "body": "151c69aaaeadc92a6990521b4a89cb6e6b515ccf24f1061bdba7c0e0e62660b9",
+      "body": "048f5e1509d140cec76cc20f97203657288a5dde57733caca6f2e61e4eaa13e4",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "f95a7b02fae9f9793fcdb78b22e4487b95156d58a849ff3ef886c13a5b139f03"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svNextRow": {
-      "body": "72b1254e612cf23d4f560a08157a06a55d01acd0cca95a415fd3b32a5ab3f8b9",
+      "body": "85e527ccfc254c3102db2c59aff02eeb78f228a61881e0239d670f01f77962dd",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47225,39 +47522,39 @@
       "type": "bfa8a78c0cd2b868617b480d54f527d83901e205afbc14ea91eaf37ef79f7479"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svOutput._proof_1": {
-      "body": "d750637b95dc8f9f89bc49dfc8d3d94daef51aab9ae03b481661d416f4181a1d",
+      "body": "ffa38f2091dbf8f3984c44ef19adc3cdfbe12490f6363f0a5e13c86e8db17de2",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "7c1f0fea2ea86c2bb9e7f9d71bea7466cb47ac7d43820872686cb046f7cfed46"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svOutputRow": {
-      "body": "ed47095ffdbb0d73e2a6c479b07b0997c83afa946bf68e57aad667c3f977fc58",
+      "body": "993e90b86743c68c7dadb80168534661a3b59b51e82e2789c009355b1d511e85",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "7e7e1711ec35b5e806b6bcbbafc572b34be7958e7d9105611e44df1ecca7e3fb"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPorts": {
-      "body": "ec04ef0cace325df7e9a2a9c8aad814b00da5ff5153717a22f120fc71f7134b1",
+      "body": "90995a3f983844a87e263ff90b4546708013a93965d2c006f2561bd752a6a8aa",
       "foundation": false,
       "kind": "def",
       "protected": true,
-      "type": "19d0705b0c54471c9020a836e033e774a434ec5c9140f71119574aad5a71e2bb"
+      "type": "472d357a67ec97d9c26484c22175c597ff62914760bd20340354b4ade20f3b78"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPorts._proof_1": {
-      "body": "5d57d3d375c6d52e34333e2141a3b23e04443e84d6ceda2c772c1d2beb6623bc",
+      "body": "a757b44c4cb101ad0291803d6e87b0d3b58494000eaabb5f0a4850e4b656c608",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "6b815455eb2ad9b969cbe2e8643fbfaeb3921570b5b6c6897001962beed8f161"
+      "type": "e4d45696b4f441a2a3ef08d165c75b5780810f511bd80970022fd4ac3aa3c2c0"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow": {
-      "body": "17fa32048e4ad11356a95119da0ae746b8948256849a39ccae89d45e8a2d289c",
+      "body": "472d3c80472826646e0a17bdf99e6603e15f90b0f371c40c3a475f69973ba428",
       "foundation": false,
       "kind": "def",
       "protected": true,
-      "type": "15f9a62c1a85f51168243ade6991602a0d34e36e804484983afc156ca7e61ca6"
+      "type": "ee7b6b2aeb60fd622cc166b3be9c5c633e5b58e8fb0c8533b01d0dc058f0407e"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_1": {
       "body": "38e16ba5ecfea6693f2ea008e894ada72388e0c50ef6cbe61e4370e31c5b48ca",
@@ -47267,74 +47564,74 @@
       "type": "2204bcc5a8a0dfaeaada3df2762ffbf5e76df3db89647496aebd8a8716f3ab17"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_10": {
-      "body": "b4fe75173c7aed826c4bea9f03f88f773aac20c0f6cdf2cf63342b6d07461919",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "27aef73da900ec30da5b1a57a5f57ec677d9dc2edcbc4ea73dbe443a5f9d0505"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_11": {
-      "body": "09b1311670fbb7fe4cc09f581f44224c0019839b647213344f5bc0b30ae5a040",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "0bcdfe78dc759669a46f9e6197681eda2e6b3ea5e521b4b0e47fcafe6a33006a"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_12": {
-      "body": "8cfc8923ee4dc94b21334be5c8b1c9c9d80e5160aa619378513191ed602d4206",
+      "body": "bdad93087153f784478e78319119d4e16e053d859ae966378c1a5e0e0c5a3ddb",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "50ef4b07902dea9aaf32e571264d80062df65e1a21e88ac89f00a27962269d07"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_13": {
-      "body": "aa2cb08d49949745371c752be63c93d7da4f7ee3218fe5e245c5ae5e4ae5ff8f",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_11": {
+      "body": "93ad6045f17788bbfd38f8d0ff78ecb0758952a85167eb4fa9394159683db5ab",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "590afa05d9da9f26095fcc313cfb247d487d91883ace47c5dc984889d8155627"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_14": {
-      "body": "4c92771bf26db6d76ab864ab2a8cbbf282f2f3473964e3ba3ee497b732a4b46f",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_12": {
+      "body": "bec5f5284b73ed97f0ff71340f72f0aac3e5076af967c6e4e3939f18dee80904",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "937017287e2f6b4238a1cb18f643c2df3e0feef06a436f03230a69742b6f5f06"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_15": {
-      "body": "284088600ad90bdc7ad64e5fd567de0a3316dabf97520513048944295eb2a517",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_13": {
+      "body": "a131a3e0cffd6db4caf1a94d3ab6c5c250bb8b10cf5bfd93dcdff9fe610f8b7f",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "42ac9cc173cec63d6c18b2e8af5855ad843fa42eb9555d3331cf4d7e90460dd5"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_16": {
-      "body": "75e073d113f38974198f2a2e4b1f6f3a448fade8e412494f23e843e6d2df2541",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_14": {
+      "body": "bc942abe9096709547e791b07eb77ca86963dc906be81e94ee6390085fcdc172",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "34c213e06e18af811c8e7fb506a359e52a28fee21459aeeba1a8d367628a14ee"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_17": {
-      "body": "4ee8318d8ed53a33479e716d74f73dfd45ba69db2c6358dd04b37b45dd5c9fd9",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_15": {
+      "body": "75ecbcabbe0da967b362b8c1e4bd9a5bb77143316146ad63a813e5d526e13cd4",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "ccb2f41a82e054bb5d6a537f6cd7588db2ef22f79b1fde29f79f125933e7cf4a"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_18": {
-      "body": "0524fccc7c2685f902b0ed88b6e44f78e421595d4ed624a9d17880259505f78a",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_16": {
+      "body": "a8fc9fb1d13dbae5ac6b3aafcccb53dffb644f1878e41232fe633c0b7c719bdb",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "045e59f0436a5eedd122ffd68833ed41b1eeb0c85b66fd07bd802119893f3724"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_19": {
-      "body": "45e089890410ec68a4f5e6c79511f16e833b85bc33ec621f4e461ae1587b7d4a",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_17": {
+      "body": "db6df357152b5d3c927ce8d1cf2d7c4bc9d840d5e9692051dba7c1c07179fae0",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "dd6ee15f89a3edce5d3a2839bf6a7fa564046115f7a25415cb5b359e8a5c23c2"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_18": {
+      "body": "5967191ca87c7388382d732e2490e09b6cfa80a070ab1f8111452cf816d94bd5",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d3b181930dcbc1e14008c7d35b583e5f3a6b42987f996a12fd393241a867beab"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_19": {
+      "body": "4c37bc06e359ad359eddcaf02b63151dea3181b30d00d895d44bc6afe0a2ca5e",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "c9d56a382d4d7da814c316fe49db7b142e98cefa66ae8140273941ed9e026a40"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_2": {
       "body": "1266e319164f7ee0d807433bd709d53a061957e0c68256260d69febdba0fb9ac",
@@ -47344,144 +47641,130 @@
       "type": "123e87170c4fcd5959503745fb2c460f4a70a017bb93e62ee148001afd182617"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_20": {
-      "body": "a0fc0935f1cd248e6a1bdef12e09e55bba70f85cfba22da671e3ac0d4696161d",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "d3b181930dcbc1e14008c7d35b583e5f3a6b42987f996a12fd393241a867beab"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_21": {
-      "body": "d9935f8ef2f64d56a227b37808b4c6b6c99596bf9203d91f3a526d851015db9d",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "c9d56a382d4d7da814c316fe49db7b142e98cefa66ae8140273941ed9e026a40"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_22": {
-      "body": "7d9f6886c0231d35d07eed7750cf7a61352d0f60230100295e54503e5b3fc81d",
+      "body": "12df32eae8ad3ac5d5fd7aae7082eee2ebe491e017c1a3bab4809a590a967f53",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "5e1e6f2363347c18ea72c902e1c8cc86da5be38455d82168dff0e0c1a2435f2c"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_23": {
-      "body": "4adc2e70c9b5932ddd2f3c44c36d669765794b9b53c41a694d2486fd5b537890",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_21": {
+      "body": "52f20969dbdd7687f38cfea2542919392b52f6b9bc84e4fed9bafcd2e993d2ff",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "7d20b8ba275cae8b3088fcbfd75e371831c9db219d0a4d34657eaea611329b4b"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_24": {
-      "body": "4ffe593c874e8ff4f8839bdd8d6e44e638248828a9caae7f73ed5cba434e6d60",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_22": {
+      "body": "5c49f3226e5897513bab6655745039882455206d24c069af2adfabca81577c3d",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "4288e583f0b479016c18b44f32762b4efbc96e0b89ea2bb573672d7a7c542274"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_25": {
-      "body": "f31e5427d789d2220572277a888ce83bb27b91e98e54243bd9248384d6986016",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_23": {
+      "body": "521f3b0ff1c4d23cea62e198d63538ae71473c8c8af0d77503ac30e45686da9e",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "05c3403ffedf2d25c85c7d8bdbf342dec5a3e7352964b978b211adbfe21301d5"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_26": {
-      "body": "b49adaf6151e6e965a72331974d8a94c6620e27eaada8266702281e1c4b20321",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_24": {
+      "body": "9b14dbeb2e667c9b18d4415f77168dab4ce436fb901f93aad88d48e43d9f7f16",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "7df2b2013b722cc4e04fb11a2274c5a77f05ad1d82658e95bc99f64c3034d5e6"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_27": {
-      "body": "14bfbdbd4bc835ed6444411b735ddb127fb5629a21dcfd8a61cab6e71309c7f5",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_25": {
+      "body": "e2677f82fc662d1e7a6313b7252f03d8940fbd7b2138735015816ab5a7a488a3",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "fcf985fca0b91dbfa62a9e80d87bdaa4297961ff1dd3a5fa62e3b88cd79e88ff"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_28": {
-      "body": "8d7d8887482127b089fbc679913bde412a4204690dd6adfeed1e27365146fe87",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_26": {
+      "body": "949636eb8253f4397583fc643e6e444327dac7ed7fd7d8dac70828c6e838b265",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "3f002fe48d18435f775a8326c5c7daac9aa0aca2254dc2acfce296bff9359661"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_29": {
-      "body": "e846c20825670825adf6eb465dd8928286268f9782b12acc8208754eabe1d483",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_27": {
+      "body": "e0e5261c0cd9c190695f9e5efa573379879bb28a7d5a2e4c1050398c1ef687e3",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "10749eb18fa4d05ae9876c97448593cd060205bd6b0c6193f4b68ff37dcaf55f"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_3": {
-      "body": "c0f3450a37e176332808c89c7028a54deb5af039cebd3676c5aa5720b059a681",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "d30096b34e4c562056eb88a752cc86493f522bb5afece8e95fab27d8870d4daa"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_30": {
-      "body": "bb4e81090fc3f6de1549bb90aed9563732ed4b743fb3f4f05e0d258694c3e62e",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_28": {
+      "body": "a4a40af3ba1f9fbc2b751e35ef1d1c0d0eb77e186431e9a709e03cb817d4b8a1",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "a4e75638ae1c24c9440d824b8d6571b748d74cfa4b2a1c137ef9824c56246ecc"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_31": {
-      "body": "3a59acf9dc3ede16b421a41f2be98f46d48d5c718ac8f3fd405a99b0e8b09a91",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_29": {
+      "body": "47c067b8fafe46443b64fc22b38e6b9f405dfedc1a93c6018835c35b77fcbc94",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "aa0aac612c97c68b98330c7ef9b6993996808d75ef5fd868773041bc3e6679db"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_32": {
-      "body": "65600caab57e4d45a2c580f9c3195d87f77de616d0d1e1b7c22d0a99b66e7860",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_3": {
+      "body": "9c5bd034d8362721b335ed99e63681336a35bef29d22830dff11a20824470f86",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "35d2558d18d13fb2cb6d11706853e7b84fb1e03508698a745444f5119ac2d9d7"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_30": {
+      "body": "13b638a7d8ba5181aa97162c8e8b3d62f660b851a312e2f07feb8e907c34a628",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "f3617761f37a0b0ea03d74f6b2df3d0a7a44b2ae6ed8e1295d419a977126f44b"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_4": {
-      "body": "bbad84fbf7b001c237d8b286333775823582d88897f4ff1adeb7fb8d6af2ab7d",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "2ab7e31f1a956277ef4f313ed85348e8e14a4d9fbd55aca6b49c279bba8912b1"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_5": {
-      "body": "a9fd5da7d81d8adf27d6c293e81c2fabf09b0cb9b5e9fa16e2996076efb0882e",
-      "foundation": false,
-      "kind": "thm",
-      "protected": true,
-      "type": "35d2558d18d13fb2cb6d11706853e7b84fb1e03508698a745444f5119ac2d9d7"
-    },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_6": {
-      "body": "17c71034cac1418d8913d6404487675986bba19603cf616c9d271628759456f4",
+      "body": "0f6338b34d259ba4cf8f594cb8c5b6189600fcc00c55e9f0af67b98098d257b1",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "78cc1b16a6230244dbcc1695f975f6a6982b9d74c622a04c7c5ba754ac1d80ec"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_7": {
-      "body": "cf8f7e750926da028c321e8f679c3848db49a181c7f1cf7aa8582dc7bbd5df97",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_5": {
+      "body": "12f8e4d19681e7f17c1ebead131c34d65497e0acc423ae6c5ad82917d3c30e47",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "6344a9477e91532f92266cc83b1428e40ad6ed532e51d2dea54eef9a4a442509"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_8": {
-      "body": "036db40accaf84bae4a2975a8ba319076437b2a6a6f93ca91d584815ba7c6ea4",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_6": {
+      "body": "6a1a51d32033ac04a1835879e10af3066c0fb5d179402d33243f921633d23681",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "b4808e3688b5b3ba4908826755867b173ad987cf619f48d53f1e33d2a1b7408b"
     },
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_9": {
-      "body": "10b584b10dc0aa1ff13ef561b28db3c8951b8d9606d59aae1e7123ee3f338f65",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_7": {
+      "body": "44e4c62bf8649c8800641b31762348c54e00df481d824c10a34182cfb5324941",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "0a526a3586c13f1185c4ca02660bdf195601a240d8085b063f7d96d8571e4c1f"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_8": {
+      "body": "8b05a17a272f5afcc47276b6bafd02224ab66e7e9a66c2f4b918a76b7936c669",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "27aef73da900ec30da5b1a57a5f57ec677d9dc2edcbc4ea73dbe443a5f9d0505"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_9": {
+      "body": "5fb81ea207c12d5d71c05b1a80541afaba1e0464f19e0291c13db31db5e5f3c3",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "0bcdfe78dc759669a46f9e6197681eda2e6b3ea5e521b4b0e47fcafe6a33006a"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegs": {
       "body": "cd75700800967b1feb69ae781a39c0a2bed723ef7f10c225b2343b7909da5d2e",
@@ -47491,14 +47774,14 @@
       "type": "249a5f1efc3c54f77c3039039da47b2ac43c6e38b3d6634ffa827332ee6599b2"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegs._proof_1": {
-      "body": "8d65acf0863a3ae6c0576e15ba46d77df1329d5a0f11fe80df8c61f3240763aa",
+      "body": "c1728b333b8b74312b71fd41abef077c24f9da199a29899517a57c174b1ea535",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "1f7323f137b73f1c182e3ecb5e2c791052b647641bf7b4c8cb5f9815c50bb5d2"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svRegsRow": {
-      "body": "851e77b9971b40c8dbb3da097e1e1901e12bfd45e3721a2716165bbdd3a26742",
+      "body": "53345a5ed89f85971ab96163c07e4279facb58c437ceb7503ab43f7024b948ab",
       "foundation": false,
       "kind": "def",
       "protected": true,
@@ -47540,18 +47823,39 @@
       "type": "4d6dc5323bb45765b2f6f7c57d25b0e81efb928b597ce3bdcc372ae8f71cd815"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_1": {
-      "body": "d89ad398d3a427ff54042f6ea6197d81b002e2b25960e73c1631ba74f5506596",
+      "body": "3bf1c039cb1dfd4bef76b7795b2206a0abd47db3413fb7f285909a13b0fc86ee",
       "foundation": false,
       "kind": "thm",
       "protected": true,
       "type": "bfded3c87ba5ac082e9c07a4dc794388697fb665e84e6ff75fd4f91550c768d9"
     },
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svStateRow": {
-      "body": "7faa278d6a50d5a4a25c093a6e24f76658b9b7a87e2785a0beae1e7697b5dd98",
+      "body": "b1986972cbf8b7f29828d4b240ca23487256df3fd13eecea4b6dfef673e98079",
       "foundation": false,
       "kind": "def",
       "protected": true,
       "type": "283eacd993134362bc29ac14a3fd2efb680941837d425c0046e9e4a4c493acda"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord": {
+      "body": "6487af14c9cff08d4ffceffe219eb8ab62839852032accb1c97efee5dc159921",
+      "foundation": false,
+      "kind": "def",
+      "protected": true,
+      "type": "0c786c2dc748637a2b2027a66a6415733520c10533b4054b7f09d41121e5db88"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord._proof_1": {
+      "body": "b12c62e6b95ad84db4cfd25e4e655008be6224b98ff7ed10a08b836b2f62529c",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "d30096b34e4c562056eb88a752cc86493f522bb5afece8e95fab27d8870d4daa"
+    },
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord._proof_2": {
+      "body": "a97cad09be9dd4700e44bb932ebd91966bdc1a43be463bba7c791ab069629fdc",
+      "foundation": false,
+      "kind": "thm",
+      "protected": true,
+      "type": "2ab7e31f1a956277ef4f313ed85348e8e14a4d9fbd55aca6b49c279bba8912b1"
     },
     "_private.HDLean.Backend.TextCodec.0.HDLean.Backend.Text.repr_no_char": {
       "body": "b0adf959b1943b56c68cfb3f4ec54ad2c28249ddb826b495fad41d1ce16fe4fe",
@@ -48898,11 +49202,11 @@
       "type": "ab9af8edf373f7cac9fefaffc97d303eb94bdfc2bdb2886a9c7189866d9b5bf9"
     },
     "_private.Init.Data.BitVec.Lemmas.0.BitVec.shiftLeftZeroExtend_eq._proof_1_2": {
-      "body": "cbc6921a4d50a541a358e4ff74851194ac271b983849c7691a67dc7a0e1c8103",
+      "body": "5ec825605b82b32a53f8d78b061212944a30512e4a3cf0b36acef6167a71d70a",
       "foundation": false,
       "kind": "thm",
       "protected": true,
-      "type": "27b2b90a207054b25da8275606157c7cd63967f30f33f32d49e4cc0b6931706e"
+      "type": "51b6d99dee680bcd354605d4daba404159f8e8e06237700faf3833d898a6cf0c"
     },
     "_private.Init.Data.BitVec.Lemmas.0.BitVec.shiftLeft_add._proof_1_1": {
       "body": "4a47403960e65c916cd7a7d27fa4dcd449e6667868e1fc0b9a2d0e18379afa9f",
@@ -63527,7 +63831,23 @@
     "HDLean.AsyncFifo.Physical.word",
     "HDLean.AsyncFifo.Physical.writeReset._proof_1",
     "HDLean.AsyncFifo.Physical.writeReset._proof_2",
+    "HDLean.AsyncFifo.QueueRelation",
+    "HDLean.AsyncFifo.QueueSpec.Allowed",
+    "HDLean.AsyncFifo.QueueSpec.EdgeFair",
+    "HDLean.AsyncFifo.QueueSpec.Input",
+    "HDLean.AsyncFifo.QueueSpec.Input.data",
+    "HDLean.AsyncFifo.QueueSpec.Input.mk",
+    "HDLean.AsyncFifo.QueueSpec.Input.readEdge",
+    "HDLean.AsyncFifo.QueueSpec.Input.ready",
+    "HDLean.AsyncFifo.QueueSpec.Input.valid",
+    "HDLean.AsyncFifo.QueueSpec.Input.writeEdge",
+    "HDLean.AsyncFifo.QueueSpec.Trace",
+    "HDLean.AsyncFifo.QueueSpec.next",
+    "HDLean.AsyncFifo.QueueSpec.run",
+    "HDLean.AsyncFifo.QueueSpec.run._f",
+    "HDLean.AsyncFifo.QueueSpec.run.match_1",
     "HDLean.AsyncFifo.ResetProgress",
+    "HDLean.AsyncFifo.Startup",
     "HDLean.AsyncFifo.State",
     "HDLean.AsyncFifo.State.memory",
     "HDLean.AsyncFifo.State.mk",
@@ -63539,8 +63859,18 @@
     "HDLean.AsyncFifo.deqValid",
     "HDLean.AsyncFifo.enqReady",
     "HDLean.AsyncFifo.next",
+    "HDLean.AsyncFifo.observe",
     "HDLean.AsyncFifo.pop",
     "HDLean.AsyncFifo.push",
+    "HDLean.AsyncFifo.queue",
+    "HDLean.AsyncFifo.queueInput",
+    "HDLean.AsyncFifo.seenRead",
+    "HDLean.AsyncFifo.seenRead._f",
+    "HDLean.AsyncFifo.seenWrite",
+    "HDLean.AsyncFifo.seenWrite._f",
+    "HDLean.AsyncFifo.stateFrom",
+    "HDLean.AsyncFifo.stateFrom._f",
+    "HDLean.AsyncFifo.stateFrom.match_1",
     "HDLean.AsyncFifo.ungray",
     "HDLean.Backend.Format",
     "HDLean.Backend.Format.Correct",
@@ -63741,6 +64071,7 @@
     "HDLean.Backend.Proved.Aag.gates",
     "HDLean.Backend.Proved.Aag.graph",
     "HDLean.Backend.Proved.Aag.ilLines",
+    "HDLean.Backend.Proved.Aag.ilLinesNamed",
     "HDLean.Backend.Proved.Aag.inputs",
     "HDLean.Backend.Proved.Aag.lines",
     "HDLean.Backend.Proved.Aag.mk",
@@ -63753,6 +64084,7 @@
     "HDLean.Backend.Proved.Aag.print",
     "HDLean.Backend.Proved.Aag.rtlil",
     "HDLean.Backend.Proved.Aag.svLines",
+    "HDLean.Backend.Proved.Aag.svLinesNamed",
     "HDLean.Backend.Proved.Aag.systemVerilog",
     "HDLean.Backend.Proved.Format",
     "HDLean.Backend.Proved.Format.aiger",
@@ -63817,6 +64149,9 @@
     "HDLean.Backend.Text.Word.noNewline",
     "HDLean.Backend.Text.Word.noSpace",
     "HDLean.Backend.Text.Word.text",
+    "HDLean.Backend.Text.join",
+    "HDLean.Backend.Text.join._f",
+    "HDLean.Backend.Text.join.match_1",
     "HDLean.Backend.Text.numeral",
     "HDLean.Backend.Text.numeral._proof_1",
     "HDLean.Backend.Text.numeral._proof_2",
@@ -65722,6 +66057,9 @@
     "List.push_append_toArray",
     "List.push_toArray",
     "List.range",
+    "List.range'",
+    "List.range'._f",
+    "List.range'.match_1",
     "List.range.loop",
     "List.range.loop._f",
     "List.range.loop.match_1",
@@ -69049,8 +69387,6 @@
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_1",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_10",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_11",
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_12",
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_13",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_2",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_3",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilStart._proof_4",
@@ -69063,17 +69399,24 @@
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.ilState._proof_1",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens",
     "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_1",
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_3",
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_5",
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_7",
-    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.parseILTokens.match_9",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_1",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_3",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_5",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_7",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.readILTokens.match_9",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord._proof_1",
+    "_private.HDLean.Backend.RTLILProved.0.HDLean.Backend.Proved.topWord._proof_2",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.Block",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_1",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_3",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_5",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_7",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.parseSVTokens.match_9",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_1",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_3",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_5",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_7",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.readSVTokens.match_9",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svConstants._proof_10",
@@ -69159,8 +69502,6 @@
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_29",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_3",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_30",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_31",
-    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_32",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_4",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_5",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svPortsRow._proof_6",
@@ -69177,6 +69518,9 @@
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svState._proof_1",
     "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.svStateRow",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord._proof_1",
+    "_private.HDLean.Backend.SystemVerilogProved.0.HDLean.Backend.Proved.topWord._proof_2",
     "_private.HDLean.Backend.TextCodec.0.HDLean.Backend.Text.repr_no_char",
     "_private.HDLean.Core.Network.0.HDLean.Circuit.connectionExpr",
     "_private.HDLean.Core.Network.0.HDLean.Circuit.connectionExpr.match_1",
@@ -71317,10 +71661,13 @@
     "HDLean.Review.AsyncFifo_Physical_output_ready",
     "HDLean.Review.AsyncFifo_Physical_output_valid",
     "HDLean.Review.AsyncFifo_Physical_storage_bits",
+    "HDLean.Review.AsyncFifo_read_progress_queue",
     "HDLean.Review.AsyncFifo_reset_establishes_queue",
     "HDLean.Review.AsyncFifo_reset_progress",
     "HDLean.Review.AsyncFifo_step_refines_queue",
+    "HDLean.Review.AsyncFifo_trace_refines_queue",
     "HDLean.Review.AsyncFifo_ungray_gray",
+    "HDLean.Review.AsyncFifo_write_progress_queue",
     "HDLean.Review.Backend_Format_correct_of_validated",
     "HDLean.Review.Backend_Format_validates_sound",
     "HDLean.Review.Backend_Graph_validateLocal_sound",
