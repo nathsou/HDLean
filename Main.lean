@@ -82,7 +82,7 @@ private def emitChecked (f : Proved.Format) (c : Dag d i r o) (path : String) : 
   let bytes ← IO.FS.readFile (System.FilePath.mk path)
   match f.parse bytes with
   | some g =>
-    unless g.graph.logic == (Dag.lowerTight c).logic do
+    unless g.graph.logic == (Dag.lowerOpt c).logic do
       throw (IO.userError s!"{path}: read-back graph differs from the circuit's lowering")
   | none => throw (IO.userError s!"{path}: the proved parser rejected the written file")
 
@@ -151,13 +151,13 @@ private def execute (args : List String) : IO Unit := do
     let f ← parseFormat format
     withDesign design width fun c => do
       emitChecked f c path
-      let g := Dag.lowerTight c
+      let g := Dag.lowerOpt c
       IO.println s!"Wrote {path} ({g.ffBits} flip-flops, {g.andCount} AND gates; proved emitter, read back)."
   | "metrics" :: design :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
     withDesign design width fun c => do
-      let g := Dag.lowerTight c
+      let g := Dag.lowerOpt c
       IO.println (Lean.Json.mkObj [("design", .str g.name), ("ff_bits", Lean.toJson g.ffBits),
         ("memory_bits", Lean.toJson (0 : Nat)), ("and_gates", Lean.toJson g.andCount),
         ("logic_depth", Lean.toJson g.depth), ("physical_metrics", .null)]).pretty
@@ -167,7 +167,7 @@ private def execute (args : List String) : IO Unit := do
     let cycles ← parseNum (rest[1]?.getD "60") 10000
     let seed ← parseNum (rest[2]?.getD "1") 4294967295
     withDesign design width fun c => do
-      let g := Dag.lowerTight c
+      let g := Dag.lowerOpt c
       writeFile path (traceJson g (trace g cycles seed)).pretty
   | "check" :: design :: rest =>
     if rest.length > 3 then throw (IO.userError usage)
@@ -214,7 +214,7 @@ private def execute (args : List String) : IO Unit := do
       n + (m.mems.toList.map fun mm => 2 ^ mm.addrWidth * mm.width).sum) 0
     let cells := d.modules.toList.foldl (fun n m => n + m.cells.size) 0
     withRtl d fun g => do
-      let lg := Dag.lowerTight g
+      let lg := Dag.lowerOpt g
       IO.println (Lean.Json.mkObj [("design", .str design), ("modules", Lean.toJson d.modules.size),
         ("cells", Lean.toJson cells), ("register_bits", Lean.toJson regBits), ("memory_bits", Lean.toJson memBits),
         ("blasted_state_bits", Lean.toJson lg.ffBits), ("blasted_and_gates", Lean.toJson lg.andCount),

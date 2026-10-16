@@ -21,6 +21,8 @@ def frameworkTheorems : List Name := [
   ``HDLean.refinesAfterReset_of_simulation, ``HDLean.refinesResetSchedule_of_simulation,
   ``HDLean.retiresLike_of_simulation, ``HDLean.compose_contracts, ``HDLean.reset_noninterference,
   ``HDLean.Dag.lowerTight_correct, ``HDLean.Dag.lowerTight_wellFormed,
+  ``HDLean.Backend.Graph.optimize_eval, ``HDLean.Backend.Graph.optimize_wellFormed,
+  ``HDLean.Dag.lowerOpt_correct, ``HDLean.Dag.lowerOpt_wellFormed,
   ``HDLean.Rtl.Design.toDag_nextState, ``HDLean.Rtl.Design.toDag_evalOutput,
   ``HDLean.Rtl.Design.parse_systemVerilog, ``HDLean.Rtl.Design.parseSystemVerilog_canonical,
   ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,

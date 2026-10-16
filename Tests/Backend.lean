@@ -16,7 +16,7 @@ def checkBackendTexts : IO Unit := do
     let c := (Fifo.hardware width).toDag
     for f in [Format.systemVerilog, .aiger, .rtlil] do
       match f.parse (f.emit c) with
-      | some g => require (g.graph.logic == (Dag.lowerTight c).logic) s!"read-back graph differs, width={width}"
+      | some g => require (g.graph.logic == (Dag.lowerOpt c).logic) s!"read-back graph differs, width={width}"
       | none => throw (IO.userError s!"proved parser rejected emitted text, width={width}")
   let c := Counter.hardware.toDag
   let sv := Format.systemVerilog.emit c
@@ -31,4 +31,4 @@ def checkBackendTexts : IO Unit := do
     require (mutant != original) "mutation made no change"
     match f.parse mutant with
     | none => pure ()
-    | some g => require (g.graph.logic != (Dag.lowerTight c).logic) "a changed file decoded to the original graph"
+    | some g => require (g.graph.logic != (Dag.lowerOpt c).logic) "a changed file decoded to the original graph"
