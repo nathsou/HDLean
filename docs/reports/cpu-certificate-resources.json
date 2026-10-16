@@ -41,5 +41,26 @@
     "ShallowHint.lean": "f57516347e8b9eb1b53fc421f835b00c54c218f27403fd7a4842135112367a68"
   },
   "aiger_sha256": "ac9f1503f4f172d9f2d20db6b9791be166b398b0b5f139c280a170a2fcb35922",
-  "reproducer_archive_sha256": "3e1e4981f77daa48292c06e5888c237aa47bb2b753299871dfdfccbc283593f3"
+  "reproducer_archive_sha256": "3e1e4981f77daa48292c06e5888c237aa47bb2b753299871dfdfccbc283593f3",
+  "independent_helper_assessment": "Genuine remaining graph-index construction resource blocker; lexical staging and parser decomposition do not establish a full CPU artifact certificate.",
+  "parser_prototype": {
+    "production": false,
+    "chunk_proofs": 708,
+    "modules": 23,
+    "chunk_peak_rss_gib_less_than": 1.86,
+    "exact_token_partition": {
+      "seconds": 9.55,
+      "peak_rss_gib": 1.98
+    },
+    "conditional_composition": {
+      "seconds": 1.21,
+      "peak_rss_gib": 1.77
+    },
+    "remaining_obligations": [
+      "Production parser compatibility",
+      "Reconstructed graph well-formedness and equality to candidate",
+      "Graph semantic equivalence",
+      "Final exact-byte theorem and independent replay"
+    ]
+  }
 }

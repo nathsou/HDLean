@@ -168,7 +168,11 @@ CPU graph-only kernel attempt reached over 7 GiB process memory. A staged-header
 graph-only experiment subsequently exhausted an 11.5 GiB managed-allocation limit
 under a 12 GiB RSS watchdog; the [measurement](reports/cpu-certificate-resources.json)
 and [bounded reproducer](reports/cpu-certificate-reproducer.tar.gz) preserve that
-real resource roadblock. Native local validation, generic soundness and replayed hardware
+real resource roadblock. A work-only recursive parser prototype also checked 708
+bounded input/latch/output/gate chunks and their conditional composition below
+2 GiB. It has not been integrated with the production parser or proved equal to
+the final candidate graph, and it does not remove the semantic-index bottleneck.
+Native local validation, generic soundness and replayed hardware
 proofs are not labeled as a successful concrete CPU byte certificate.
 
 All 77 current headline roots have independently replayed in nanoda over 6,680
