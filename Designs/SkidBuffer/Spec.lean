@@ -1,5 +1,5 @@
 import HDLean.Lib.Network
-import Designs.Fifo.Interface
+import Designs.Fifo.Spec
 
 namespace HDLean.SkidBuffer
 open Fifo
@@ -16,13 +16,5 @@ def wiring (fallback : α) (i : Input α) (o : Fin 3 → Output α) : Fin 3 → 
 def pipelineSpec (fallback : α) :
     Machine (Fin 3 → List α) (Input α) (Fin 3 → Output α) :=
   Machine.network 3 (fun _ => Fifo.spec α 2) (wiring fallback)
-
-/-- The reference accepts little-endian bit ports with the FIFO input mapping.
-The fallback is unobservable whenever its corresponding valid bit is false. -/
-def pipelineWireSpec (w : Nat) : Machine (Fin 3 → List (Vector Bool w))
-    (Fin (w + 2) → Bool) (Fin 3 → Output (Vector Bool w)) where
-  init := (pipelineSpec (Vector.replicate w false)).init
-  out := (pipelineSpec (Vector.replicate w false)).out
-  next q xs := (pipelineSpec (Vector.replicate w false)).next q (decodeInput xs)
 
 end HDLean.SkidBuffer
