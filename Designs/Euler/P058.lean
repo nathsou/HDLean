@@ -80,43 +80,81 @@ def sDone := 17
 def nStates : Nat := 18
 def SW : Nat := 35       -- carry-save words
 
-def laneRegs (l : Nat) : List RegSpec :=
-  [rs s!"st{l}" nStates (.sync (1 <<< sIdle)), rs s!"n{l}" NW, rs s!"r1_{l}" NW, rs s!"x{l}" NW,
-   rs s!"x3_{l}" TW, rs s!"n3_{l}" TW, rs s!"t{l}" TW, rs s!"S{l}" SW, rs s!"C{l}" SW, rs s!"ci{l}" 1,
-   rs s!"ib{l}" 5, rs s!"tb{l}" 5, rs s!"r{l}" 5, rs s!"rr{l}" 5,
-   rs s!"mc{l}" 5, rs s!"ab{l}" 3, rs s!"bi{l}" 2, rs s!"ph{l}" 2, rs s!"tag{l}" robBits, rs s!"lap{l}" 1,
-   rs s!"res{l}" 1, rs s!"dq{l}" 2, rs s!"eq1_{l}" 1, rs s!"eqm{l}" 1, rs s!"skip{l}" 1]
-def laneSize : Nat := 25
-def laneBase (l : Nat) : Nat := laneSize * l
+hdl_record Lane where
+  st : nStates := (1 <<< sIdle)
+  n : NW
+  r1 : NW
+  x : NW
+  x3 : TW
+  n3 : TW
+  t : TW
+  S : SW
+  C : SW
+  ci : 1
+  ib : 5
+  tb : 5
+  r : 5
+  rr : 5
+  mc : 5
+  ab : 3
+  bi : 2
+  ph : 2
+  tag : robBits
+  lap : 1
+  res : 1
+  dq : 2
+  eq1 : 1
+  eqm : 1
+  skip : 1
 
-def dBase : Nat := laneSize * lanes
-def dispRegs : List RegSpec :=
-  [rs "s" W (.sync 3), rs "sq" NW (.sync 9), rs "f4" 20 (.sync 16), rs "t3" 20 (.sync 12), rs "sm1" W (.sync 2),
-   rs "cn" NW (.sync 7), rs "cj" 2 (.sync 0), rs "lk" 2 (.sync 0), rs "q" (robBits + 1) (.sync 0),
-   rs "wp" (fifoBits + 1) (.sync 0), rs "wpd" (fifoBits + 1) (.sync 0), rs "filt" 1 (.sync 0)] ++
-  filterPrimes.map (fun p => rs s!"res_{p}" 7 (.sync (3 % p))) ++
-  -- the layer's filter verdicts (registered, a cycle into the layer), and a
-  -- one-job slot between the corner walk and the lanes
-  [rs "hits" 3 (.sync 0), rs "hv" 1 (.sync 0), rs "pv" 1 (.sync 0), rs "pn" NW, rs "ptag" robBits, rs "plap" 1]
-def dSize : Nat := 18 + filterPrimes.length
+/-- The dispatcher: the corner walk, the layer's filter verdicts (registered, a
+cycle into the layer), and a one-job slot between the corner walk and the lanes. -/
+hdl_record Disp where
+  s : W := 3
+  sq : NW := 9
+  f4 : 20 := 16
+  t3 : 20 := 12
+  sm1 : W := 2
+  cn : NW := 7
+  cj : 2 := 0
+  lk : 2 := 0
+  q : (robBits + 1) := 0
+  wp : (fifoBits + 1) := 0
+  wpd : (fifoBits + 1) := 0
+  filt : 1 := 0
+  hits : 3 := 0
+  hv : 1 := 0
+  pv : 1 := 0
+  pn : NW
+  ptag : robBits
+  plap : 1
 
-def rBase : Nat := dBase + dSize
-/-- The reorder buffer: verdict and lap per entry (laps start at 1, so nothing is valid). -/
-def robRegs : List RegSpec :=
-  (List.range (2 ^ robBits)).flatMap fun e => [rs s!"rp{e}" 1 (.sync 0), rs s!"rl{e}" 1 (.sync 1)]
+/-- A reorder buffer entry: verdict and lap (laps start at 1, so nothing is valid). -/
+hdl_record RobEntry where
+  rp : 1 := 0
+  rl : 1 := 1
 
-def cBase : Nat := rBase + 2 * 2 ^ robBits
-def collRegs : List RegSpec :=
-  [rs "h" (robBits + 1) (.sync 0), rs "rptr" (fifoBits + 1) (.sync 0), rs "sc" W (.sync 3),
-   rs "p10" 20 (.sync 0), rs "tt" 20 (.sync 5), rs "krem" 2 (.sync 0), rs "kv" 1 (.sync 0),
-   rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]
+hdl_record Coll where
+  h : (robBits + 1) := 0
+  rptr : (fifoBits + 1) := 0
+  sc : W := 3
+  p10 : 20 := 0
+  tt : 20 := 5
+  krem : 2 := 0
+  kv : 1 := 0
+  done : 1 := 0
+  answer : W := 0
 
-def regs : Array RegSpec :=
-  ((List.range lanes).flatMap laneRegs ++ dispRegs ++ robRegs ++ collRegs).toArray
+/-- Lanes, dispatcher, the residues of the corner walk modulo the filter primes,
+the reorder buffer and the collector. -/
+abbrev State := Both (Lanes "l" lanes Lane) (Both Disp (Both (Lanes "res" filterPrimes.length (Word 7))
+  (Both (Lanes "rob" (2 ^ robBits) RobEntry) Coll)))
 
 def mems : Array MemSpec := #[ms "layers" fifoBits 2]
 
-def ctx : Ctx := solverCtx "euler58" W regs mems
+def ctx : Ctx := solverCtx "euler58" W State
+  ⟨Lanes.replicate Lane.resets, Disp.resets, Lanes.ofFn fun i => ⟨.sync (3 % filterPrimes[i]!)⟩,
+   Lanes.replicate RobEntry.resets, Coll.resets⟩ mems
 
 /-- Bit `i` of `x`, for a 5-bit index. -/
 def bitAt (x : Sig w) (i : Sig 5) : M ctx (Sig 1) := do
@@ -136,34 +174,33 @@ structure LaneIO where
   deriving Inhabited
 
 set_option maxRecDepth 20000 in
-def lane (l : Nat) (load : Sig 1) (nIn : Sig NW) (tagIn : Sig robBits) (lapIn : Sig 1) (granted : Sig 1) :
-    M ctx (LaneIO × Array Nat) := do
-  let b := laneBase l
-  let st ← rd b nStates
-  let n ← rd (b + 1) NW
-  let r1 ← rd (b + 2) NW
-  let x ← rd (b + 3) NW
-  let x3 ← rd (b + 4) TW
-  let n3 ← rd (b + 5) TW
-  let t ← rd (b + 6) TW
-  let sS ← rd (b + 7) SW
-  let sC ← rd (b + 8) SW
-  let ci ← rd (b + 9) 1
-  let ib ← rd (b + 10) 5
-  let tb ← rd (b + 11) 5
-  let r ← rd (b + 12) 5
-  let rr ← rd (b + 13) 5
-  let mc ← rd (b + 14) 5
-  let ab ← rd (b + 15) 3
-  let bi ← rd (b + 16) 2
-  let ph ← rd (b + 17) 2
-  let tag ← rd (b + 18) robBits
-  let lap ← rd (b + 19) 1
-  let res ← rd (b + 20) 1
-  let dq ← rd (b + 21) 2
-  let eq1 ← rd (b + 22) 1
-  let eqm ← rd (b + 23) 1
-  let skipR ← rd (b + 24) 1
+def lane (l : Nat) (rg : Lane Sig) (load : Sig 1) (nIn : Sig NW) (tagIn : Sig robBits) (lapIn : Sig 1)
+    (granted : Sig 1) : M ctx (LaneIO × Lane Sig) := scope s!"lane {l}" do
+  let st := rg.st
+  let n := rg.n
+  let r1 := rg.r1
+  let x := rg.x
+  let x3 := rg.x3
+  let n3 := rg.n3
+  let t := rg.t
+  let sS := rg.S
+  let sC := rg.C
+  let ci := rg.ci
+  let ib := rg.ib
+  let tb := rg.tb
+  let r := rg.r
+  let rr := rg.rr
+  let mc := rg.mc
+  let ab := rg.ab
+  let bi := rg.bi
+  let ph := rg.ph
+  let tag := rg.tag
+  let lap := rg.lap
+  let res := rg.res
+  let dq := rg.dq
+  let eq1 := rg.eq1
+  let eqm := rg.eqm
+  let skipR := rg.skip
   let is (k : Nat) : M ctx (Sig 1) := bit st k
   let isIdle ← is sIdle
   let isScanR ← is sScanR
@@ -326,9 +363,9 @@ def lane (l : Nat) (load : Sig 1) (nIn : Sig NW) (tagIn : Sig robBits) (lapIn : 
   let eq1' ← eq x r1
   let eqm' ← and1 (← eq (← slice sum 0 NW) n) (← eqK (← slice sum NW (TW - NW)) 0)
   pure (⟨isIdle, isDone, tag, lap, res⟩,
-    #[st'.ref, n'.ref, r1'.ref, x'.ref, x3'.ref, n3'.ref, t'.ref, sS'.ref, sC'.ref, ci'.ref,
-      ib'.ref, tb'.ref, r'.ref, rr'.ref, mc'.ref,
-      ab'.ref, bi'.ref, ph'.ref, tag'.ref, lap'.ref, res'.ref, dq'.ref, eq1'.ref, eqm'.ref, skipNext.ref])
+    { st := st', n := n', r1 := r1', x := x', x3 := x3', n3 := n3', t := t', S := sS', C := sC', ci := ci',
+      ib := ib', tb := tb', r := r', rr := rr', mc := mc', ab := ab', bi := bi', ph := ph', tag := tag',
+      lap := lap', res := res', dq := dq', eq1 := eq1', eqm := eqm', skip := skipNext })
 
 /-! ## Dispatcher, reorder buffer, collector -/
 
@@ -339,38 +376,38 @@ def divides (p : Nat) (rsd : Nat) : Nat :=
     if v == 0 then acc ||| (1 <<< j) else acc) 0
 
 set_option maxRecDepth 20000 in
-def body : M ctx Wiring := do
+def body : M ctx Wiring := solver "P058" State fun ⟨laneRs, d, residR, rob, co⟩ => do
+  let lrs := laneRs.lanes.toArray
   -- dispatcher state
-  let s ← rd dBase W
-  let sq ← rd (dBase + 1) NW
-  let f4 ← rd (dBase + 2) 20
-  let t3 ← rd (dBase + 3) 20
-  let sm1 ← rd (dBase + 4) W
-  let cn ← rd (dBase + 5) NW
-  let cj ← rd (dBase + 6) 2
-  let lk ← rd (dBase + 7) 2
-  let q ← rd (dBase + 8) (robBits + 1)
-  let wp ← rd (dBase + 9) (fifoBits + 1)
-  let wpd ← rd (dBase + 10) (fifoBits + 1)
-  let filt ← rd (dBase + 11) 1
-  let resids ← filterPrimes.zipIdx.mapM fun (_, i) => rd (dBase + 12 + i) 7
-  let pBase := dBase + 12 + filterPrimes.length
-  let hitsR ← rd pBase 3
-  let hv ← rd (pBase + 1) 1
-  let pv ← rd (pBase + 2) 1
-  let pn ← rd (pBase + 3) NW
-  let ptag ← rd (pBase + 4) robBits
-  let plap ← rd (pBase + 5) 1
+  let s := d.s
+  let sq := d.sq
+  let f4 := d.f4
+  let t3 := d.t3
+  let sm1 := d.sm1
+  let cn := d.cn
+  let cj := d.cj
+  let lk := d.lk
+  let q := d.q
+  let wp := d.wp
+  let wpd := d.wpd
+  let filt := d.filt
+  let resids := (residR.lanes.map (·.v)).toArray
+  let hitsR := d.hits
+  let hv := d.hv
+  let pv := d.pv
+  let pn := d.pn
+  let ptag := d.ptag
+  let plap := d.plap
   -- collector state
-  let h ← rd cBase (robBits + 1)
-  let rptr ← rd (cBase + 1) (fifoBits + 1)
-  let sc ← rd (cBase + 2) W
-  let p10 ← rd (cBase + 3) 20
-  let tt ← rd (cBase + 4) 20
-  let krem ← rd (cBase + 5) 2
-  let kv ← rd (cBase + 6) 1
-  let done ← rd (cBase + 7) 1
-  let answer ← rd (cBase + 8) W
+  let h := co.h
+  let rptr := co.rptr
+  let sc := co.sc
+  let p10 := co.p10
+  let tt := co.tt
+  let krem := co.krem
+  let kv := co.kv
+  let done := co.done
+  let answer := co.answer
   -- the filter: corners divisible by a small prime (from s = 11 on)
   let mut mask ← lit 3 0
   for (p, i) in filterPrimes.zipIdx do
@@ -390,7 +427,7 @@ def body : M ctx Wiring := do
   let mut loads : Array (Sig 1) := #[]
   let mut idleAny ← lit 1 0
   -- lanes' idle flags first (from their state registers)
-  let idles ← (List.range lanes).mapM fun l => do bit (← rd (laneBase l) nStates) sIdle
+  let idles ← lrs.toList.mapM fun rg => bit rg.st sIdle
   for l in [0:lanes] do
     idleAny ← or1 idleAny idles[l]!
   -- the slot's job goes to the lowest idle lane
@@ -405,17 +442,17 @@ def body : M ctx Wiring := do
   let walking ← and1 hv (← not1 done)
   let dispatch ← and1 walking (← and1 survives (← and1 slotFree (← and1 windowOk roomOk)))
   -- ROB write arbitration: the lowest finished lane
-  let dones ← (List.range lanes).mapM fun l => do bit (← rd (laneBase l) nStates) sDone
+  let dones ← lrs.toList.mapM fun rg => bit rg.st sDone
   let mut wtaken ← lit 1 0
   let mut grants : Array (Sig 1) := #[]
   for l in [0:lanes] do
     grants := grants.push (← and1 dones[l]! (← not1 wtaken))
     wtaken ← or1 wtaken dones[l]!
-  let mut nexts : Array Nat := #[]
+  let mut laneNext : Array (Lane Sig) := #[]
   let mut ios : Array LaneIO := #[]
   for l in [0:lanes] do
-    let (io, ns) ← lane l loads[l]! pn ptag plap grants[l]!
-    nexts := nexts ++ ns
+    let (io, rg') ← lane l lrs[l]! loads[l]! pn ptag plap grants[l]!
+    laneNext := laneNext.push rg'
     ios := ios.push io
   -- the granted lane's verdict
   let mut wTag ← lit robBits 0
@@ -441,11 +478,11 @@ def body : M ctx Wiring := do
   let sm1' ← ite' layerEnd (← addK sm1 2) sm1
   let wp' ← ite' layerEnd (← addK wp 1) wp
   let filt' ← or1 filt (← and1 layerEnd (← eqK s 9))
-  let mut residNexts : Array Nat := #[]
+  let mut residNext : Array (Sig 7) := #[]
   for (p, i) in filterPrimes.zipIdx do
     let v ← addK resids[i]! 2
     let wrapped ← ite' (← geK v p) (← subK v p) v
-    residNexts := residNexts.push (← ite' layerEnd wrapped resids[i]!).ref
+    residNext := residNext.push (← ite' layerEnd wrapped resids[i]!)
   let hitsR' ← ite' hv hitsR hits
   let hv' ← and1 (← or1 hv (← lit 1 1)) (← not1 layerEnd)
   let pv' ← or1 dispatch (← and1 pv (← not1 consumed))
@@ -455,14 +492,14 @@ def body : M ctx Wiring := do
   let fifoAddr ← slice wp 0 fifoBits
   let fifoWrite := port layerEnd fifoAddr lk1
   -- the reorder buffer
-  let mut robNexts : Array Nat := #[]
+  let mut robNext : Array (RobEntry Sig) := #[]
   let mut robP : Array (Sig 1) := #[]
   let mut robL : Array (Sig 1) := #[]
-  for e in [0:2 ^ robBits] do
-    let rpE ← rd (rBase + 2 * e) 1
-    let rlE ← rd (rBase + 2 * e + 1) 1
+  for (en, e) in rob.lanes.zipIdx do
+    let rpE := en.rp
+    let rlE := en.rl
     let hit ← and1 wtaken (← eqK wTag e)
-    robNexts := robNexts ++ #[(← ite' hit wRes rpE).ref, (← ite' hit wLap rlE).ref]
+    robNext := robNext.push ⟨← ite' hit wRes rpE, ← ite' hit wLap rlE⟩
     robP := robP.push rpE
     robL := robL.push rlE
   -- the collector
@@ -472,7 +509,7 @@ def body : M ctx Wiring := do
   let entryL ← pick hIdx robL
   let ready ← eq entryL hLap
   let fifoHas ← ne rptr wpd
-  let layerCount ← memRead 0 2 (← slice rptr 0 fifoBits)
+  let layerCount ← readMem "layers" 2 (← slice rptr 0 fifoBits)
   let running ← not1 done
   let loadK ← and1 running (← and1 (← not1 kv) fifoHas)
   let kZero ← eqK krem 0
@@ -490,13 +527,17 @@ def body : M ctx Wiring := do
   let tt' ← ite' nextLayer (← addK tt 4) tt
   let answer' ← ite' found sc answer
   let done' ← or1 done found
-  pure (solverWiring ⟨done, answer.ref,
-    nexts ++ #[s'.ref, sq'.ref, f4'.ref, t3'.ref, sm1'.ref, cn'.ref, cj'.ref, lk'.ref, q'.ref, wp'.ref, wp.ref, filt'.ref] ++
-    residNexts ++ #[hitsR'.ref, hv'.ref, pv'.ref, pn'.ref, ptag'.ref, plap'.ref] ++ robNexts ++
-    #[h'.ref, rptr'.ref, sc'.ref, p10'.ref, tt'.ref, krem'.ref, kv'.ref, done'.ref, answer'.ref],
-    #[#[fifoWrite]]⟩)
+  finish done answer
+    ⟨Lanes.ofFn fun l => laneNext.getD l default,
+     { s := s', sq := sq', f4 := f4', t3 := t3', sm1 := sm1', cn := cn', cj := cj', lk := lk', q := q', wp := wp',
+       wpd := wp, filt := filt', hits := hitsR', hv := hv', pv := pv', pn := pn', ptag := ptag', plap := plap' },
+     Lanes.ofFn fun i => ⟨residNext.getD i default⟩,
+     Lanes.ofFn fun e => robNext.getD e default,
+     { h := h', rptr := rptr', sc := sc', p10 := p10', tt := tt', krem := krem', kv := kv', done := done',
+       answer := answer' }⟩
+    (← writePorts [("layers", #[fifoWrite])])
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 58, title := "Spiral primes",

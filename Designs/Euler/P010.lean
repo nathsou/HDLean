@@ -66,22 +66,32 @@ def eLarge := 1
 def eSmall := 2
 def eScan := 3
 
-def engineRegs (e : Nat) : List RegSpec :=
-  -- engines start by reading back (and so clearing) their blocks, during the set-up
-  [rs s!"st{e}" 2 (.sync eScan), rs s!"idx{e}" 13, rs s!"rho{e}" 4, rs s!"raddr{e}" 8,
-   rs s!"pv{e}" 1 (.sync 0), rs s!"pm{e}" 16, rs s!"ps{e}" 1]
-def eSize : Nat := 7
-def eBase (e : Nat) : Nat := eSize * e
+/-- An engine; engines start by reading back (and so clearing) their blocks,
+during the set-up. -/
+hdl_record Engine where
+  st : 2 := eScan
+  idx : 13
+  rho : 4
+  raddr : 8
+  pv : 1 := 0
+  pm : 16
+  ps : 1
 
 /-- Three read-back units, each serving five neighbouring engines (1280 words in a row). -/
 def scanners : Nat := 3
 def perScanner : Nat := E / scanners
 def scanWords : Nat := perScanner * bankWords
-def scanRegs (u : Nat) : List RegSpec :=
-  [rs s!"sw{u}" 11 (.sync 0), rs s!"sl{u}" 1 (.sync 0), rs s!"cc{u}" 15, rs s!"rr{u}" 25, rs s!"pp{u}" 18,
-   rs s!"zr{u}" 16, rs s!"zv{u}" 1 (.sync 0), rs s!"cn{u}" 5, rs s!"po{u}" 7, rs s!"sv{u}" 1 (.sync 0)]
-def uSize : Nat := 10
-def uBase (u : Nat) : Nat := eSize * E + uSize * u
+hdl_record Scanner where
+  sw : 11 := 0
+  sl : 1 := 0
+  cc : 15
+  rr : 25
+  pp : 18
+  zr : 16
+  zv : 1 := 0
+  cn : 5
+  po : 7
+  sv : 1 := 0
 
 -- controller phases
 def cPre := 0
@@ -93,14 +103,23 @@ def cComb := 5
 def cFinal := 6
 def cDone := 7
 
-def cBase : Nat := eSize * E + uSize * scanners
-def ctrlRegs : List RegSpec :=
-  [rs "ph" 3 (.sync cPre), rs "k" 8 (.sync 0), rs "kr" 8 (.sync 0), rs "kmax" 8 (.sync 0),
-   rs "segn" 5 (.sync 0), rs "segw" 16 (.sync 0), rs "ce" 3 (.sync 0),
-   rs "cs" 5 (.sync 0), rs "v0" W (.sync 1), rs "sumr" W (.sync 0),
-   rs "ma" 17 (.sync 0), rs "mb" W (.sync 0), rs "mcnt" 5 (.sync 0),
-   rs "total" W (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]
-def cSize : Nat := 16
+hdl_record Ctrl where
+  ph : 3 := cPre
+  k : 8 := 0
+  kr : 8 := 0
+  kmax : 8 := 0
+  segn : 5 := 0
+  segw : 16 := 0
+  ce : 3 := 0
+  cs : 5 := 0
+  v0 : W := 1
+  sumr : W := 0
+  ma : 17 := 0
+  mb : W := 0
+  mcnt : 5 := 0
+  total : W := 0
+  done : 1 := 0
+  answer : W := 0
 
 -- set-up phase
 def pScan := 0
@@ -108,25 +127,36 @@ def pMod := 1
 def pChain := 2
 def pFin := 3
 
-def sBase : Nat := cBase + cSize
-def setupRegs : List RegSpec :=
-  [rs "pst" 2 (.sync pScan), rs "m" 11 (.sync 3), rs "pc" 11 (.sync 1), rs "pcnt" 4 (.sync 0),
-   rs "pb" 4 (.sync 0), rs "prr" 11 (.sync 0), rs "kk" 8 (.sync 0), rs "small" 6 (.sync 0),
-   rs "wsm" 8 (.sync 0)] ++
-  trialPrimes.map (fun q => rs s!"tr{q}" 6 (.sync (3 % q))) ++
-  -- every engine (and read-back unit) idle, registered
-  [rs "idm" 1 (.sync 0), rs "ids" 1 (.sync 0), rs "pkd" 22 (.sync 0), rs "pkd2" 22 (.sync 0)]
-def sSize : Nat := 13 + trialPrimes.length
+/-- The set-up, and the registered "every engine (and read-back unit) idle" and
+current prime. -/
+hdl_record Setup where
+  pst : 2 := pScan
+  m : 11 := 3
+  pc : 11 := 1
+  pcnt : 4 := 0
+  pb : 4 := 0
+  prr : 11 := 0
+  kk : 8 := 0
+  small : 6 := 0
+  wsm : 8 := 0
+  idm : 1 := 0
+  ids : 1 := 0
+  pkd : 22 := 0
+  pkd2 : 22 := 0
 
-def regs : Array RegSpec :=
-  ((List.range E).flatMap engineRegs ++ (List.range scanners).flatMap scanRegs ++ ctrlRegs ++ setupRegs).toArray
+/-- Engines, read-back units, controller, set-up, and the candidate's residues
+modulo the trial primes. -/
+abbrev State := Both (Lanes "e" E Engine) (Both (Lanes "u" scanners Scanner)
+  (Both Ctrl (Both Setup (Lanes "tr" trialPrimes.length (Word 6)))))
 
 /-- Per engine: its block (memory `2e`) and its offsets (memory `2e + 1`); then the prime list. -/
 def mems : Array MemSpec :=
   ((List.range E).flatMap fun e => [ms s!"bits{e}" 8 16, ms s!"offs{e}" 8 12]).toArray ++
   #[ms "primes" 8 22]
 
-def ctx : Ctx := solverCtx "euler10" W regs mems
+def ctx : Ctx := solverCtx "euler10" W State
+  ⟨Lanes.replicate Engine.resets, Lanes.replicate Scanner.resets, Ctrl.resets, Setup.resets,
+   Lanes.ofFn fun i => ⟨.sync (3 % trialPrimes[i]!)⟩⟩ mems
 
 /-- Popcount and position sum of a 16-bit word: the position sum is
 `Σ_j 2^j · popcount(z ∧ M_j)`, `M_j` the positions with bit `j` set. -/
@@ -151,20 +181,20 @@ Strikes are masks: the prime's pattern `pat` (one bit for `p ≥ 17`, bits `0, p
 2p, …` below) shifted to the offset within the word. -/
 def engine (e : Nat) (go scanGo isSmall : Sig 1) (pk pk2 dk : Sig 11) (k : Sig 8) (scanEn : Sig 1) (scanAddr : Sig 8)
     (setupWrite : Sig 1) (setupAddr : Sig 8) (setupVal : Sig 12) (pat : Sig 16) (k3 : Sig 3) (wsm : Sig 8)
-    (wsmLast : Sig 1) : M ctx (EngineIO × Array Nat × Array (Array WritePort)) := do
-  let b := eBase e
-  let st ← rd b 2
-  let idx ← rd (b + 1) 13
-  let rho ← rd (b + 2) 4
-  let raddr ← rd (b + 3) 8
-  let pv ← rd (b + 4) 1
-  let pm ← rd (b + 5) 16
-  let ps ← rd (b + 6) 1
+    (wsmLast : Sig 1) (r : Engine Sig) : M ctx (EngineIO × Engine Sig × Array (Array WritePort)) :=
+    scope s!"engine {e}" do
+  let st := r.st
+  let idx := r.idx
+  let rho := r.rho
+  let raddr := r.raddr
+  let pv := r.pv
+  let pm := r.pm
+  let ps := r.ps
   let isLarge ← eqK st eLarge
   let isSmall' ← eqK st eSmall
   let isScan ← eqK st eScan
-  let offset ← memRead (2 * e + 1) 12 k        -- k is a register: the offset for prime k
-  let data ← memRead (2 * e) 16 raddr
+  let offset ← readMem s!"offs{e}" 12 k        -- k is a register: the offset for prime k
+  let data ← readMem s!"bits{e}" 16 raddr
   -- large primes: strike bit idx while inside the block
   let inside ← ltK idx bank
   let strike ← and1 isLarge inside
@@ -202,39 +232,39 @@ def engine (e : Nat) (go scanGo isSmall : Sig 1) (pk pk2 dk : Sig 11) (k : Sig 8
   let offPort := port (← or1 offWrite setupWrite) (← ite' setupWrite setupAddr k) (← ite' setupWrite setupVal newOff)
   let idle ← and1 (← eqK st eIdle) (← not1 pv)
   pure (⟨idle, data, ← and1 pv ps⟩,
-    #[st'.ref, idx'.ref, rho'.ref, addr.ref, issue.ref, mask.ref, isScan.ref],
+    { st := st', idx := idx', rho := rho', raddr := addr, pv := issue, pm := mask, ps := isScan },
     #[#[writePort], #[offPort]])
 
 set_option maxRecDepth 20000 in
-def body : M ctx Wiring := do
+def body : M ctx Wiring := solver "P010" State fun ⟨engines, units, c, su, trl⟩ => do
   -- controller
-  let ph ← rd cBase 3
-  let k ← rd (cBase + 1) 8
-  let kr ← rd (cBase + 2) 8
-  let kmax ← rd (cBase + 3) 8
-  let segn ← rd (cBase + 4) 5
-  let segw ← rd (cBase + 5) 16
-  let ce ← rd (cBase + 6) 3
-  let cs ← rd (cBase + 7) 5
-  let v0 ← rd (cBase + 8) W
-  let sumr ← rd (cBase + 9) W
-  let ma ← rd (cBase + 10) 17
-  let mb ← rd (cBase + 11) W
-  let mcnt ← rd (cBase + 12) 5
-  let total ← rd (cBase + 13) W
-  let done ← rd (cBase + 14) 1
-  let answer ← rd (cBase + 15) W
+  let ph := c.ph
+  let k := c.k
+  let kr := c.kr
+  let kmax := c.kmax
+  let segn := c.segn
+  let segw := c.segw
+  let ce := c.ce
+  let cs := c.cs
+  let v0 := c.v0
+  let sumr := c.sumr
+  let ma := c.ma
+  let mb := c.mb
+  let mcnt := c.mcnt
+  let total := c.total
+  let done := c.done
+  let answer := c.answer
   -- set-up
-  let pst ← rd sBase 2
-  let m ← rd (sBase + 1) 11
-  let pc ← rd (sBase + 2) 11
-  let pcnt ← rd (sBase + 3) 4
-  let pb ← rd (sBase + 4) 4
-  let prr ← rd (sBase + 5) 11
-  let kk ← rd (sBase + 6) 8
-  let small ← rd (sBase + 7) 6
-  let wsm ← rd (sBase + 8) 8
-  let trs ← trialPrimes.zipIdx.mapM fun (_, i) => rd (sBase + 9 + i) 6
+  let pst := su.pst
+  let m := su.m
+  let pc := su.pc
+  let pcnt := su.pcnt
+  let pb := su.pb
+  let prr := su.prr
+  let kk := su.kk
+  let small := su.small
+  let wsm := su.wsm
+  let trs := (trl.lanes.map (·.v)).toArray
   let isPre ← eqK ph cPre
   let isLoad ← eqK ph cLoad
   let isMark ← eqK ph cMark
@@ -282,12 +312,12 @@ def body : M ctx Wiring := do
   let setupDone := isPFin
   -- the prime list
   -- the prime and its 57344 mod p, registered from the list (read during cLoad)
-  let pkdNext ← memRead (2 * E) 22 k
-  let pkd ← rd (sBase + 11 + trialPrimes.length) 22
+  let pkdNext ← readMem "primes" 22 k
+  let pkd := su.pkd
   let pk ← slice pkd 0 11
   -- a second copy, a cycle later (the first is the block RAM's own output register),
   -- for the offset of the next segment, needed at the earliest three cycles in
-  let pkd2 ← rd (sBase + 12 + trialPrimes.length) 22
+  let pkd2 := su.pkd2
   let pk2 ← slice pkd2 0 11
   let dk ← slice pkd2 11 11
   -- with each prime, 57344 mod p = ((p − 1)/2 − r_14) mod p (r_14 = the last engine's offset)
@@ -295,10 +325,9 @@ def body : M ctx Wiring := do
   let dVal ← ite' (← ult half chainNext) (← add dSub m) dSub
   let primeWrite := port (← and1 isPChain chainLast) kk (← concat dVal m)
   -- read-back units: whose turn, which word
-  let scanState ← (List.range scanners).mapM fun u => do
-    pure (← rd (uBase u) 11, ← rd (uBase u + 1) 1, ← rd (uBase u + 2) 15, ← rd (uBase u + 3) 25, ← rd (uBase u + 4) 18)
-  let scanPipe ← (List.range scanners).mapM fun u => do
-    pure (← rd (uBase u + 5) 16, ← rd (uBase u + 6) 1, ← rd (uBase u + 7) 5, ← rd (uBase u + 8) 7, ← rd (uBase u + 9) 1)
+  let us := units.lanes.toArray
+  let scanState := us.map fun u => (u.sw, u.sl, u.cc, u.rr, u.pp)
+  let scanPipe := us.map fun u => (u.zr, u.zv, u.cn, u.po, u.sv)
   -- engines
   let go := isLoad
   let isSmallK ← ltK k smallPrimes.length
@@ -311,7 +340,8 @@ def body : M ctx Wiring := do
   -- the small primes' word counter, shared by the engines in lockstep
   let wsmLast ← eqK wsm (bankWords - 1)
   let wsm' ← ite' go (← lit 8 0) (← addK wsm 1)
-  let mut nexts : Array Nat := #[]
+  let es := engines.lanes.toArray
+  let mut engNext : Array (Engine Sig) := #[]
   let mut writes : Array (Array WritePort) := #[]
   let mut ios : Array EngineIO := #[]
   for e in [0:E] do
@@ -321,13 +351,13 @@ def body : M ctx Wiring := do
     let scanEn ← and1 reading (← eqK turn (e % perScanner))
     let scanAddr ← slice sw 0 8
     let setupWrite ← and1 isPChain (← eqK pb e)
-    let (io, ns, ws) ← engine e go isScanGo isSmallK pk pk2 dk k scanEn scanAddr setupWrite kk chainVal pat k3 wsm wsmLast
-    nexts := nexts ++ ns
+    let (io, r', ws) ← engine e go isScanGo isSmallK pk pk2 dk k scanEn scanAddr setupWrite kk chainVal pat k3 wsm wsmLast es[e]!
+    engNext := engNext.push r'
     writes := writes ++ ws
     ios := ios.push io
   -- read-back units: a word a cycle from their engines, in order; the word's
   -- statistics a cycle after its read
-  let mut scanNexts : Array Nat := #[]
+  let mut scanNext : Array (Scanner Sig) := #[]
   let mut scanBusy : List (Sig 1) := []
   let mut ccs : Array (Sig 15) := #[]
   let mut rrs : Array (Sig 25) := #[]
@@ -353,7 +383,8 @@ def body : M ctx Wiring := do
     let cc' ← ite' isScanGo (← lit 15 0) (← ite' sv (← add cc (← zx cn 15)) cc)
     let rr' ← ite' isScanGo (← lit 25 0) (← ite' sv (← add rr (← zx cc 25)) rr)
     let pp' ← ite' isScanGo (← lit 18 0) (← ite' sv (← add pp (← zx po 18)) pp)
-    scanNexts := scanNexts ++ #[sw'.ref, sl'.ref, cc'.ref, rr'.ref, pp'.ref, zs.ref, valid.ref, cnt.ref, pos.ref, zv.ref]
+    scanNext := scanNext.push
+      { sw := sw', sl := sl', cc := cc', rr := rr', pp := pp', zr := zs, zv := valid, cn := cnt, po := pos, sv := zv }
     scanBusy := scanBusy ++ [reading, valid, zv, sv]
     ccs := ccs.push cc
     rrs := rrs.push rr
@@ -362,8 +393,8 @@ def body : M ctx Wiring := do
   let scansIdle ← not1 (← anyTree scanBusy)
   -- marking: prime after prime, all engines in lockstep
   let lastPrime ← eq (← addK k 1) kmax
-  let idm ← rd (sBase + 9 + trialPrimes.length) 1
-  let ids ← rd (sBase + 10 + trialPrimes.length) 1
+  let idm := su.idm
+  let ids := su.ids
   let idm' ← and1 isMark allIdle
   let ids' ← and1 isScan (← and1 allIdle scansIdle)
   let markEnd ← and1 isMark idm
@@ -420,14 +451,16 @@ def body : M ctx Wiring := do
   -- the end: total − 32·ΣR
   let answer' ← ite' finished (← sub total (← shlK sumr 5)) answer
   let done' ← or1 done finished
-  pure (solverWiring ⟨done, answer.ref,
-    nexts ++ scanNexts ++ #[ph'.ref, k'.ref, kr'.ref, kmax'.ref, segn'.ref, segw'.ref, ce'.ref, cs'.ref, v0'.ref,
-      sumr'.ref, ma'.ref, mb'.ref, mcnt'.ref, total'.ref, done'.ref, answer'.ref] ++
-    #[pst'.ref, m'.ref, pc'.ref, pcnt'.ref, pb'.ref, prr'.ref, kk'.ref, small'.ref, wsm'.ref] ++
-    (trs'.map (·.ref)).toArray ++ #[idm'.ref, ids'.ref, pkdNext.ref, pkd.ref],
-    writes ++ #[#[primeWrite]]⟩)
+  finish done answer
+    ⟨Lanes.ofFn fun e => engNext.getD e default, Lanes.ofFn fun u => scanNext.getD u default,
+     { ph := ph', k := k', kr := kr', kmax := kmax', segn := segn', segw := segw', ce := ce', cs := cs', v0 := v0',
+       sumr := sumr', ma := ma', mb := mb', mcnt := mcnt', total := total', done := done', answer := answer' },
+     { pst := pst', m := m', pc := pc', pcnt := pcnt', pb := pb', prr := prr', kk := kk', small := small',
+       wsm := wsm', idm := idm', ids := ids', pkd := pkdNext, pkd2 := pkd },
+     Lanes.ofFn fun i => ⟨trs'.getD i default⟩⟩
+    (writes ++ #[#[primeWrite]])
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 10, title := "Summation of primes",

@@ -47,22 +47,45 @@ def sMul := 3
 def sAfter := 4    -- multiplication finished
 def sAdd := 5      -- add the term to the lane's sums
 
-def laneRegs (l : Nat) : List RegSpec :=
-  [rs s!"st{l}" 3 (.sync sIdle), rs s!"n{l}" 10, rs s!"x{l}" MW, rs s!"x2_{l}" 10, rs s!"bi{l}" 4,
-   rs s!"isn{l}" 1, rs s!"a{l}" MW, rs s!"b{l}" (MW + 1), rs s!"b3_{l}" (MW + 2), rs s!"acc{l}" MW,
-   rs s!"cnt{l}" 4, rs s!"s5_{l}" MW (.sync 0), rs s!"s2_{l}" 10 (.sync 0)] ++
-  ks.map fun k => rs s!"y{k}_{l}" YW
-def laneSize : Nat := 13 + ks.length
-def laneBase (l : Nat) : Nat := laneSize * l
+hdl_record Lane where
+  st : 3 := sIdle
+  n : 10
+  x : MW
+  x2 : 10
+  bi : 4
+  isn : 1
+  a : MW
+  b : (MW + 1)
+  b3 : (MW + 2)
+  acc : MW
+  cnt : 4
+  s5 : MW := 0
+  s2 : 10 := 0
+  y0 : YW
+  y1 : YW
+  y2 : YW
+  y3 : YW
+  y4 : YW
+  y5 : YW
+  y6 : YW
 
-def gBase : Nat := laneSize * lanes
-def regs : Array RegSpec :=
-  ((List.range lanes).flatMap laneRegs ++
-   [rs "nn" 10 (.sync 1), rs "u10" 4 (.sync 1), rs "left" 1 (.sync 1), rs "scan" 4 (.sync 0), rs "t5" MW (.sync 0), rs "t2" 10 (.sync 0),
-    rs "fin" 3 (.sync 0), rs "tt" 10 (.sync 0), rs "acc" W (.sync 0), rs "mb" W (.sync 0),
-    rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]).toArray
+hdl_record Glob where
+  nn : 10 := 1
+  u10 : 4 := 1      -- nn mod 10
+  left : 1 := 1
+  scan : 4 := 0
+  t5 : MW := 0
+  t2 : 10 := 0
+  fin : 3 := 0
+  tt : 10 := 0
+  acc : W := 0
+  mb : W := 0
+  done : 1 := 0
+  answer : W := 0
 
-def ctx : Ctx := solverCtx "euler48" W regs
+abbrev State := Both (Lanes "l" lanes Lane) Glob
+
+def ctx : Ctx := solverCtx "euler48" W State ⟨Lanes.replicate Lane.resets, Glob.resets⟩
 
 /-- `d·B − k·M` for each `k`, as two's complement, for the digit `d`. -/
 def reductions (d : Sig 2) (b : Sig (MW + 1)) (b3 : Sig (MW + 2)) : M ctx (List (Sig YW)) := do
@@ -90,22 +113,21 @@ structure LaneIO where
   deriving Inhabited
 
 set_option maxRecDepth 20000 in
-def lane (l : Nat) (load : Sig 1) (nIn : Sig 10) : M ctx (LaneIO × Array Nat) := do
-  let b0 := laneBase l
-  let st ← rd b0 3
-  let n ← rd (b0 + 1) 10
-  let x ← rd (b0 + 2) MW
-  let x2 ← rd (b0 + 3) 10
-  let bi ← rd (b0 + 4) 4
-  let isn ← rd (b0 + 5) 1
-  let a ← rd (b0 + 6) MW
-  let b ← rd (b0 + 7) (MW + 1)
-  let b3 ← rd (b0 + 8) (MW + 2)
-  let acc ← rd (b0 + 9) MW
-  let cnt ← rd (b0 + 10) 4
-  let s5 ← rd (b0 + 11) MW
-  let s2 ← rd (b0 + 12) 10
-  let ys ← ks.mapM fun k => rd (b0 + 13 + k) YW
+def lane (l : Nat) (r : Lane Sig) (load : Sig 1) (nIn : Sig 10) : M ctx (LaneIO × Lane Sig) := scope s!"lane {l}" do
+  let st := r.st
+  let n := r.n
+  let x := r.x
+  let x2 := r.x2
+  let bi := r.bi
+  let isn := r.isn
+  let a := r.a
+  let b := r.b
+  let b3 := r.b3
+  let acc := r.acc
+  let cnt := r.cnt
+  let s5 := r.s5
+  let s2 := r.s2
+  let ys := [r.y0, r.y1, r.y2, r.y3, r.y4, r.y5, r.y6]
   let isIdle ← eqK st sIdle
   let isNext ← eqK st sNext
   let isPrep ← eqK st sPrep
@@ -166,28 +188,31 @@ def lane (l : Nat) (load : Sig 1) (nIn : Sig 10) : M ctx (LaneIO × Array Nat) :
   let s5' ← ite' isAdd (← addMod s5 x) s5
   let s2' ← ite' isAdd (← add s2 x2) s2
   let _ := topIdx
+  let y := ys'.toArray
   pure (⟨isIdle, s5, s2⟩,
-    #[st'.ref, n'.ref, x'.ref, x2'.ref, bi'.ref, isn'.ref, a'.ref, b'.ref, b3'.ref, acc'.ref, cnt'.ref,
-      s5'.ref, s2'.ref] ++ (ys'.map (·.ref)).toArray)
+    { st := st', n := n', x := x', x2 := x2', bi := bi', isn := isn', a := a', b := b', b3 := b3', acc := acc',
+      cnt := cnt', s5 := s5', s2 := s2', y0 := y[0]!, y1 := y[1]!, y2 := y[2]!, y3 := y[3]!, y4 := y[4]!,
+      y5 := y[5]!, y6 := y[6]! })
 
 set_option maxRecDepth 20000 in
-def body : M ctx Wiring := do
-  let nn ← rd gBase 10
-  let u10 ← rd (gBase + 1) 4      -- nn mod 10
-  let left ← rd (gBase + 2) 1
-  let scan ← rd (gBase + 3) 4
-  let t5 ← rd (gBase + 4) MW
-  let t2 ← rd (gBase + 5) 10
-  let fin ← rd (gBase + 6) 3
-  let tt ← rd (gBase + 7) 10
-  let acc ← rd (gBase + 8) W
-  let mb ← rd (gBase + 9) W
-  let done ← rd (gBase + 10) 1
-  let answer ← rd (gBase + 11) W
+def body : M ctx Wiring := solver "P048" State fun ⟨ls, g⟩ => do
+  let nn := g.nn
+  let u10 := g.u10
+  let left := g.left
+  let scan := g.scan
+  let t5 := g.t5
+  let t2 := g.t2
+  let fin := g.fin
+  let tt := g.tt
+  let acc := g.acc
+  let mb := g.mb
+  let done := g.done
+  let answer := g.answer
+  let lrs := ls.lanes.toArray
   -- exponents 1 … 1000, skipping multiples of 10, to the lowest idle lane
-  let idles ← (List.range lanes).mapM fun l => do eqK (← rd (laneBase l) 3) sIdle
+  let idles ← lrs.toList.mapM fun r => eqK r.st sIdle
   let mut taken ← lit 1 0
-  let mut nexts : Array Nat := #[]
+  let mut next : Array (Lane Sig) := #[]
   let mut ios : Array LaneIO := #[]
   let mut idleAny ← lit 1 0
   for l in [0:lanes] do
@@ -197,8 +222,8 @@ def body : M ctx Wiring := do
   for l in [0:lanes] do
     let load ← and1 give (← and1 idles[l]! (← not1 taken))
     taken ← or1 taken idles[l]!
-    let (io, ns) ← lane l load nn
-    nexts := nexts ++ ns
+    let (io, r') ← lane l lrs[l]! load nn
+    next := next.push r'
     ios := ios.push io
   let advance ← and1 left (← or1 skip give)
   let lastN ← eqK nn limit
@@ -226,10 +251,11 @@ def body : M ctx Wiring := do
   let finished ← and1 (← eqK fin 3) (← not1 done)
   let answer' ← ite' finished acc answer
   let done' ← or1 done finished
-  pure (solverWiring ⟨done, answer.ref, nexts ++
-    #[nn'.ref, u10'.ref, left'.ref, scan'.ref, t5'.ref, t2'.ref, fin'.ref, tt'.ref, acc'.ref, mb'.ref, done'.ref, answer'.ref], #[]⟩)
+  finish done answer ⟨Lanes.ofFn fun l => next.getD l default,
+    { nn := nn', u10 := u10', left := left', scan := scan', t5 := t5', t2 := t2', fin := fin', tt := tt',
+      acc := acc', mb := mb', done := done', answer := answer' }⟩
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 48, title := "Self powers",

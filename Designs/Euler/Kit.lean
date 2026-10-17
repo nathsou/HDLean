@@ -6,9 +6,11 @@ import HDLean
 Every solver is a single-clock word-level module with one input, `start`
 (tied high on the board), and two outputs, `done` and `answer`. It is held in
 reset by the board shell, then runs until `done` rises; `answer` is valid from
-then on. Registers and memories are declared up front in the module context;
-the program reads them, computes, and returns the wiring (outputs, next
-register values, memory write ports).
+then on. Its registers are a record (`hdl_record`, composed with `Both` and
+`Lanes`), declared with their reset values; the program reads them as handles and
+returns `done`, `answer`, the next registers (`{ r with … }`, everything else
+holds) and the memory writes. A rejected program is reported with the reason
+and the enclosing `scope`s.
 
 These designs are checked by simulation against plain Lean references and by
 external simulators; they carry no proofs yet.
@@ -16,45 +18,47 @@ external simulators; they carry no proofs yet.
 namespace HDLean.Euler
 open HDLean.Rtl HDLean.Rtl.Build
 
-instance : Inhabited (Sig w) := ⟨⟨0⟩⟩
-
-def rs (name : String) (w : Nat) (r : Reset := .none) : RegSpec := ⟨Ident.ofString name, w, r⟩
 def ms (name : String) (aw w : Nat) (ports : Nat := 1) : MemSpec := ⟨Ident.ofString name, aw, w, ports⟩
 
-/-- The interface of a solver. -/
-def solverCtx (name : String) (answer : Nat) (regs : Array RegSpec) (mems : Array MemSpec := #[]) : Ctx :=
-  { name := Ident.ofString name, inputs := #[⟨Ident.ofString "start", 1⟩],
-    outputs := #[⟨Ident.ofString "done", 1⟩, ⟨Ident.ofString "answer", answer⟩], regs, mems }
+/-- A single word, for `Lanes` of words. -/
+hdl_record Word (w : Nat) where
+  v : w
 
-/-- What a solver body returns. -/
-structure Result where
-  done : Sig 1
-  answer : Nat
-  nexts : Array Nat
-  writes : Array (Array WritePort) := #[]
+hdl_record SolverIn where
+  start : 1
 
-def solverWiring (r : Result) : Wiring := ⟨#[r.done.ref, r.answer], r.nexts, r.writes⟩
+hdl_record SolverOut (w : Nat) where
+  done : 1
+  answer : w
 
-/-- A one-module design; empty if the program fails its checks. -/
-def single (c : Ctx) (p : M c Wiring) : Design := ⟨#[c.module p]⟩
+/-- The interface of a solver whose answer is `answer` bits wide and whose
+registers are the record `R`, with resets `resets`. -/
+def solverCtx (name : String) (answer : Nat) (R : (Nat → Type) → Type) [Bundle R]
+    (resets : R (fun _ => Reset)) (mems : Array MemSpec := #[]) : Ctx :=
+  Ctx.mealy name SolverIn (SolverOut answer) R resets mems
 
-/-- Why a program fails the builder's checks (for debugging). -/
-def diagnose (c : Ctx) (p : M c Wiring) : String :=
-  match p (init c) with
-  | none => "an operation failed its width or reference check"
-  | some (r, s) =>
-    s!"outputs {r.outputs.size}/{c.outputs.size}, registers {r.nexts.size}/{c.regs.size}, " ++
-    s!"memories {r.writes.size}/{c.mems.size}, ports {(c.mems.zip r.writes).map fun q => (q.2.size, q.1.ports)}, " ++
-    s!"ctx ok {c.ok}, module check {(s.toModule r).check c.subs}"
+/-- A solver program: from the registers to `done`, `answer`, the next registers
+and the memory writes. The body runs inside `scope name`, so a rejected cell
+names the solver. -/
+def solver {c : Ctx} {w : Nat} (name : String) (R : (Nat → Type) → Type) [Bundle R]
+    (body : R Sig → M c (Step (SolverOut w) R)) : M c Wiring :=
+  scope name (mealy SolverIn (SolverOut w) R fun _ r => body r)
 
-/-- Whether the program passes every builder check. -/
-def builds (c : Ctx) (p : M c Wiring) : Bool := (run c p).isSome
+/-- The end of a solver cycle. -/
+def finish {c : Ctx} {w : Nat} {R : (Nat → Type) → Type} (done : Sig 1) (answer : Sig w) (next : R Sig)
+    (writes : Array (Array WritePort) := #[]) : M c (Step (SolverOut w) R) :=
+  pure ⟨⟨done, answer⟩, next, writes⟩
+
+/-- The one-module design of a solver, or why the builder rejected it. -/
+def solverDesign (c : Ctx) (p : M c Wiring) : Except String Design :=
+  match runE c p with
+  | .ok m => .ok ⟨#[m]⟩
+  | .error e => .error e.render
 
 section Ops
 variable {c : Ctx}
 
 def lit (w v : Nat) : M c (Sig w) := const w (BitVec.ofNat w v)
-def rd (k w : Nat) : M c (Sig w) := regRead k w
 def addK (a : Sig w) (v : Nat) : M c (Sig w) := do add a (← lit w v)
 def subK (a : Sig w) (v : Nat) : M c (Sig w) := do sub a (← lit w v)
 def eqK (a : Sig w) (v : Nat) : M c (Sig 1) := do eq a (← lit w v)
@@ -191,7 +195,8 @@ structure Problem where
   /-- What the design does, in a sentence or two. -/
   idea : String
   answerWidth : Nat
-  design : Design
+  /-- The solver, or why the builder rejected it. -/
+  design : Except String Design
   /-- The answer, computed in plain Lean. -/
   reference : Unit → Nat
   /-- An upper bound on the cycles to `done`, for simulators. -/

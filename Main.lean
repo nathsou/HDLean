@@ -228,7 +228,13 @@ private unsafe def enableInitUnsafe : IO Unit := Lean.enableInitializersExecutio
 /-- Notation and pretty-printer extensions of imported modules are registered by initializers. -/
 @[implemented_by enableInitUnsafe] private opaque enableInit : IO Unit
 
-private def execute (args : List String) : IO Unit := do
+/-- A solver's design, or the builder's reason for rejecting it. -/
+def eulerDesign (p : Euler.Problem) : IO Rtl.Design :=
+  match p.design with
+  | .ok d => pure d
+  | .error e => throw (IO.userError s!"problem {p.number}: the builder rejected the solver: {e}")
+
+def execute (args : List String) : IO Unit := do
   match args with
   | ["--help"] | ["help"] | [] => IO.println usage
   | ["--version"] => IO.println "HDLean 0.3.0 (Lean 4.35.0)"
@@ -352,11 +358,13 @@ private def execute (args : List String) : IO Unit := do
   | ["euler-list"] =>
     IO.println (Lean.toJson (Euler.problems.map fun p => Lean.Json.mkObj [("number", Lean.toJson p.number),
       ("title", .str p.title), ("idea", .str p.idea), ("answer_width", Lean.toJson p.answerWidth),
-      ("max_cycles", Lean.toJson p.maxCycles)])).pretty
+      ("max_cycles", Lean.toJson p.maxCycles),
+      ("error", match p.design with | .ok _ => .null | .error e => .str e)])).pretty
   | ["euler-sim", n] =>
     let some p := Euler.find? (← parseNum n) | throw (IO.userError s!"no solver for problem {n}")
     let reference := p.reference ()
-    match Euler.simulate p.design.optimized p.maxCycles with
+    let design ← eulerDesign p
+    match Euler.simulate design.optimized p.maxCycles with
     | some (cycles, answer) =>
       IO.println (Lean.Json.mkObj [("number", Lean.toJson p.number), ("cycles", Lean.toJson cycles),
         ("answer", Lean.toJson answer), ("reference", Lean.toJson reference),
@@ -370,7 +378,7 @@ private def execute (args : List String) : IO Unit := do
     let some p := Euler.find? (← parseNum n) | throw (IO.userError s!"no solver for problem {n}")
     let clock ← parseNum hz 1000000000
     let divisor := (clock + 57600) / 115200
-    let solver := p.design.optimized
+    let solver := (← eulerDesign p).optimized
     let report := (Euler.Report.design divisor).optimized
     let count := Euler.Report.countDesign.optimized
     unless solver.check do throw (IO.userError s!"problem {n}: the solver does not pass Design.check")

@@ -106,6 +106,21 @@ square-and-multiply on a radix-4 interleaved multiplier, where multiplying by tw
 is a doubling with a conditional subtraction; modulo `2^10` the same steps on a
 ten-bit register.
 
+## Writing a solver
+
+A solver's registers are a record: `hdl_record` fields with their reset values,
+composed with `Both` and `Lanes` for the parallel parts (P14's 24 walkers and 4
+table pipelines, P58's lanes and reorder buffer). The body reads the record as
+handles and returns `done`, `answer` and the next record, usually as
+`{ r with … }`; memories are read and written by name. When the builder rejects
+a solver, `hdlean euler-sim`/`euler-emit` print why: the failing operation, its
+widths and the enclosing scopes (each solver runs in `scope "P0NN"`, each lane in
+`scope "lane i"`), for example (from `Tests/Euler.lean`)
+
+```
+toy > low half: zero extension from 8 to 4 bits (narrower: use a slice) (after 3 cells)
+```
+
 ## On the board
 
 [`boards/alchitry-cu/euler_top.v`](../boards/alchitry-cu/euler_top.v) is the

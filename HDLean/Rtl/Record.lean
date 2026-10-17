@@ -10,20 +10,27 @@ hdl_record CpuRegs where
 ```
 
 declares `structure CpuRegs (F : Nat → Type)` with fields `pc : F 8`, `acc : F 16`,
-and its `Bundle` instance. Parameters are allowed: `hdl_record RamIn (a w : Nat) where ...`.
+and its `Bundle` instance. A field may declare a reset value, `pc : 8 := 0`; the
+record then also gets `CpuRegs.resets : CpuRegs (fun _ => Reset)` (`.none` for
+the fields without one). Parameters are allowed: `hdl_record RamIn (a w : Nat) where ...`.
 -/
 namespace HDLean.Rtl
 
 open Lean Elab Command
 
 declare_syntax_cat hdlField
-syntax ident " : " term:max : hdlField
+syntax ident " : " term:max (" := " withPosition(term))? : hdlField
 
 syntax (docComment)? "hdl_record " ident (ppSpace bracketedBinder)* " where" (ppLine hdlField)+ : command
 
 private def fieldParts (stx : TSyntax `hdlField) : MacroM (TSyntax `ident × Term) :=
   match stx with
-  | `(hdlField| $n:ident : $w) => pure (n, w)
+  | `(hdlField| $n:ident : $w $[:= $_]?) => pure (n, w)
+  | _ => Macro.throwUnsupported
+
+private def fieldReset (stx : TSyntax `hdlField) : MacroM (Option Term) :=
+  match stx with
+  | `(hdlField| $_:ident : $_ $[:= $v]?) => pure v
   | _ => Macro.throwUnsupported
 
 macro_rules
@@ -52,7 +59,16 @@ macro_rules
       access := access.push (← `(HVec.head $cur))
       cur ← `(HVec.tail $cur)
     let ofVec ← `(⟨$access,*⟩)
-    `($[$doc:docComment]? structure $name:ident $binders:bracketedBinder* ($F : Nat → Type) where
+    -- reset values: `field : w := v` resets to `v`; generate `Name.resets` if any is given
+    let resets ← fields.mapM fieldReset
+    let resetsDecl : Array (TSyntax `command) ← if resets.all Option.isNone then pure #[] else do
+      let vals ← resets.mapM fun r => match r with
+        | some v => `(HDLean.Rtl.Reset.sync $v)
+        | none => `(HDLean.Rtl.Reset.none)
+      let resetsName := mkIdent (name.getId ++ `resets)
+      pure #[← `(/-- The reset values declared with the fields (`.none` where none is given). -/
+        def $resetsName $binders:bracketedBinder* : $applied (fun _ => HDLean.Rtl.Reset) := ⟨$vals,*⟩)]
+    let main ← `($[$doc:docComment]? structure $name:ident $binders:bracketedBinder* ($F : Nat → Type) where
         $structFields:structSimpleBinder*
       instance $binders:bracketedBinder* : Bundle ($applied) where
         fields := [$fieldList,*]
@@ -60,6 +76,7 @@ macro_rules
         ofVec := fun $v => $ofVec
         ofVec_toVec := fun _ => by dsimp only [HVec.head_cons, HVec.tail_cons]
         toVec_ofVec := fun $v => HVec.rebuild_eq _ $v)
+    pure (mkNullNode (#[main] ++ resetsDecl))
 
 /-- The record with no fields, for modules without registers or inputs. -/
 structure NoFields (F : Nat → Type) where

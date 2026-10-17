@@ -55,23 +55,40 @@ def mConv := 1
 def mAdd := 2
 def mDone := 3
 
-/-- Per lane: digits d1 … d9 (d10 is the lane's), the mask, the position being
-chosen, the candidate, then the conversion. -/
-def laneRegs (l : Nat) : List RegSpec :=
-  (List.range 9).map (fun k => rs s!"d{k + 1}_{l}" 4 (.sync 0)) ++
-  [rs s!"used{l}" 10 (.sync (1 <<< l)), rs s!"pos{l}" 4 (.sync 9), rs s!"cand{l}" 4 (.sync 0),
-   rs s!"mode{l}" 2 (.sync mSearch), rs s!"k{l}" 4 (.sync 0), rs s!"v{l}" VW (.sync 0), rs s!"tot{l}" W (.sync 0),
-   -- d(pos+1), and the residue the window at pos needs from 100·cand (pos = 9: none)
-   rs s!"wa{l}" 4 (.sync l), rs s!"need{l}" 5 (.sync 0), rs s!"win{l}" 1 (.sync 0)]
-def laneSize : Nat := 19
-def laneBase (l : Nat) : Nat := laneSize * l
+/-- A lane: digits d1 … d9 (d10 is the lane's), the mask of digits in use, the
+position being chosen, the candidate, the conversion, and the window state:
+d(pos+1) and the residue the window at pos needs from 100·cand (pos = 9: none). -/
+hdl_record Lane where
+  d1 : 4 := 0
+  d2 : 4 := 0
+  d3 : 4 := 0
+  d4 : 4 := 0
+  d5 : 4 := 0
+  d6 : 4 := 0
+  d7 : 4 := 0
+  d8 : 4 := 0
+  d9 : 4 := 0
+  used : 10
+  pos : 4 := 9
+  cand : 4 := 0
+  mode : 2 := mSearch
+  k : 4 := 0
+  v : VW := 0
+  tot : W := 0
+  wa : 4
+  need : 5 := 0
+  win : 1 := 0
 
-def gBase : Nat := laneSize * lanes
-def regs : Array RegSpec :=
-  ((List.range lanes).flatMap laneRegs ++
-   [rs "scan" 4 (.sync 0), rs "sum" W (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]).toArray
+hdl_record Glob where
+  scan : 4 := 0
+  sum : W := 0
+  done : 1 := 0
+  answer : W := 0
 
-def ctx : Ctx := solverCtx "euler43" W regs
+abbrev State := Both (Lanes "l" lanes Lane) Glob
+
+def ctx : Ctx := solverCtx "euler43" W State
+  ⟨Lanes.ofFn fun l => { Lane.resets with used := .sync (1 <<< l), wa := .sync l }, Glob.resets⟩
 
 /-- The residue `100·c` must have, modulo the prime of the window at position
 `i`, for the window `c a b` to be divisible: `−(10a + b) mod p`. -/
@@ -92,19 +109,18 @@ structure LaneIO where
   deriving Inhabited
 
 set_option maxRecDepth 20000 in
-def lane (l : Nat) : M ctx (LaneIO × Array Nat) := do
-  let b := laneBase l
-  let ds ← (List.range 9).mapM fun k => rd (b + k) 4
-  let used ← rd (b + 9) 10
-  let pos ← rd (b + 10) 4
-  let cand ← rd (b + 11) 4
-  let mode ← rd (b + 12) 2
-  let k ← rd (b + 13) 4
-  let v ← rd (b + 14) VW
-  let tot ← rd (b + 15) W
-  let wa ← rd (b + 16) 4
-  let need ← rd (b + 17) 5
-  let win ← rd (b + 18) 1
+def lane (l : Nat) (r : Lane Sig) : M ctx (LaneIO × Lane Sig) := scope s!"lane {l}" do
+  let ds := [r.d1, r.d2, r.d3, r.d4, r.d5, r.d6, r.d7, r.d8, r.d9]
+  let used := r.used
+  let pos := r.pos
+  let cand := r.cand
+  let mode := r.mode
+  let k := r.k
+  let v := r.v
+  let tot := r.tot
+  let wa := r.wa
+  let need := r.need
+  let win := r.win
   let d10 ← lit 4 l
   let digits := ds ++ [d10]           -- digits[i - 1] = d_i
   let digitAt (i : Sig 4) : M ctx (Sig 4) := do
@@ -164,31 +180,30 @@ def lane (l : Nat) : M ctx (LaneIO × Array Nat) := do
   let tot' ← ite' isAdd (← add tot v) tot
   let mode' ← ite' complete (← lit 2 mConv) (← ite' (← and1 isConv convLast) (← lit 2 mAdd)
     (← ite' isAdd (← lit 2 mSearch) (← ite' finishLane (← lit 2 mDone) mode)))
+  let d := ds'.toArray
   pure (⟨← eqK mode mDone, tot⟩,
-    (ds'.map (·.ref)).toArray ++ #[used'.ref, pos'.ref, cand'.ref, mode'.ref, k'.ref, v'.ref, tot'.ref, wa'.ref, need'.ref, win'.ref])
+    { d1 := d[0]!, d2 := d[1]!, d3 := d[2]!, d4 := d[3]!, d5 := d[4]!, d6 := d[5]!, d7 := d[6]!, d8 := d[7]!,
+      d9 := d[8]!, used := used', pos := pos', cand := cand', mode := mode', k := k', v := v', tot := tot',
+      wa := wa', need := need', win := win' })
 
 set_option maxRecDepth 20000 in
-def body : M ctx Wiring := do
-  let scan ← rd gBase 4
-  let sum ← rd (gBase + 1) W
-  let done ← rd (gBase + 2) 1
-  let answer ← rd (gBase + 3) W
-  let mut nexts : Array Nat := #[]
+def body : M ctx Wiring := solver "P043" State fun ⟨ls, g⟩ => do
+  let mut next : Array (Lane Sig) := #[]
   let mut ios : Array LaneIO := #[]
-  for l in [0:lanes] do
-    let (io, ns) ← lane l
-    nexts := nexts ++ ns
+  for (r, l) in ls.lanes.zipIdx do
+    let (io, r') ← lane l r
+    next := next.push r'
     ios := ios.push io
   let allDone ← allTree (ios.toList.map (·.done))
-  let scanning ← and1 allDone (← ltK scan lanes)
-  let sum' ← ite' scanning (← add sum (← pick scan (ios.map (·.tot)))) sum
-  let scan' ← ite' scanning (← addK scan 1) scan
-  let finished ← and1 allDone (← and1 (← eqK scan lanes) (← not1 done))
-  let answer' ← ite' finished sum answer
-  let done' ← or1 done finished
-  pure (solverWiring ⟨done, answer.ref, nexts ++ #[scan'.ref, sum'.ref, done'.ref, answer'.ref], #[]⟩)
+  let scanning ← and1 allDone (← ltK g.scan lanes)
+  let sum' ← ite' scanning (← add g.sum (← pick g.scan (ios.map (·.tot)))) g.sum
+  let scan' ← ite' scanning (← addK g.scan 1) g.scan
+  let finished ← and1 allDone (← and1 (← eqK g.scan lanes) (← not1 g.done))
+  let answer' ← ite' finished g.sum g.answer
+  let done' ← or1 g.done finished
+  finish g.done g.answer ⟨Lanes.ofFn fun l => next.getD l default, { scan := scan', sum := sum', done := done', answer := answer' }⟩
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 43, title := "Sub-string divisibility",

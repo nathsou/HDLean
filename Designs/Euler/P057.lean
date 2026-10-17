@@ -48,22 +48,42 @@ def phRun := 1
 def phDrain := 2
 def phDone := 3
 
-def regs : Array RegSpec := #[
-  rs "ph" 2 (.sync phClear), rs "it" 10 (.sync 1), rs "w" 5 (.sync 0), rs "wl" 5 (.sync 3), rs "top" 5 (.sync 0),
+hdl_record Regs where
+  ph : 2 := phClear
+  it : 10 := 1
+  w : 5 := 0
+  wl : 5 := 3
+  top : 5 := 0
   -- stage R (the block RAMs' output registers), S (registered again), A (q' = p + q),
   -- B (p' = q' + q, written back), C (lengths)
-  rs "vr" 1 (.sync 0), rs "wr" AW, rs "pr" BW, rs "qr" BW,
-  rs "vs" 1 (.sync 0), rs "ws" AW, rs "ps" BW, rs "qs" BW,
-  rs "va" 1 (.sync 0), rs "wa" AW, rs "qa" BW, rs "qqa" BW,
-  rs "cq" 1 (.sync 0), rs "cp" 1 (.sync 0),
-  rs "vc" 1 (.sync 0), rs "wc" AW, rs "pc" BW, rs "qc" BW,
+  vr : 1 := 0
+  wr : AW
+  pr : BW
+  qr : BW
+  vs : 1 := 0
+  ws : AW
+  ps : BW
+  qs : BW
+  va : 1 := 0
+  wa : AW
+  qa : BW
+  qqa : BW
+  cq : 1 := 0
+  cp : 1 := 0
+  vc : 1 := 0
+  wc : AW
+  pc : BW
+  qc : BW
   -- digit counts of the expansion going through stage C (initially 3/2)
-  rs "plen" LW (.sync 1), rs "qlen" LW (.sync 1),
-  rs "count" W (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]
+  plen : LW := 1
+  qlen : LW := 1
+  count : W := 0
+  done : 1 := 0
+  answer : W := 0
 
 def mems : Array MemSpec := #[ms "p" AW BW, ms "q" AW BW]
 
-def ctx : Ctx := solverCtx "euler57" W regs mems
+def ctx : Ctx := solverCtx "euler57" W Regs Regs.resets mems
 
 /-- The number of digits of a word: the position of its top nonzero digit, plus one. -/
 def wordLen (x : Sig BW) : M ctx (Sig 6) := do
@@ -74,42 +94,39 @@ def wordLen (x : Sig BW) : M ctx (Sig 6) := do
   bitLen v 6
 
 set_option maxRecDepth 20000 in
-def body : M ctx Wiring := do
-  let ph ← rd 0 2
-  let it ← rd 1 10
-  let w ← rd 2 5
-  let wl ← rd 3 5
-  let top ← rd 4 5
-  let vr ← rd 5 1
-  let wr ← rd 6 AW
-  let pr ← rd 7 BW
-  let qr ← rd 8 BW
-  let vs ← rd 9 1
-  let ws ← rd 10 AW
-  let ps ← rd 11 BW
-  let qs ← rd 12 BW
-  let va ← rd 13 1
-  let wa ← rd 14 AW
-  let qa ← rd 15 BW
-  let qqa ← rd 16 BW
-  let cq ← rd 17 1
-  let cp ← rd 18 1
-  let vc ← rd 19 1
-  let wc ← rd 20 AW
-  let pc ← rd 21 BW
-  let qc ← rd 22 BW
-  let plen ← rd 23 LW
-  let qlen ← rd 24 LW
-  let count ← rd 25 W
-  let done ← rd 26 1
-  let answer ← rd 27 W
+def body : M ctx Wiring := solver "P057" Regs fun g => do
+  let ph := g.ph
+  let it := g.it
+  let w := g.w
+  let wl := g.wl
+  let top := g.top
+  let ws := g.ws
+  let ps := g.ps
+  let qs := g.qs
+  let vs := g.vs
+  let va := g.va
+  let wa := g.wa
+  let qa := g.qa
+  let qqa := g.qqa
+  let cq := g.cq
+  let cp := g.cp
+  let vc := g.vc
+  let wc := g.wc
+  let pc := g.pc
+  let qc := g.qc
+  let vr := g.vr
+  let plen := g.plen
+  let qlen := g.qlen
+  let count := g.count
+  let done := g.done
+  let answer := g.answer
   let isClear ← eqK ph phClear
   let isRun ← eqK ph phRun
   let isDrain ← eqK ph phDrain
   let wA ← slice w 0 AW
   -- running: the word at address w (stage R: the block RAMs' outputs)
-  let pw ← memRead 0 BW wA
-  let qw ← memRead 1 BW wA
+  let pw ← readMem "p" BW wA
+  let qw ← readMem "q" BW wA
   -- stage A: q' = p + q + carry (none into word 0)
   let sA ← bcdAddC D ps qs (← and1 cq (← neK ws 0))
   let qNew ← slice sA 0 BW
@@ -154,17 +171,17 @@ def body : M ctx Wiring := do
   let finished ← and1 drained (← not1 done)
   let answer' ← ite' finished (← ite' longer (← addK count 1) count) answer
   let done' ← or1 done finished
-  pure (solverWiring ⟨done, answer.ref,
-    #[ph'.ref, it'.ref, w'.ref, wl'.ref, top'.ref,
-      isRun.ref, wA.ref, pw.ref, qw.ref,
-      vr.ref, wr.ref, pr.ref, qr.ref,
-      vs.ref, ws.ref, qNew.ref, qs.ref,
-      cq'.ref, cp'.ref,
-      va.ref, wa.ref, pNew.ref, qa.ref,
-      plen'.ref, qlen'.ref, count'.ref, done'.ref, answer'.ref],
-    #[#[pWrite], #[qWrite]]⟩)
+  finish done answer
+    { ph := ph', it := it', w := w', wl := wl', top := top',
+      vr := isRun, wr := wA, pr := pw, qr := qw,
+      vs := vr, ws := g.wr, ps := g.pr, qs := g.qr,
+      cq := cq', cp := cp',
+      va := vs, wa := ws, qa := qNew, qqa := qs,
+      vc := va, wc := wa, pc := pNew, qc := qa,
+      plen := plen', qlen := qlen', count := count', done := done', answer := answer' }
+    (← writePorts [("p", #[pWrite]), ("q", #[qWrite])])
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 57, title := "Square root convergents",

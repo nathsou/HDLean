@@ -46,13 +46,27 @@ def sCrt := 7
 /-- The seven candidate reductions per digit. -/
 def ks : List Nat := List.range 7
 
-def regs : Array RegSpec := #[
-  rs "state" 3 (.sync sSquare), rs "r" RW (.sync 1), rs "a" RW, rs "b" (RW + 1), rs "b3" (RW + 2), rs "acc" RW,
-  rs "cnt" 5, rs "idx" 5 (.sync 22), rs "last" 1 (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0),
-  rs "r2" 10 (.sync 1), rs "tt" 10 (.sync 0), rs "x" W (.sync 0), rs "mb" W (.sync 0)] ++
-  (ks.map fun k => rs s!"y{k}" YW).toArray
+hdl_record Regs where
+  state : 3 := sSquare
+  r : RW := 1
+  a : RW
+  b : (RW + 1)
+  b3 : (RW + 2)
+  acc : RW
+  cnt : 5
+  idx : 5 := 22
+  last : 1 := 0
+  done : 1 := 0
+  answer : W := 0
+  r2 : 10 := 1
+  tt : 10 := 0
+  x : W := 0
+  mb : W := 0
 
-def ctx : Ctx := solverCtx "euler97" W regs
+/-- The candidate reductions for the next digit, one register each. -/
+abbrev State := Both Regs (Lanes "y" 7 (Word YW))
+
+def ctx : Ctx := solverCtx "euler97" W State ⟨Regs.resets, Lanes.replicate ⟨.none⟩⟩
 
 /-- `d·B − k·M` for each `k`, as two's complement, for the digit `d`. -/
 def reductions (d : Sig 2) (b : Sig (RW + 1)) (b3 : Sig (RW + 2)) : M ctx (List (Sig YW)) := do
@@ -67,23 +81,21 @@ def reductions (d : Sig 2) (b : Sig (RW + 1)) (b3 : Sig (RW + 2)) : M ctx (List 
   let dB ← ite' d2 hi lo
   ks.mapM fun k => subK dB (k * M5)
 
-def body : M ctx Wiring := do
-  let st ← rd 0 3
-  let r ← rd 1 RW
-  let a ← rd 2 RW
-  let b ← rd 3 (RW + 1)
-  let b3 ← rd 4 (RW + 2)
-  let acc ← rd 5 RW
-  let cnt ← rd 6 5
-  let idx ← rd 7 5
-  let last ← rd 8 1
-  let done ← rd 9 1
-  let answer ← rd 10 W
-  let r2 ← rd 11 10
-  let tt ← rd 12 10
-  let x ← rd 13 W
-  let mb ← rd 14 W
-  let ys ← ks.mapM fun k => rd (15 + k) YW
+def body : M ctx Wiring := solver "P097" State fun ⟨g, yl⟩ => do
+  let ys := yl.lanes.map (·.v)
+  let st := g.state
+  let r := g.r
+  let a := g.a
+  let b := g.b
+  let b3 := g.b3
+  let acc := g.acc
+  let cnt := g.cnt
+  let idx := g.idx
+  let last := g.last
+  let r2 := g.r2
+  let tt := g.tt
+  let x := g.x
+  let mb := g.mb
   let isSquare ← eqK st sSquare
   let isPrep ← eqK st sPrep
   let isMul ← eqK st sMul
@@ -154,14 +166,15 @@ def body : M ctx Wiring := do
   let tt' ← ite' isFinish tVal (← ite' isCrt (← shrK tt 1) tt)
   let x' ← ite' isFinish (← zx aRes W) (← ite' (← and1 isCrt (← bit tt 0)) (← add x mb) x)
   let mb' ← ite' isFinish (← lit W M5) (← ite' isCrt (← shlK mb 1) mb)
-  let finished ← and1 isCrt (← and1 (← eqK tt 0) (← not1 done))
-  let answer' ← ite' finished x answer
-  let done' ← or1 done finished
-  let nexts := #[st'.ref, r'.ref, a''.ref, b''.ref, b3''.ref, acc''.ref, cnt''.ref, idx'.ref, last'.ref,
-    done'.ref, answer'.ref, r2'.ref, tt'.ref, x'.ref, mb'.ref] ++ (ys'.map (·.ref)).toArray
-  pure (solverWiring ⟨done, answer.ref, nexts, #[]⟩)
+  let finished ← and1 isCrt (← and1 (← eqK tt 0) (← not1 g.done))
+  let answer' ← ite' finished x g.answer
+  let done' ← or1 g.done finished
+  finish g.done g.answer
+    ⟨{ state := st', r := r', a := a'', b := b'', b3 := b3'', acc := acc'', cnt := cnt'', idx := idx',
+       last := last', done := done', answer := answer', r2 := r2', tt := tt', x := x', mb := mb' },
+     Lanes.ofFn fun k => ⟨ys'.getD k default⟩⟩
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 97, title := "Large non-Mersenne prime",

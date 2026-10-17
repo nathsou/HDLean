@@ -31,20 +31,23 @@ def reference (_ : Unit) : Nat := Id.run do
 def G : Nat := 18
 def W : Nat := 16
 
-def regs : Array RegSpec := #[
-  rs "a" (4 * G) (.sync (1 <<< (4 * (G - 1)))),
-  rs "b" (4 * G) (.sync (1 <<< (4 * (G - 1)))),
-  rs "k" W (.sync 2), rs "drop" 11 (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]
+hdl_record Regs where
+  a : (4 * G) := (1 <<< (4 * (G - 1)))
+  b : (4 * G) := (1 <<< (4 * (G - 1)))
+  k : W := 2
+  drop : 11 := 0
+  done : 1 := 0
+  answer : W := 0
 
-def ctx : Ctx := solverCtx "euler25" W regs
+def ctx : Ctx := solverCtx "euler25" W Regs Regs.resets
 
-def body : M ctx Wiring := do
-  let a ← rd 0 (4 * G)
-  let b ← rd 1 (4 * G)
-  let k ← rd 2 W
-  let drop ← rd 3 11
-  let done ← rd 4 1
-  let answer ← rd 5 W
+def body : M ctx Wiring := solver "P025" Regs fun r => do
+  let a := r.a
+  let b := r.b
+  let k := r.k
+  let drop := r.drop
+  let done := r.done
+  let answer := r.answer
   -- s1 = F(k+1) = a + b, s2 = F(k+2) = a + 2b, with G + 1 digits
   let s1 ← bcdAdd G a b
   let b2 ← bcdDouble G b
@@ -62,9 +65,9 @@ def body : M ctx Wiring := do
   let a' ← ite' over (← digs s1 1 G) (← digs s1 0 G)
   let b' ← ite' over (← digs s2 1 G) (← digs s2 0 G)
   let drop' ← ite' over (← addK drop 1) drop
-  pure (solverWiring ⟨done, answer.ref, #[a'.ref, b'.ref, (← addK k 2).ref, drop'.ref, done'.ref, answer'.ref], #[]⟩)
+  finish done answer { a := a', b := b', k := ← addK k 2, drop := drop', done := done', answer := answer' }
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 25, title := "1000-digit Fibonacci number",

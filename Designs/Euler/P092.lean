@@ -59,43 +59,64 @@ def classLimit : Nat := 200
 def LINE : Nat := 83        -- delay line: x[2m+1], x[2m], x[2m−1], …
 def AWB : Nat := 9          -- bank addresses: pair indices
 
--- DP control: round, input pair, mode (0 stream, 1 drain, 2 wait), drain counter,
--- the round's last pair and the input limit 81·rnd
-def dpRegs : List RegSpec :=
-  [rs "rnd" 3 (.sync 0), rs "m" AWB (.sync 0), rs "mode" 2 (.sync 0), rs "drain" 3 (.sync 0),
-   rs "mend" AWB (.sync ((81 + 3) / 2)), rs "lim" 10 (.sync 0)]
--- pipeline levels 0 … 4 (taps, l1, l2, l3, l4): valid and pair index
-def pipeRegs : List RegSpec :=
-  (List.range 5).map (fun k => rs s!"v{k}" 1 (.sync 0)) ++ (List.range 5).map (fun k => rs s!"pm{k}" AWB)
--- two adder trees (hi: s = 2m+1, lo: s = 2m)
-def treeRegs : List RegSpec :=
-  ["h", "l"].flatMap fun t =>
-    (List.range 5).map (fun k => rs s!"{t}1_{k}" W) ++ (List.range 3).map (fun k => rs s!"{t}2_{k}" W) ++
-    (List.range 2).map (fun k => rs s!"{t}3_{k}" W) ++ [rs s!"{t}4" W]
--- last round: BCD of 2m at level 2, the class table addresses (level 3), classes
--- (level 4), the masked pair sum (level 5)
-def lastRegs : List RegSpec :=
-  [rs "sb" 12 (.sync 0), rs "ah" 12, rs "al" 12, rs "ch" 1, rs "cl" 1, rs "ps" W, rs "pv" 1 (.sync 0),
-   rs "acc" W (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]
--- classifier (values in BCD)
-def classRegs : List RegSpec :=
-  [rs "cs" 12 (.sync 1), rs "part" 12, rs "cv" 12 (.sync 1), rs "sqh" 8, rs "phase" 1 (.sync 0),
-   rs "cdone" 1 (.sync 0)]
-def lineRegs : List RegSpec := (List.range LINE).map fun k => rs s!"d{k}" W (.sync 0)
+/-- DP control: round, input pair, mode (0 stream, 1 drain, 2 wait), drain
+counter, the round's last pair and the input limit 81·rnd; the last round: BCD of
+2m at level 2, the class table addresses (level 3), classes (level 4), the masked
+pair sum (level 5); the classifier (values in BCD). -/
+hdl_record Ctl where
+  rnd : 3 := 0
+  m : AWB := 0
+  mode : 2 := 0
+  drain : 3 := 0
+  mend : AWB := ((81 + 3) / 2)
+  lim : 10 := 0
+  sb : 12 := 0
+  ah : 12
+  al : 12
+  ch : 1
+  cl : 1
+  ps : W
+  pv : 1 := 0
+  acc : W := 0
+  done : 1 := 0
+  answer : W := 0
+  cs : 12 := 1
+  part : 12
+  cv : 12 := 1
+  sqh : 8
+  phase : 1 := 0
+  cdone : 1 := 0
 
-def regs : Array RegSpec := (dpRegs ++ pipeRegs ++ treeRegs ++ lastRegs ++ classRegs ++ lineRegs).toArray
-def iPipe := dpRegs.length
-def iTree := iPipe + pipeRegs.length
-def iLast := iTree + treeRegs.length
-def iClass := iLast + lastRegs.length
-def iLine := iClass + classRegs.length
+/-- Pipeline levels 0 … 4 (taps, l1, l2, l3, l4): valid and pair index. -/
+hdl_record Pipe where
+  v : 1 := 0
+  pm : AWB
+
+/-- An adder tree over ten taps: five, three, two and one partial sums. -/
+hdl_record Tree where
+  a0 : W
+  a1 : W
+  a2 : W
+  a3 : W
+  a4 : W
+  b0 : W
+  b1 : W
+  b2 : W
+  c0 : W
+  c1 : W
+  d : W
+
+/-- Control, the pipeline, the two adder trees (hi: s = 2m+1, lo: s = 2m) and
+the delay line. -/
+abbrev State := Both Ctl (Both (Lanes "p" 5 Pipe) (Both (Lanes "t" 2 Tree) (Lanes "d" LINE (Word W))))
 
 /-- Banks: even and odd `s`, for rounds of each parity; three copies of the class
 table (classifier, hi lookup, lo lookup), indexed by BCD. -/
 def mems : Array MemSpec := #[ms "be0" AWB W, ms "bo0" AWB W, ms "be1" AWB W, ms "bo1" AWB W,
   ms "classA" 12 1, ms "classH" 12 1, ms "classL" 12 1]
 
-def ctx : Ctx := solverCtx "euler92" W regs mems
+def ctx : Ctx := solverCtx "euler92" W State
+  ⟨Ctl.resets, Lanes.replicate Pipe.resets, Lanes.replicate (Bundle.fill Tree .none), Lanes.replicate ⟨.sync 0⟩⟩ mems
 
 /-- Increment a 3-digit BCD number. -/
 def bcdInc (x : Sig 12) : M ctx (Sig 12) := do
@@ -137,44 +158,43 @@ def sq (d : Sig 4) : M ctx (Sig 8) := do
   pure r
 
 set_option maxRecDepth 20000 in
-def body : M ctx Wiring := do
-  let rnd ← rd 0 3
-  let m ← rd 1 AWB
-  let mode ← rd 2 2
-  let drain ← rd 3 3
-  let mend ← rd 4 AWB
-  let lim ← rd 5 10
-  let vs ← (List.range 5).mapM fun k => rd (iPipe + k) 1
-  let pms ← (List.range 5).mapM fun k => rd (iPipe + 5 + k) AWB
-  let tree (t : Nat) : M ctx (List (Sig W) × List (Sig W) × List (Sig W) × Sig W) := do
-    let base := iTree + 11 * t
-    pure (← (List.range 5).mapM fun k => rd (base + k) W, ← (List.range 3).mapM fun k => rd (base + 5 + k) W,
-      ← (List.range 2).mapM fun k => rd (base + 8 + k) W, ← rd (base + 10) W)
-  let (h1, h2, h3, h4) ← tree 0
-  let (l1, l2, l3, l4) ← tree 1
-  let sb ← rd iLast 12
-  let ah ← rd (iLast + 1) 12
-  let al ← rd (iLast + 2) 12
-  let ch ← rd (iLast + 3) 1
-  let cl ← rd (iLast + 4) 1
-  let ps ← rd (iLast + 5) W
-  let pv ← rd (iLast + 6) 1
-  let acc ← rd (iLast + 7) W
-  let done ← rd (iLast + 8) 1
-  let answer ← rd (iLast + 9) W
-  let cs ← rd iClass 12
-  let part ← rd (iClass + 1) 12
-  let cv ← rd (iClass + 2) 12
-  let sqh ← rd (iClass + 3) 8
-  let phase ← rd (iClass + 4) 1
-  let cdone ← rd (iClass + 5) 1
-  let line ← (List.range LINE).mapM fun k => rd (iLine + k) W
+def body : M ctx Wiring := solver "P092" State fun ⟨g, pipe, trees, lineR⟩ => do
+  let rnd := g.rnd
+  let m := g.m
+  let mode := g.mode
+  let drain := g.drain
+  let mend := g.mend
+  let lim := g.lim
+  let vs := pipe.lanes.map (·.v)
+  let pms := pipe.lanes.map (·.pm)
+  let tree (t : Tree Sig) : List (Sig W) × List (Sig W) × List (Sig W) × Sig W :=
+    ([t.a0, t.a1, t.a2, t.a3, t.a4], [t.b0, t.b1, t.b2], [t.c0, t.c1], t.d)
+  let (h1, h2, h3, _) := tree (trees.getD 0 default)
+  let (l1, l2, l3, l4) := tree (trees.getD 1 default)
+  let h4 := (trees.getD 0 default).d
+  let sb := g.sb
+  let ah := g.ah
+  let al := g.al
+  let ch := g.ch
+  let cl := g.cl
+  let ps := g.ps
+  let pv := g.pv
+  let acc := g.acc
+  let done := g.done
+  let answer := g.answer
+  let cs := g.cs
+  let part := g.part
+  let cv := g.cv
+  let sqh := g.sqh
+  let phase := g.phase
+  let cdone := g.cdone
+  let line := lineR.lanes.map (·.v)
   -- the classifier: one chain step per two cycles (test and two squares, then
   -- the third square), in BCD; the class table is memoised
   let cv1 ← eqK cv 1
   let cv89 ← eqK cv 0x89
   let below ← ult cv cs
-  let known ← memRead 4 1 cv
+  let known ← readMem "classA" 1 cv
   let finishS ← or1 cv1 (← or1 cv89 below)
   let clsVal ← ite' cv1 (← lit 1 0) (← ite' cv89 (← lit 1 1) known)
   let classifying ← not1 cdone
@@ -199,10 +219,10 @@ def body : M ctx Wiring := do
   let streaming ← and1 running isStream
   let parity ← bit rnd 0
   -- round r reads the banks written by round r − 1 (parity of r − 1)
-  let e0 ← memRead 0 W m
-  let o0 ← memRead 1 W m
-  let e1 ← memRead 2 W m
-  let o1 ← memRead 3 W m
+  let e0 ← readMem "be0" W m
+  let o0 ← readMem "bo0" W m
+  let e1 ← readMem "be1" W m
+  let o1 ← readMem "bo1" W m
   let ev ← ite' parity e0 e1
   let od ← ite' parity o0 o1
   let rnd0 ← eqK rnd 0
@@ -251,8 +271,8 @@ def body : M ctx Wiring := do
   let sOddB ← or sb (← lit 12 1)            -- 2m is even: its last digit + 1 needs no carry
   let ah' ← ite' (← small sOddB) sOddB (← f sOddB)
   let al' ← ite' (← small sb) sb (← f sb)
-  let ch' ← memRead 5 1 ah
-  let cl' ← memRead 6 1 al
+  let ch' ← readMem "classH" 1 ah
+  let cl' ← readMem "classL" 1 al
   -- level 5: the pair's contribution (s = 0 is not a start)
   let lo0 ← eqK outM 0
   let hiPart ← ite' ch h4 zero
@@ -278,21 +298,23 @@ def body : M ctx Wiring := do
   let finished ← and1 (← eqK rnd rounds) (← and1 (← not1 pv) (← not1 done))
   let answer' ← ite' finished acc answer
   let done' ← or1 done finished
-  let treeRefs (n1 n2 n3 : List (Sig W)) (n4 : Sig W) : Array Nat :=
-    (n1.map (·.ref)).toArray ++ (n2.map (·.ref)).toArray ++ (n3.map (·.ref)).toArray ++ #[n4.ref]
-  let nexts := #[rnd'.ref, m'.ref, mode'.ref, drain'.ref, mend'.ref, lim'.ref,
-      streaming.ref, vs[0]!.ref, vs[1]!.ref, vs[2]!.ref, vs[3]!.ref,
-      m.ref, pms[0]!.ref, pms[1]!.ref, pms[2]!.ref, pms[3]!.ref] ++
-    treeRefs h1' h2' h3' h4' ++ treeRefs l1' l2' l3' l4' ++
-    #[sb'.ref, ah'.ref, al'.ref, ch'.ref, cl'.ref, ps'.ref, pv'.ref, acc'.ref, done'.ref, answer'.ref,
-      cs'.ref, part'.ref, cv'.ref, sqh'.ref, phase'.ref, cdone'.ref] ++
-    (line'.map (·.ref)).toArray
+  let mkT (n1 n2 n3 : List (Sig W)) (n4 : Sig W) : Tree Sig :=
+    { a0 := n1[0]!, a1 := n1[1]!, a2 := n1[2]!, a3 := n1[3]!, a4 := n1[4]!, b0 := n2[0]!, b1 := n2[1]!,
+      b2 := n2[2]!, c0 := n3[0]!, c1 := n3[1]!, d := n4 }
+  let vNext := [streaming, vs[0]!, vs[1]!, vs[2]!, vs[3]!]
+  let pmNext := [m, pms[0]!, pms[1]!, pms[2]!, pms[3]!]
   let clsPort := port writeCls cs clsVal
-  let writes := #[#[port w0 outM l4], #[port w0 outM h4], #[port w1 outM l4], #[port w1 outM h4],
-    #[clsPort], #[clsPort], #[clsPort]]
-  pure (solverWiring ⟨done, answer.ref, nexts, writes⟩)
+  finish done answer
+    ⟨{ rnd := rnd', m := m', mode := mode', drain := drain', mend := mend', lim := lim', sb := sb', ah := ah',
+       al := al', ch := ch', cl := cl', ps := ps', pv := pv', acc := acc', done := done', answer := answer',
+       cs := cs', part := part', cv := cv', sqh := sqh', phase := phase', cdone := cdone' },
+     Lanes.ofFn fun k => ⟨vNext[k]!, pmNext[k]!⟩,
+     Lanes.ofFn fun t => if t == 0 then mkT h1' h2' h3' h4' else mkT l1' l2' l3' l4',
+     Lanes.ofFn fun k => ⟨line'[k]!⟩⟩
+    (← writePorts [("be0", #[port w0 outM l4]), ("bo0", #[port w0 outM h4]), ("be1", #[port w1 outM l4]),
+      ("bo1", #[port w1 outM h4]), ("classA", #[clsPort]), ("classH", #[clsPort]), ("classL", #[clsPort])])
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 92, title := "Square digit chains",

@@ -10,6 +10,12 @@
    operations of `HDLean/Rtl/Build.lean`). Factor repeated structure into
    builder functions generic in the context (see `Fifo.Word.flags` and
    `Fifo.Word.advance`, used once by the FIFO and three times by the pipeline).
+   Larger state composes records with `Both` and `Lanes`
+   (`HDLean/Rtl/Named.lean`; the Euler solvers are examples); return the next
+   state as `{ r with field := … }`, so that unmentioned registers hold. If
+   `Ctx.module` comes out empty, `runE` says which cell or wiring the builder
+   rejected; wrap parts of the program in `scope "name"` or `scope here%` to
+   locate it.
 4. Simulate from an all-zero and a random store before proving (`hdlean rtl-trace`,
    or a test in `Tests/Main.lean`).
 5. Prove the body with `rtl_let` and the operator lemmas, giving the outputs and

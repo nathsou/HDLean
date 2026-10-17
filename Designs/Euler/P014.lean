@@ -73,33 +73,48 @@ def L : Nat := lanes.length
 /-- The last start of a lane. -/
 def lastStart (n0 stride last : Nat) : Nat := n0 + (last - n0) / stride * stride
 
-def laneRegs : List RegSpec :=
-  lanes.zipIdx.flatMap fun ((n0, _, _), l) =>
-    [rs s!"x{l}" XW (.sync n0), rs s!"c{l}" CW (.sync 0), rs s!"n{l}" W (.sync n0), rs s!"act{l}" 1 (.sync 1)]
-def laneBase (l : Nat) : Nat := 4 * l
+/-- A lane walking its starts: value, steps so far, start, still active. -/
+hdl_record Walker where
+  x : XW
+  c : CW := 0
+  n : W
+  act : 1 := 1
 
 /-- Per copy, a pipeline: read address, count and start (stage 1); table entry
 (the block RAM's output register), count and start (stage 2); total and start
 (stage 3); the copy's best. -/
-def copyRegs : List RegSpec :=
-  (List.range copies).flatMap fun k =>
-    [rs s!"v1_{k}" 1 (.sync 0), rs s!"raddr{k}" TB, rs s!"c1_{k}" CW, rs s!"n1_{k}" W,
-     rs s!"v2_{k}" 1 (.sync 0), rs s!"data{k}" TW, rs s!"c2_{k}" CW, rs s!"n2_{k}" W,
-     rs s!"v3_{k}" 1 (.sync 0), rs s!"t3_{k}" CW, rs s!"n3_{k}" W,
-     rs s!"bc{k}" CW (.sync 0), rs s!"bn{k}" W (.sync 0)]
-def copyBase (k : Nat) : Nat := 4 * L + 13 * k
+hdl_record Copy where
+  v1 : 1 := 0
+  raddr : TB
+  c1 : CW
+  n1 : W
+  v2 : 1 := 0
+  data : TW
+  c2 : CW
+  n2 : W
+  v3 : 1 := 0
+  t3 : CW
+  n3 : W
+  bc : CW := 0
+  bn : W := 0
 
 /-- The table builder, then the final comparison. -/
-def gBase : Nat := 4 * L + 13 * copies
-def globalRegs : List RegSpec :=
-  [rs "built" 1 (.sync 0), rs "y" (TB + 1) (.sync 1), rs "xb" XW (.sync 0), rs "cb" CW (.sync 0),
-   rs "bst" 2 (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0)]
+hdl_record Glob where
+  built : 1 := 0
+  y : (TB + 1) := 1
+  xb : XW := 0
+  cb : CW := 0
+  bst : 2 := 0
+  done : 1 := 0
+  answer : W := 0
 
-def regs : Array RegSpec := (laneRegs ++ copyRegs ++ globalRegs).toArray
+abbrev State := Both (Lanes "l" L Walker) (Both (Lanes "k" copies Copy) Glob)
 
 def mems : Array MemSpec := ((List.range copies).map fun k => ms s!"tail{k}" TB TW).toArray
 
-def ctx : Ctx := solverCtx "euler14" W regs mems
+def ctx : Ctx := solverCtx "euler14" W State
+  ⟨Lanes.ofFn fun l => { Walker.resets with x := .sync (lanes[l]!).1, n := .sync (lanes[l]!).1 },
+   Lanes.replicate Copy.resets, Glob.resets⟩ mems
 
 /-- Two shortcut steps: `x ↦ (x + B)/4` with `B` = `0`, `2x|1`, `2x|2` or `8x|5`
 (the constant fills bits of the shifted copy that are known to be zero), and the
@@ -125,21 +140,23 @@ def bWalk := 0
 def bWait := 1
 def bWrite := 2
 
-structure Lane where
+structure Req where
   req : Sig 1
   addr : Sig TB
   c : Sig CW
   n : Sig W
   deriving Inhabited
 
-def body : M ctx Wiring := do
-  let built ← rd gBase 1
-  let y ← rd (gBase + 1) (TB + 1)
-  let xb ← rd (gBase + 2) XW
-  let cb ← rd (gBase + 3) CW
-  let bst ← rd (gBase + 4) 2
-  let done ← rd (gBase + 5) 1
-  let answer ← rd (gBase + 6) W
+def body : M ctx Wiring := solver "P014" State fun ⟨walkers, cps, g⟩ => do
+  let ws := walkers.lanes.toArray
+  let cs := cps.lanes.toArray
+  let built := g.built
+  let y := g.y
+  let xb := g.xb
+  let cb := g.cb
+  let bst := g.bst
+  let done := g.done
+  let answer := g.answer
   -- the builder: walk y until it drops below y, then add the table entry there
   let isWalk ← eqK bst bWalk
   let isWait ← eqK bst bWait
@@ -150,7 +167,7 @@ def body : M ctx Wiring := do
   let issue ← and1 building (← and1 isWalk (← and1 (← not1 first) below))
   let direct ← and1 building (← and1 isWalk first)
   let walk ← and1 building (← and1 isWalk (← and1 (← not1 first) (← not1 below)))
-  let data0 ← rd (copyBase 0 + 5) TW
+  let data0 := cs[0]!.data
   let bval ← ite' direct (← resize (← subK y 1) TW) (← resize (← add cb (← zx data0 CW)) TW)
   let bwrite ← or1 direct (← and1 building isWrite)
   let yNext ← addK y 1
@@ -163,37 +180,38 @@ def body : M ctx Wiring := do
   let built' ← or1 built (← and1 bwrite lastY)
   let yAddr ← slice y 0 TB
   -- lanes: walk until the value drops below the table's range, then request
-  let mut laneOut : Array Lane := #[]
+  let mut laneOut : Array Req := #[]
   let mut acts : List (Sig 1) := []
-  for (_, l) in lanes.zipIdx do
-    let x ← rd (laneBase l) XW
-    let c ← rd (laneBase l + 1) CW
-    let n ← rd (laneBase l + 2) W
-    let act ← rd (laneBase l + 3) 1
+  for w in ws do
+    let x := w.x
+    let c := w.c
+    let n := w.n
+    let act := w.act
     let req ← and1 built (← and1 act (← small x))
     laneOut := laneOut.push ⟨req, ← slice x 0 TB, c, n⟩
     acts := acts ++ [act]
   -- arbiters: the lowest requesting lane of each copy is granted
   let mut granted : Array (Sig 1) := Array.replicate L ⟨0⟩
-  let mut copyNexts : Array Nat := #[]
+  let mut copyNext : Array (Copy Sig) := #[]
   let mut writes : Array (Array WritePort) := #[]
   let mut busy : List (Sig 1) := []
   let mut bcs : Array (Sig CW) := #[]
   let mut bns : Array (Sig W) := #[]
   for k in [0:copies] do
-    let v1 ← rd (copyBase k) 1
-    let raddr ← rd (copyBase k + 1) TB
-    let c1 ← rd (copyBase k + 2) CW
-    let n1 ← rd (copyBase k + 3) W
-    let v2 ← rd (copyBase k + 4) 1
-    let data ← rd (copyBase k + 5) TW
-    let c2 ← rd (copyBase k + 6) CW
-    let n2 ← rd (copyBase k + 7) W
-    let v3 ← rd (copyBase k + 8) 1
-    let t3 ← rd (copyBase k + 9) CW
-    let n3 ← rd (copyBase k + 10) W
-    let bc ← rd (copyBase k + 11) CW
-    let bn ← rd (copyBase k + 12) W
+    let cp := cs[k]!
+    let v1 := cp.v1
+    let raddr := cp.raddr
+    let c1 := cp.c1
+    let n1 := cp.n1
+    let v2 := cp.v2
+    let data := cp.data
+    let c2 := cp.c2
+    let n2 := cp.n2
+    let v3 := cp.v3
+    let t3 := cp.t3
+    let n3 := cp.n3
+    let bc := cp.bc
+    let bn := cp.bn
     let mut taken ← lit 1 0
     let mut addr := raddr
     let mut cSel := c1
@@ -209,24 +227,26 @@ def body : M ctx Wiring := do
         taken ← or1 taken ln.req
     if k == 0 then
       addr ← ite' issue (← slice xb 0 TB) addr
-    let entry ← memRead k TW raddr
+    let entry ← readMem s!"tail{k}" TW raddr
     let total ← add c2 (← zx data CW)
     let better ← and1 v3 (← ult bc t3)
     let bc' ← ite' better t3 bc
     let bn' ← ite' better n3 bn
-    copyNexts := copyNexts ++ #[taken.ref, addr.ref, cSel.ref, nSel.ref, v1.ref, entry.ref, c1.ref, n1.ref,
-      v2.ref, total.ref, n2.ref, bc'.ref, bn'.ref]
+    let cp' : Copy Sig :=
+      { v1 := taken, raddr := addr, c1 := cSel, n1 := nSel, v2 := v1, data := entry, c2 := c1, n2 := n1,
+        v3 := v2, t3 := total, n3 := n2, bc := bc', bn := bn' }
+    copyNext := copyNext.push cp'
     writes := writes.push #[port bwrite yAddr bval]
     busy := busy ++ [v1, v2, v3]
     bcs := bcs.push bc
     bns := bns.push bn
   -- lanes: step, or move on to the next start once granted
-  let mut laneNexts : Array Nat := #[]
+  let mut laneNext : Array (Walker Sig) := #[]
   for ((n0, stride, last), l) in lanes.zipIdx do
-    let x ← rd (laneBase l) XW
-    let c ← rd (laneBase l + 1) CW
-    let n ← rd (laneBase l + 2) W
-    let act ← rd (laneBase l + 3) 1
+    let x := ws[l]!.x
+    let c := ws[l]!.c
+    let n := ws[l]!.n
+    let act := ws[l]!.act
     let g := granted[l]!
     let stepping ← and1 act (← not1 (← small x))
     let more ← neK n (lastStart n0 stride last)
@@ -237,7 +257,7 @@ def body : M ctx Wiring := do
     let c' ← ite' reload (← lit CW 0) (← ite' stepping (← add c inc) c)
     let n' ← ite' reload nNext n
     let act' ← and1 act (← or1 (← not1 g) more)
-    laneNexts := laneNexts ++ #[x'.ref, c'.ref, n'.ref, act'.ref]
+    laneNext := laneNext.push { x := x', c := c', n := n', act := act' }
   -- the end: every lane finished and every pipeline drained; the best of the copies
   let finished ← and1 built (← and1 (← not1 (← anyTree (acts ++ busy))) (← not1 done))
   let mut best := bcs[0]!
@@ -248,10 +268,11 @@ def body : M ctx Wiring := do
     arg ← ite' b bns[k]! arg
   let answer' ← ite' finished arg answer
   let done' ← or1 done finished
-  pure (solverWiring ⟨done, answer.ref, laneNexts ++ copyNexts ++
-    #[built'.ref, y'.ref, xb'.ref, cb'.ref, bst'.ref, done'.ref, answer'.ref], writes⟩)
+  finish done answer
+    ⟨Lanes.ofFn fun l => laneNext.getD l default, Lanes.ofFn fun k => copyNext.getD k default,
+     { built := built', y := y', xb := xb', cb := cb', bst := bst', done := done', answer := answer' }⟩ writes
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 14, title := "Longest Collatz sequence",

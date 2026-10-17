@@ -29,87 +29,78 @@ def reference (_ : Unit) : Nat := Id.run do
 
 def stages : Nat := coins.length
 
-/-- Per stage: valid, amount, count, read address of its delay line; then the
-generator and the result. -/
-def regs : Array RegSpec :=
-  ((List.range stages).flatMap fun s =>
-    -- for the 1p and 2p stages, h is a flag and must start cleared
-    [rs s!"v{s}" 1 (.sync 0), rs s!"i{s}" 8, rs s!"y{s}" W, rs s!"ra{s}" 8,
-     rs s!"h{s}" W (if coins[s]! ≤ 2 then .sync 0 else .none), rs s!"g{s}" W]).toArray ++
-  #[rs "gen" 8 (.sync 0), rs "done" 1 (.sync 0), rs "answer" W (.sync 0), rs "fin" 1 (.sync 0)]
+/-- A stage: valid, amount, count, read address of its delay line, and the
+two words behind the count (for the 1p and 2p stages `h` is a flag). -/
+hdl_record Stage where
+  v : 1 := 0
+  i : 8
+  y : W
+  ra : 8
+  h : W
+  g : W
+
+hdl_record Glob where
+  gen : 8 := 0
+  done : 1 := 0
+  answer : W := 0
+  fin : 1 := 0
+
+abbrev State := Both (Lanes "s" stages Stage) Glob
 
 /-- Delay lines for the coins above 2p (stages 2 … 7). -/
 def mems : Array MemSpec := ((List.range (stages - 2)).map fun s => ms s!"hist{s + 2}" 8 W).toArray
 
-def ctx : Ctx := solverCtx "euler31" W regs mems
+def ctx : Ctx := solverCtx "euler31" W State
+  ⟨Lanes.ofFn fun s => { Stage.resets with h := if coins[s]! ≤ 2 then .sync 0 else .none }, Glob.resets⟩ mems
 
-def base (s : Nat) : Nat := 6 * s
-def genIdx : Nat := 6 * stages
-
-def body : M ctx Wiring := do
-  let gen ← rd genIdx 8
-  let done ← rd (genIdx + 1) 1
-  let answer ← rd (genIdx + 2) W
-  let fin ← rd (genIdx + 3) 1
+def body : M ctx Wiring := solver "P031" State fun ⟨sts, g⟩ => do
   -- the generator: amounts 0 … 200, a single way to make 0
-  let running ← not1 (← geK gen (target + 1))
-  let gen' ← ite' running (← addK gen 1) gen
-  let x0 ← zx (← eqK gen 0) W
+  let running ← not1 (← geK g.gen (target + 1))
+  let gen' ← ite' running (← addK g.gen 1) g.gen
+  let x0 ← zx (← eqK g.gen 0) W
   let mut vin := running
-  let mut iin := gen
+  let mut iin := g.gen
   let mut xin := x0
-  let mut nexts : Array Nat := #[]
+  let mut next : Array (Stage Sig) := #[]
   let mut writes : Array (Array WritePort) := #[]
-  let mut lastV := running
-  let mut lastI := gen
   let mut lastY := x0
   let mut finNext := running
-  for s in [0:stages] do
+  for (st, s) in sts.lanes.zipIdx do
     let c := coins[s]!
-    let v ← rd (base s) 1
-    let i ← rd (base s + 1) 8
-    let y ← rd (base s + 2) W
-    let ra ← rd (base s + 3) 8
-    let h1 ← rd (base s + 4) W
-    let h2 ← rd (base s + 5) W
     -- this stage at this cycle sees (vin, iin, xin) from the previous stage and
     -- needs its own output for amount iin − c (zero below c)
     let zero ← lit W 0
     if c ≤ 2 then
       -- from the output register (c = 1) or the one before it (c = 2, kept in
-      -- h2); h1 is a flag, registered a cycle ahead: iin ≥ c
-      let prev := if c == 1 then y else h2
-      let has ← bit h1 0
-      let back ← ite' has prev zero
+      -- g); h is a flag, registered a cycle ahead: iin ≥ c
+      let prev := if c == 1 then st.y else st.g
+      let back ← ite' (← bit st.h 0) prev zero
       let yNew ← add xin back
       let has' ← zx (← and1 vin (← geK iin (c - 1))) W
-      nexts := nexts ++ #[vin.ref, iin.ref, yNew.ref, ra.ref, has'.ref, y.ref]
+      next := next.push { st with v := vin, i := iin, y := yNew, h := has', g := st.y }
     else
       -- from the block RAM delay line: written from the output registers, read
-      -- two cycles ahead (into the RAM's own output register h1, then h2)
-      let yNew ← add xin h2
-      writes := writes.push #[port v i y]
-      let h ← memRead (s - 2) W ra
-      let h2' ← ite' (← and1 vin (← geK iin (c - 1))) h1 zero
+      -- two cycles ahead (into the RAM's own output register h, then g)
+      let yNew ← add xin st.g
+      writes := writes.push #[port st.v st.i st.y]
+      let h ← memRead (s - 2) W st.ra
+      let g' ← ite' (← and1 vin (← geK iin (c - 1))) st.h zero
       let raNext ← subK (← addK iin 3) c
-      nexts := nexts ++ #[vin.ref, iin.ref, yNew.ref, raNext.ref, h.ref, h2'.ref]
+      next := next.push { v := vin, i := iin, y := yNew, ra := raNext, h, g := g' }
     if s + 1 == stages then
       -- the last stage takes amount 200 this cycle: its output is the answer next cycle
       finNext ← and1 vin (← eqK iin target)
-    lastV := v
-    lastI := i
-    lastY := y
-    vin := v
-    iin := i
-    xin := y
+    lastY := st.y
+    vin := st.v
+    iin := st.i
+    xin := st.y
   -- the last stage's output registers hold ways[i] for all coins
-  let _ := lastV
-  let _ := lastI
-  let answer' ← ite' fin lastY answer
-  let done' ← or1 done fin
-  pure (solverWiring ⟨done, answer.ref, nexts ++ #[gen'.ref, done'.ref, answer'.ref, finNext.ref], writes⟩)
+  let answer' ← ite' g.fin lastY g.answer
+  let done' ← or1 g.done g.fin
+  finish g.done g.answer
+    ⟨Lanes.ofFn fun s => next.getD s default, { gen := gen', done := done', answer := answer', fin := finNext }⟩ writes
 
-def design : Design := single ctx body
+def design : Except String Design := solverDesign ctx body
 
 def problem : Problem :=
   { number := 31, title := "Coin sums",
