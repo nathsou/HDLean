@@ -88,7 +88,7 @@ reset, builder, memory and instance rules).
 (what `emit` writes and `metrics` reports). The word-level designs come from the
 proved bit-blaster; memories are counted as state bits here, and stay memories in
 the word-level SystemVerilog. No retiming; synthesis improves on these numbers.
-The ECP5 reports in `docs/reports/` predate these changes and should be re-run.
+Physical measurements are run on demand ([Physical.md](Physical.md)) and not committed.
 
 ## Known gaps
 

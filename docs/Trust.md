@@ -65,5 +65,8 @@ fail to type-check rather than silently changing the claim
 `python3 scripts/freeze.py --write` produces a candidate manifest
 (`approval: review-required`). It is never approval. A reviewer compares it with the
 previous version, then sets the protected `HDLEAN_TRUSTED_MANIFEST_SHA256` variable.
-Branch protection with required code-owner review (`verification/branch-protection.json`)
-must be enabled by a repository admin.
+Branch protection (`verification/branch-protection.json`, applied by a repository
+admin) makes `main` change only through pull requests that pass `verify` and
+`approved-specifications`, with no force pushes. With one maintainer the merge is the
+review; required code-owner approval is left off because GitHub does not let an
+author approve their own pull request. Turn it on once there is a second reviewer.

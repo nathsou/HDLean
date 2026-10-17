@@ -795,7 +795,7 @@ A block is accepted when Lean's official kernel accepts its proofs, every theore
 
 ### 12.2 Checks
 
-1. **Frozen spec, pinned by an outside anchor.** Reviewer-owned and framework files are hash-pinned in `verification/frozen.json`. CI reads the approved digest from a protected repository variable, and branch protection requires code-owner review. A manifest stored in the repository is never its own anchor.
+1. **Frozen spec, pinned by an outside anchor.** Reviewer-owned and framework files are hash-pinned in `verification/frozen.json`. CI reads the approved digest from a protected repository variable, and branch protection makes `main` change only through pull requests that pass both checks. A manifest stored in the repository is never its own anchor. With a single maintainer, the merge itself is the review: GitHub does not let an author approve their own pull request, so required code-owner approval would block every merge. Add it once a second reviewer exists.
 2. **Frozen specs import only frozen modules.** A spec or interface cannot depend on agent code; only challenge files import implementations.
 3. **Statement audit.** Every theorem in a `Challenge.lean` depends only on `propext`, `Classical.choice` and `Quot.sound`, and every constant in its statement comes from a frozen module, from Lean, or from the manifest's list of *implementation holes* (the hardware and facts about its type). Since challenge files are frozen, weakening an agent theorem breaks the challenge instead of changing the claim.
 4. **Notation and instances.** A spec elaborates only with framework notation and instances.
@@ -997,7 +997,7 @@ The first implementation delivered all seven v0.1 milestones, with the gaps list
 Remediation milestones:
 
 - **R0 Toolchain.** Lean 4.35.0. *Done.* The project builds unchanged; the bundled extra kernels were tried and then dropped (12.1).
-- **R1 Trust surface (F2 to F4).** *Done in R5:* readable challenge files for every claimed block, statement audit with implementation holes, frozen interfaces for the Toy16, general-depth and dual-clock FIFO maps, CI digest from a protected variable. Branch protection still needs a repository admin.
+- **R1 Trust surface (F2 to F4).** *Done in R5:* readable challenge files for every claimed block, statement audit with implementation holes, frozen interfaces for the Toy16, general-depth and dual-clock FIFO maps, CI digest from a protected variable, branch protection (`verification/branch-protection.json`).
 - **R3 Shared core and proved emitter (F6).** *Done:* node graph, node-allocating `circuit do`, lowering and printer round trips proved once, `emit_correct`. Hierarchical emission is still open (moved to S3).
 - **R4 Queue specs (F5).** *Done:* the general-depth FIFO refines `Fifo.spec (2^k)`; the dual-clock FIFO has a relational queue spec with progress stated from reset.
 - **R5 Consolidate.** *Done:* one pipeline (tree circuits compile to node graphs by the proved `Circuit.toDag`); validator pipeline, export-based checkers, custom comparator, byte certificates and generated statement dumps deleted; proved-parser read-back at every emission. *Done when:* every design is emitted by `emit_correct` and audited from its readable challenge.
