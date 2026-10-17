@@ -212,6 +212,29 @@ def check_rtl(work, design, iverilog, vvp, yosys, ivl_base, cycles=200):
     print(f'PASS {design}: word SV and bit-blasted SV match {cycles} cycles of Design.step; Yosys elaborates')
 
 
+def check_abc(work, design, width, yosys):
+    """ABC-optimised emission: the result must be validated by the verified LRAT
+    checker, match the trace, and be Yosys-equivalent to the plain emission."""
+    name = f'{design}_{width}_abc'
+    plain = work / f'{design}_{width}.sv'
+    rtlil = work / f'{name}.rtlil'
+    aag = work / f'{name}.aiger'
+    message = run([EXE, 'abc-emit', design, 'rtlil', rtlil, width])
+    assert 'validated' in message, message
+    run([EXE, 'abc-emit', design, 'aiger', aag, width])
+    rows = json.loads((work / f'{design}_{width}.json').read_text())
+    check_aag(aag, rows)
+    script = (f'read_verilog -sv {plain.name}; proc; rename hd_top gold; design -stash gold; '
+              f'read_rtlil {rtlil.name}; rename hd_top gate; design -stash gate; '
+              f'design -copy-from gold -as gold gold; design -copy-from gate -as gate gate; '
+              f'splitnets gold/state gate/state; expose -evert-dff -shared; opt_clean; check -assert; '
+              f'equiv_make gold gate equiv; hierarchy -top equiv; opt_merge; opt_clean; equiv_simple; '
+              f'equiv_induct; equiv_status -assert')
+    log = run([yosys, '-p', script], cwd=work)
+    assert 'Equivalence successfully proven!' in log
+    print(f'PASS {name}: {message.strip()} Trace and Yosys equivalence with the plain emission.')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--iverilog', default=os.environ.get('IVERILOG', 'iverilog'))
@@ -235,6 +258,8 @@ def main():
             check_design(work, design, width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
         if design.startswith('rtl-'):
             check_rtl(work, design, args.iverilog, args.vvp, args.yosys, args.ivl_base)
+        if design in ('counter', 'ring', 'rtl-ram') and shutil.which(os.environ.get('HDLEAN_ABC', 'yosys-abc')):
+            check_abc(work, design, widths[design][-1], args.yosys)
 
 
 

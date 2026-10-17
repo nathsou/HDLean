@@ -37,6 +37,7 @@ lake exe hdlean rtl-emit rtl-toy16 build/toy16_words.sv     # word-level SystemV
 lake exe hdlean emit rtl-toy16 aiger build/toy16_words.aag   # bit-blasted, proved
 lake exe hdlean rtl-trace rtl-ram build/ram.json 100 1
 lake exe hdlean rtl-metrics rtl-toy16
+lake exe hdlean abc-emit toy16 aiger build/toy16_abc.aag      # ABC-optimised, LRAT-validated
 lake env .lake/build/bin/hdlean review docs/Review.md        # reviewer document
 ```
 
