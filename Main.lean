@@ -1,5 +1,6 @@
 import HDLean
 import Designs
+import Designs.Euler
 import Lean
 open HDLean HDLean.Backend HDLean.Verification
 
@@ -16,6 +17,10 @@ private def usage : String := "HDLean 0.3.0\n\
   hdlean rtl-metrics <design> [width=8]\n\
   hdlean toy16 [cycles=60]     (retirement reports of the word-level CPU running the sum program)\n\
   hdlean review <path.md>      (challenge statements, axioms, interfaces, scenarios; run under `lake env`)\n\
+  hdlean euler-list            (the Project Euler solvers, as JSON)\n\
+  hdlean euler-sim <n>         (run solver n in Lean from reset to done; compare with the Lean reference)\n\
+  hdlean euler-ref <n>         (the answer from the plain-Lean reference)\n\
+  hdlean euler-emit <n> <dir> <report-clock-hz>  (solver, cycle counter and UART reporter as word-level SystemVerilog, read back)\n\
 Inputs and outputs are the ports of each design's top module; reset is the last bit-level input.\n\
 Width applies to fifo, pipeline, ring, ram and async."
 
@@ -344,6 +349,41 @@ private def execute (args : List String) : IO Unit := do
         ("register_bits", Lean.toJson regBits), ("memory_bits", Lean.toJson memBits),
         ("blasted_state_bits", Lean.toJson lg.ffBits), ("blasted_and_gates", Lean.toJson lg.andCount),
         ("blasted_logic_depth", Lean.toJson lg.depth)]).pretty
+  | ["euler-list"] =>
+    IO.println (Lean.toJson (Euler.problems.map fun p => Lean.Json.mkObj [("number", Lean.toJson p.number),
+      ("title", .str p.title), ("idea", .str p.idea), ("answer_width", Lean.toJson p.answerWidth),
+      ("max_cycles", Lean.toJson p.maxCycles)])).pretty
+  | ["euler-sim", n] =>
+    let some p := Euler.find? (← parseNum n) | throw (IO.userError s!"no solver for problem {n}")
+    let reference := p.reference ()
+    match Euler.simulate p.design.optimized p.maxCycles with
+    | some (cycles, answer) =>
+      IO.println (Lean.Json.mkObj [("number", Lean.toJson p.number), ("cycles", Lean.toJson cycles),
+        ("answer", Lean.toJson answer), ("reference", Lean.toJson reference),
+        ("ok", Lean.toJson (answer == reference))]).compress
+      unless answer == reference do throw (IO.userError s!"problem {n}: design answered {answer}, reference {reference}")
+    | none => throw (IO.userError s!"problem {n}: no answer within {p.maxCycles} cycles")
+  | ["euler-ref", n] =>
+    let some p := Euler.find? (← parseNum n) | throw (IO.userError s!"no solver for problem {n}")
+    IO.println (Lean.Json.mkObj [("number", Lean.toJson p.number), ("reference", Lean.toJson (p.reference ()))]).compress
+  | ["euler-emit", n, dir, hz] =>
+    let some p := Euler.find? (← parseNum n) | throw (IO.userError s!"no solver for problem {n}")
+    let clock ← parseNum hz 1000000000
+    let divisor := (clock + 57600) / 115200
+    let solver := p.design.optimized
+    let report := (Euler.Report.design divisor).optimized
+    let count := Euler.Report.countDesign.optimized
+    unless solver.check do throw (IO.userError s!"problem {n}: the solver does not pass Design.check")
+    unless report.check && count.check do throw (IO.userError "the reporter does not pass Design.check")
+    for (d, file) in [(solver, "solver.sv"), (report, "report.sv"), (count, "count.sv")] do
+      let path := (System.FilePath.mk dir / file).toString
+      writeFile path d.systemVerilog
+      unless Rtl.Design.parseSystemVerilog (← IO.FS.readFile path) == some d do
+        throw (IO.userError s!"{path}: the proved parser did not read back the design")
+    let m := solver.modules[solver.top]!
+    IO.println (Lean.Json.mkObj [("module", .str s!"hd_{solver.top}_{m.name.text}"),
+      ("answer_width", Lean.toJson p.answerWidth), ("divisor", Lean.toJson divisor),
+      ("cells", Lean.toJson m.cells.size)]).compress
   | _ => throw (IO.userError usage)
 
 def main (args : List String) : IO UInt32 := do
