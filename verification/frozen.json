@@ -107,7 +107,7 @@
     "scripts/check_native_clocks.py": "3219126f9273f599fd5ca038dc26931cffb6be2737e47bacb7622ae5689dd856",
     "scripts/freeze.py": "01e1a343d132ecd283c26fcb562165d8b851a14742f57a6031455007f6f9a4d7",
     "scripts/verify.py": "af73f653488913e425ed523a5c736cfc57908df358961090bf48859ebc0827e1",
-    "verification/branch-protection.json": "c208bd4156e2b1f42e99a7db1e00f0bf8ff179224ed4bcbb2f4b9afc8e1a358e"
+    "verification/branch-protection.json": "fb00b1571f59dabbea47dffe5d95426086f7e4769bdb26193da535315413befa"
   },
   "framework": "HDLean 0.3.0",
   "holes": [

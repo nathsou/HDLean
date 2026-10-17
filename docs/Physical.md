@@ -29,29 +29,12 @@ The `Routed FPGA measurements` GitHub workflow runs these commands on demand and
 uploads emitted RTL, mapped/routed artifacts, logs and reports. The archive is
 approximately 748 MB compressed and 2.5 GB extracted.
 
-## Recorded results
+## Results
 
-All three runs used **ECP5-25K, CABGA381, speed grade 6, seed 1, 12 MHz**. Pins were
-assigned automatically. The complete CPU includes 256 sixteen-bit data words
-implemented as flip-flops, eight registers, the immutable sum-program ROM and its
-full 79-bit retirement interface.
-
-| Design | Mapped combinational cells | Mapped flip-flops | Routed Fmax |
-| --- | ---: | ---: | ---: |
-| Decade counter | 12 / 24,288 | 4 / 24,288 | 361.01 MHz |
-| Three-stage elastic FIFO pipeline, width 8 | 136 / 24,288 | 54 / 24,288 | 246.24 MHz |
-| Complete Toy16 fetch/execute CPU | 12,629 / 24,288 | 4,234 / 24,288 | 47.02 MHz |
-
-The machine-readable results are [counter](reports/counter-ecp5-25k.json),
-[pipeline](reports/pipeline-ecp5-25k.json) and [CPU](reports/toy16-ecp5-25k.json).
-The physical CPU AST has 4,288 bits; synthesis removes unused/padding bits, which
-explains the lower mapped count. Its proved retirement bound remains two cycles.
-
-An earlier Yosys 0.52 run on the same ECP5 target achieved 45.63 MHz with 12,750
-combinational cells. The current table uses the fully pinned distribution above.
-The full CPU exceeded iCE40HX8K capacity (8,918 / 7,680 logic cells); that failure
-is not a successful device result. `place_route.py` also supports smaller iCE40
-designs with the installed chip database specified by `--chipdb-model`.
+Reports are not committed: they go stale with every design, tool or constraint
+change. Run the commands above, or the `Routed FPGA measurements` workflow, and read
+the JSON reports it uploads. For scale, the old bit-level Toy16 (flip-flop memories)
+routed at 47 MHz on an ECP5-25K and did not fit an iCE40HX8K.
 
 Fmax is a tool/model estimate for register timing after placement and routing.
 There are no external I/O delay constraints, board measurements, power estimates
