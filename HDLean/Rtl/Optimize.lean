@@ -454,18 +454,4 @@ theorem _root_.HDLean.Rtl.Design.optimize_output (d : Design) : d.optimize.outpu
   funext st ins
   simp [Design.output, Design.optimize_top, Design.optimize_sem]
 
-/-- The optimised design when it passes `Design.check` (it always should; the
-fallback keeps the CLI total). -/
-def _root_.HDLean.Rtl.Design.optimized (d : Design) : Design := if d.optimize.check then d.optimize else d
-
-theorem _root_.HDLean.Rtl.Design.optimized_step (d : Design) : d.optimized.step = d.step := by
-  unfold Design.optimized; split
-  · exact d.optimize_step
-  · rfl
-
-theorem _root_.HDLean.Rtl.Design.optimized_output (d : Design) : d.optimized.output = d.output := by
-  unfold Design.optimized; split
-  · exact d.optimize_output
-  · rfl
-
 end HDLean.Rtl.Opt

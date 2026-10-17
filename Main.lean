@@ -267,10 +267,9 @@ private def execute (args : List String) : IO Unit := do
     unless back == some d do
       throw (IO.userError s!"{path}: the proved parser did not read back the design")
     let cells := d.modules.toList.foldl (fun n m => n + m.cells.size) 0
-    let rewritten := (d0.modules.zip d.modules).toList.foldl (fun n (a, b) =>
-      n + ((a.cells.zip b.cells).toList.filter fun (x, y) => x != y).length) 0
+    let cells0 := d0.modules.toList.foldl (fun n m => n + m.cells.size) 0
     let fmt := if rtlil then "RTLIL" else "SystemVerilog"
-    IO.println s!"Wrote {path}: word-level {fmt}, {d.modules.size} modules, {cells} cells, {rewritten} rewritten by the proved word-level pass; proved round trip, read back."
+    IO.println s!"Wrote {path}: word-level {fmt}, {d.modules.size} modules, {cells} cells ({cells0} before the proved word-level passes); proved round trip, read back."
   | "rtl-trace" :: design :: path :: rest =>
     if rest.length > 2 then throw (IO.userError usage)
     let cycles ← parseNum (rest[0]?.getD "100") 100000
@@ -291,8 +290,8 @@ private def execute (args : List String) : IO Unit := do
     withRtl d fun g => do
       let lg := Dag.lowerOpt g
       IO.println (Lean.Json.mkObj [("design", .str design), ("modules", Lean.toJson d.modules.size),
-        ("cells", Lean.toJson cells), ("cells_rewritten", Lean.toJson ((d.modules.zip d.optimized.modules).toList.foldl
-          (fun n (a, b) => n + ((a.cells.zip b.cells).toList.filter fun (x, y) => x != y).length) 0)),
+        ("cells", Lean.toJson cells),
+        ("cells_optimized", Lean.toJson (d.optimized.modules.toList.foldl (fun n m => n + m.cells.size) 0)),
         ("register_bits", Lean.toJson regBits), ("memory_bits", Lean.toJson memBits),
         ("blasted_state_bits", Lean.toJson lg.ffBits), ("blasted_and_gates", Lean.toJson lg.andCount),
         ("blasted_logic_depth", Lean.toJson lg.depth)]).pretty

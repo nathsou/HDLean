@@ -31,3 +31,4 @@ import HDLean.Rtl.RTLILProof
 import HDLean.Rtl.Memory
 import HDLean.Rtl.Blast.Top
 import HDLean.Rtl.Optimize
+import HDLean.Rtl.Compact
