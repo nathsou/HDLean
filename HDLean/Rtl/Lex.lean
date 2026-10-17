@@ -24,7 +24,7 @@ inductive Tok where
   | wire (k : Nat)
   /-- `u_<k>` -/
   | inst (k : Nat)
-  /-- `<c>_<k>_<name>` for `c` in `i o r m`, and `hd_<k>_<name>` for `c = 'h'` -/
+  /-- `<c>_<k>_<name>` for `c` in `i o r m t`, and `hd_<k>_<name>` for `c = 'h'` -/
   | named (c : Char) (k : Nat) (name : Ident)
   | lit (s : String)
   deriving Repr, DecidableEq
@@ -83,17 +83,24 @@ def numeric (l : List Char) : Tok :=
   | some (a, 'd' :: b) => match digits a, digits b with
     | some w, some v => .const w v
     | _, _ => .lit (String.ofList l)
-  | _ => match digits l with
+  | some _ => .lit (String.ofList l)
+  | none => match digits l with
     | some n => .num n
     | none => .lit (String.ofList l)
 
+/-- Generated names may be escaped with `\\` (RTLIL): `\\n_3` is the wire `n_3`. An
+escaped literal stays a literal, backslash included. -/
 def symbolic (l : List Char) : Tok :=
   match l with
   | 'n' :: '_' :: rest => (digits rest).elim (.lit (String.ofList l)) .wire
   | 'u' :: '_' :: rest => (digits rest).elim (.lit (String.ofList l)) .inst
   | 'h' :: 'd' :: '_' :: rest => (parseNamed rest).elim (.lit (String.ofList l)) fun p => .named 'h' p.1 p.2
+  | '\\' :: rest =>
+    match symbolic rest with
+    | .lit _ => .lit (String.ofList l)
+    | t => t
   | c :: '_' :: rest =>
-    if c = 'i' ∨ c = 'o' ∨ c = 'r' ∨ c = 'm' then
+    if c = 'i' ∨ c = 'o' ∨ c = 'r' ∨ c = 'm' ∨ c = 't' then
       (parseNamed rest).elim (.lit (String.ofList l)) fun p => .named c p.1 p.2
     else .lit (String.ofList l)
   | _ => .lit (String.ofList l)

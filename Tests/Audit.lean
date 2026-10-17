@@ -29,6 +29,7 @@ def frameworkTheorems : List Name := [
   ``HDLean.Optimized.toy16_correctness, ``HDLean.Optimized.ram_correctness,
   ``HDLean.Rtl.Design.toDag_nextState, ``HDLean.Rtl.Design.toDag_evalOutput,
   ``HDLean.Rtl.Design.parse_systemVerilog, ``HDLean.Rtl.Design.parseSystemVerilog_canonical,
+  ``HDLean.Rtl.Design.parse_rtlil, ``HDLean.Rtl.Design.parseRTLIL_canonical,
   ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,
   ``HDLean.Rtl.Build.instantiate_ensures]
 
