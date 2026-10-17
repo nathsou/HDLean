@@ -7,13 +7,16 @@ reviewer-owned files. There are no other proof checkers in the trusted path.
 
 - **Lean's logic and kernel.** `lake build` checks every proof; `leanchecker --fresh`
   replays the designs into a fresh kernel environment.
-- **The framework** (`HDLean/`): semantics, the node graph, lowering, printers and
-  parsers, generic theorems. Maintainer-owned and frozen by hash.
-- **Each format's parser**, including the word-level SystemVerilog parser
-  (`Design.parseSystemVerilog`). The parser *is* that format's formal semantics:
-  `emit_correct` says what the printed text means by parsing it. The subsets are
-  flat gate lists, so the parsers are small. Yosys and Icarus runs
-  (`scripts/check_backends.py`) cross-check that they match the real languages.
+- **The framework** (`HDLean/`): the word-level language and its semantics
+  (single- and multi-clock), the builder, the bit-blaster, the node graph,
+  lowering, printers and parsers, generic theorems. Maintainer-owned and frozen by
+  hash.
+- **Each format's parser**, including the word-level SystemVerilog and RTLIL
+  parsers (`Design.parseSystemVerilog`, `Design.parseRTLIL` and their multi-clock
+  versions). The parser *is* that format's formal semantics: `emit_correct` says
+  what the printed text means by parsing it. Yosys and Icarus runs
+  (`scripts/check_backends.py`, `scripts/check_native_clocks.py`) cross-check that
+  they match the real languages.
 - **Compiled Lean code for emission.** The bytes are computed by compiled code, not by
   the kernel. The CLI reads every emitted file back and decodes it with the proved
   parser, which must return exactly the lowered graph.
@@ -25,7 +28,7 @@ reviewer-owned files. There are no other proof checkers in the trusted path.
   `Design.optimize`) need no extra trust.
 - **One physical assumption:** two-flop synchronizers resolve metastability.
 - **The reviewer-owned files**, as approved: `Spec.lean`, `Interface.lean`,
-  `Challenge.lean` in each design, plus `AsyncFifo/Model.lean` and `Fifo/Circular.lean`.
+  `Challenge.lean` in each design.
 
 ## What a reviewer reads
 
@@ -48,8 +51,7 @@ through named **holes** (the hardware and facts about its type), listed in
    editing a helper definition it controls.
 
 Because challenge files are frozen, a weakened agent theorem makes the challenge
-fail to type-check rather than silently changing the claim
-(`Tests/test_workflow.py` checks this).
+fail to type-check rather than silently changing the claim.
 
 ## What is not covered
 
@@ -57,8 +59,9 @@ fail to type-check rather than silently changing the claim
   not mind it touching. Lean 4.35's `lake comparator` adds a sandbox if needed.
 - Kernel-checked exact bytes. Replaced by the proved-parser read-back above.
 - Physical timing, power and analog behaviour. Measured, see [Physical.md](Physical.md).
-- The dual-clock FIFO's hardware link: its challenge is model-level until the
-  hardware moves to `MultiClock.Shared.MultiDag` (design milestone R2).
+- Multi-clock designs below the word level: they have no bit-level backend, and
+  the two-flop synchronizer assumption above is what connects their semantics to
+  silicon.
 
 ## Approval
 

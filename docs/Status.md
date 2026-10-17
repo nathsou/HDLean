@@ -6,101 +6,94 @@ what is trusted in [Trust.md](Trust.md).
 
 ## Pipeline
 
-Two entry points, one path to bits. New designs are written in the word-level RTL
+One language, one path to bits. Designs are written in the word-level RTL
 (`HDLean/Rtl`, [Design.md](Design.md) 3.1): typed records, a checked builder,
-memories and module instances. They print directly as word-level SystemVerilog
-(proved round trip) and reach the bit-level backends through the proved
-bit-blaster `Design.toDag` (`toDag_nextState`, `toDag_evalOutput`). The bit-level
-path below is unchanged; since v0.4 it lowers with `Dag.lowerTight` (negation free,
-one gate per AND), and since v0.5 every backend emits `Dag.lowerOpt`: the lowering
-followed by the proved AIG optimisation `Graph.optimize`, which `emit_correct`
-covers. Word-level designs pass through the proved word-level rewriting
-`Design.optimize` first. `hdlean abc-emit` adds ABC's optimisation, accepted only
-with an LRAT certificate checked by Lean's verified checker
-([Design.md](Design.md) 13.5).
+memories, module instances, and several clock domains joined by two-flop
+synchronizers and shared memories (`MDesign`). Single-clock designs print as
+word-level SystemVerilog and RTLIL (proved round trips), pass through the proved
+word-level passes (`Design.optimized`: rewriting, then dead-cell removal), and
+reach the bit-level backends through the proved bit-blaster `Design.toDag`
+(`toDag_nextState`, `toDag_evalOutput`). The bit-level node graph (`Dag`) is
+lowered by `Dag.lowerTight` and optimised by the proved AIG pass `Graph.optimize`;
+the printers are proved by parse-after-print round trips, so `Proved.emit_correct`
+gives the meaning of every emitted file. `hdlean abc-emit` adds ABC's optimisation,
+accepted only with an LRAT certificate checked by Lean's verified checker
+([Design.md](Design.md) 13.5). The CLI reads each emitted file back with the
+proved parser.
 
-Bit-level path. A design is a node graph (`Dag`), either built directly with the
-node-allocating `circuit do` (the Toy16 CPU) or translated from an expression-tree
-circuit by the proved `Circuit.toDag`. `Dag.lower` (proved once) produces a gate
-graph, and the printers (proved once by parse-after-print round trips) produce
-SystemVerilog, AIGER and RTLIL. `Proved.emit_correct` gives the meaning of every
-emitted file for every design; no per-design validator runs. The CLI reads each
-emitted file back with the proved parser.
+Multi-clock designs print as word-level SystemVerilog and RTLIL with proved round
+trips (`MDesign.parse_systemVerilog`, `MDesign.parse_rtlil`).
 
 All proofs are checked by Lean's official kernel. There is no `sorry`, and every
 audited theorem uses only `propext`, `Classical.choice` and `Quot.sound`.
 
 ## Designs and their challenges
 
-| Design | Challenge (frozen, readable) | Hardware path |
+| Design | Challenge (frozen, readable) | Implementation |
 | --- | --- | --- |
-| Counter | Decade behaviour after reset from any power-up state; 4 flip-flops | Tree circuit, `toDag` |
-| Two-entry FIFO | Exact queue after reset, every payload width; `2w+2` flip-flops | Tree circuit, `toDag` |
-| Three-stage pipeline | Three coupled queues after reset; budget | Tree circuit, `toDag` |
-| General-depth FIFO | Refines `Fifo.spec (2^k)` after reset, every depth and width; budget | Tree circuit, `toDag` |
-| RAM (register array) | Read port follows the read-before-write memory for some initial contents; budget | Tree circuit, `toDag` |
-| Toy16 CPU | Retirement refines the ISA from any power-up state; 2-cycle progress; budget | Node graph |
-| Dual-clock FIFO | Model level: queue trace after startup for every sampling oracle; enqueue and dequeue progress from reset | Legacy multi-clock circuit, emitted event-encoded |
-| Toy16 CPU, word level | Retirement refines the ISA after one reset cycle from any power-up store; 2-cycle progress | Word RTL: register file and data memory as RTL memories, ALU as an instantiated module, 13-field register record |
-| RAM, word level | Read port follows the read-before-write RAM for some initial state, any inputs and resets | Word RTL: one RTL memory, one write port |
+| Counter | Decade behaviour after one reset cycle from any power-up store; 4 state bits | One Mealy module, one register |
+| Two-entry FIFO | The capacity-2 queue after reset, every positive payload width; `2w+2` state bits | Count and two slots; ready and valid from the count |
+| General-depth FIFO | The capacity-`2^k` queue after reset, every positive `k` and width; `2k+1` register bits and `2^k` words of memory | Head and count registers, payload in an RTL memory; implements the circular-buffer model cycle for cycle |
+| Three-stage pipeline | Three coupled queues after reset (every stage's ports observed); `3(2w+2)` state bits | One module; the FIFO's stage functions used three times |
+| Single-port RAM | Read port follows the read-before-write RAM for some initial state, any inputs and resets | One RTL memory, one write port |
+| Toy16 CPU | Retirement refines the ISA after one reset cycle from any power-up store; 2-cycle progress | Register file and data memory as RTL memories, ALU as an instantiated module |
+| Dual-clock FIFO | Queue trace after a reset startup for every power-up state, clock interleaving and sampling oracle; writes and reads complete within three fair windows | Two clock domains with Gray pointers exchanged through synchronizers and a shared memory; implements the dual-clock model exactly |
 
-`scripts/verify.py` audits 53 theorems: the 17 challenge theorems, the two word-level
+`scripts/verify.py` audits 59 theorems: the 23 challenge theorems, the two
 challenges re-proved for the optimised designs, and 34 generic framework theorems
-(emitter, lowerings, AIG optimisation, validated emission, word-level rewriting,
-tree translation, refinement rules, bit-blasting, word SystemVerilog round trip,
-reset, builder, memory and instance rules).
+(emitter, lowerings, AIG optimisation, validated emission, word-level passes,
+refinement rules, bit-blasting, word-level and multi-clock round trips, builder,
+memory, instance and register-cell rules, and the two model correspondences).
 [Review.md](Review.md) is generated from them by `hdlean review`.
 
 ## Checks
 
 - `lake build` and `leanchecker --fresh Designs` (official kernel).
 - Challenge audit: axioms, and statement constants from frozen modules or declared holes.
-- `lake exe tests`: arbitrary-power-up simulation of every design against its
-  reference (9,000 circular-FIFO, 9,600 RAM, 240 CPU, 2,400 pipeline, 8,400 FIFO and
-  1,200 counter cycles), plus emitter read-back and mutation rejection.
-- `scripts/check_backends.py`: AIGER interpretation, 100 Icarus cycles and Yosys
-  RTLIL/SystemVerilog equivalence for every design; a corrupted next state must fail.
-  For word-level designs, Icarus also runs the word SystemVerilog and the
-  bit-blasted netlist side by side against 200 cycles of the Lean trace of
-  `Design.step`, and Yosys elaborates the word-level text (hierarchy, memories).
-  For the counter, the general-depth FIFO and the word-level RAM, `abc-emit` must be
-  validated, match the trace and be Yosys-equivalent to the plain emission.
-  A corrupted ABC result is refuted by the SAT solver and not adopted.
-- `scripts/check_native_clocks.py`: native multi-domain SV/RTLIL for a two-domain
-  fixture, including wrong-clock rejection.
-- `Tests/test_workflow.py`: the audit rejects foreign axioms and agent-defined
-  statement constants; a weakened agent theorem breaks the frozen challenge.
+- `lake exe tests`: every single-clock design against its reference on random
+  traces with resets (900 counter, 2,700 FIFO, 2,700 pipeline and 8,100
+  general-depth FIFO cycles), the CPU's retirements against the ISA, 7,200
+  dual-clock steps of the multi-clock design against the dual-clock model (state
+  and ports), bit-blasted graphs against their lowered gate graphs, emitter
+  read-back and mutation rejection.
+- `scripts/check_backends.py`: for every design, AIGER interpretation, 100 Icarus
+  cycles and Yosys RTLIL/SystemVerilog equivalence of the bit-blasted netlist (a
+  corrupted next state must fail); Icarus runs the word SystemVerilog, the word
+  RTLIL (through Yosys) and the bit-blasted netlist side by side against 200 cycles
+  of the Lean trace of `Design.step`; Yosys elaborates the word-level text
+  (hierarchy, memories). For the counter, the general-depth FIFO and the RAM,
+  `abc-emit` must be validated, match the trace and be Yosys-equivalent to the
+  plain emission.
+- `scripts/check_native_clocks.py`: the dual-clock FIFO's word SystemVerilog and
+  word RTLIL (through Yosys) run in Icarus with two real clocks against 400-step
+  Lean traces of `MDesign.next`, at two widths and two seeds.
 
 ## Emitted sizes (bit-level formats, width 8)
 
-| Design | State bits | AND gates, lowering only | AND gates, emitted | Logic depth | AND gates, `abc-emit` (validated) |
-| --- | --- | --- | --- | --- | --- |
-| Counter | 4 | 152 | 33 | 8 | 26 |
-| FIFO | 18 | 126 | 107 | 5 | 106 |
-| Pipeline | 54 | 378 | 319 | 5 | 316 |
-| RAM, register array (16 × 8) | 136 | 4,992 | 796 | 34 | 724 |
-| RAM, word level (16 × 8) | 136 | 788 | 788 | 8 | 710 |
-| General-depth FIFO | 144 | 19,180 | 1,288 | 17 | 830 |
-| Toy16 CPU, bit level | 4,288 | 62,072 | 40,822 | 50 | 25,057 |
-| Toy16 CPU, word level | 4,312 | 27,825 | 27,764 | 53 | 25,164 |
+| Design | State bits | AND gates, emitted | Logic depth | AND gates, `abc-emit` (validated) |
+| --- | --- | --- | --- | --- |
+| Counter | 4 | 32 | 8 | 20 |
+| Two-entry FIFO | 18 | 118 | 10 | 115 |
+| Pipeline | 54 | 352 | 10 | 343 |
+| General-depth FIFO (16 × 8) | 137 | 892 | 16 | 867 |
+| RAM (16 × 8) | 136 | 788 | 8 | 710 |
+| Toy16 CPU | 4,312 | 27,764 | 53 | 25,164 |
 
-"Lowering only" is `Dag.lowerTight`; "emitted" adds the proved `Graph.optimize`
-(what `emit` writes and `metrics` reports). The word-level designs come from the
-proved bit-blaster; memories are counted as state bits here, and stay memories in
-the word-level SystemVerilog. No retiming; synthesis improves on these numbers.
-Physical measurements are run on demand ([Physical.md](Physical.md)) and not committed.
+"Emitted" is the proved bit-blaster, lowering and AIG pass (what `emit` writes and
+`metrics` reports). Memories are counted as state bits here and stay memories in
+the word-level text. No retiming; synthesis improves on these numbers. Physical
+measurements are run on demand ([Physical.md](Physical.md)) and not committed.
 
 ## Known gaps
 
-- Dual-clock FIFO hardware still uses the legacy multi-clock model (clock labels,
-  deterministic sampling). Its challenge is model-level until it moves to
-  `MultiClock.Shared.MultiDag` (milestone R2).
-- The two word-level designs have nothing for the word-level passes to rewrite or
-  remove; `Tests/Backend.lean` exercises them on a redundant module.
+- Multi-clock designs have no bit-level backend: they are emitted as word
+  SystemVerilog and RTLIL only. Their top module's structure is decoded from its
+  header comments; the rest of it is checked by exact reprint, so Yosys and Icarus
+  runs are its independent check.
+- Budgets exist for single-clock designs only (`Blast.stateBits`); there is no state
+  measure for multi-clock designs yet.
+- The example designs have little for the word-level passes to rewrite or remove;
+  `Tests/Backend.lean` exercises the passes on a redundant module.
 - No sequential optimisation (retiming, register merging, state re-encoding):
   deferred, see [Design.md](Design.md) 13.5.
-- Multi-clock word designs (`MDesign`) have no bit-level backend: they are emitted
-  as word SystemVerilog and RTLIL only. Their top module's structure is decoded from
-  its header comments; the rest of it is checked by exact reprint, so Yosys and
-  Icarus runs are its independent check.
 - Exact emitted bytes are not kernel-checked; the proved-parser read-back replaces it.

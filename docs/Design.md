@@ -57,29 +57,29 @@ HDLean separates who writes, who reads and who checks into three layers. Only th
 | Spec (per block) | Reference machine, observation map, headline theorem statements, scenarios, mutation tests, performance budgets | Reviewer (an agent may draft) | Reviewer | Frozen and hash-pinned; the agent cannot write to it |
 | Implementation and proofs (per block) | Circuits, invariants, proofs, scenario traces | Agent | Nobody | Kernel-checked against the challenge file |
 
-An agent writes a circuit in do-notation, which elaborates into the core AST. `denote` maps the AST to a machine, and proofs relate that machine to the spec machine. Comparator checks those proofs against the trusted challenge file; only then does the same AST go through the verified lowering to the netlist IR and its printers.
+An agent writes a design as a builder program, which elaborates into the word-level IR (3.1). `Design.denote` maps the IR to a machine, and proofs relate that machine to the spec machine. The audit checks those proofs against the trusted challenge file; only then does the same IR go through the verified printers, or the verified bit-blaster, lowering and printers.
 
 ```mermaid
 flowchart LR
   spec["Spec + challenge<br/>reviewer-owned, frozen"] --> audit
-  circuit["Circuit<br/>written by the agent"] --> ast["Core graph<br/>typed by width and domain"] --> proofs["Proofs<br/>relate denote to the spec"] --> audit["Lean kernel<br/>+ statement audit"]
-  ast --> lower["Proved lowering<br/>runs on the term the theorem names"]
+  circuit["Builder program<br/>written by the agent"] --> ast["Word IR<br/>checked widths and references"] --> proofs["Proofs<br/>relate denote to the spec"] --> audit["Lean kernel<br/>+ statement audit"]
+  ast --> lower["Proved printers, bit-blaster and lowering<br/>run on the term the theorem names"]
   audit -. only after acceptance .-> lower
   lower --> netlist["Gate graph"] --> printers["Proved printers<br/>SystemVerilog, AIGER, RTLIL<br/>read back by the proved parser"]
 ```
 
-The agent's code reaches a netlist only through the verified lowering, and only after comparator has accepted its proofs against the frozen challenge.
+The agent's code reaches text only through the verified printers and lowering, and only after the audit has accepted its proofs against the frozen challenge.
 
 ### 3.1 Word-level RTL (v0.4)
 
-Since v0.4 designs are written at the word level, and bits appear only after a proved pass. The layers, from what an agent writes to what tools read:
+Since v0.4 designs are written at the word level, and bits appear only after a proved pass. Since v0.7 it is the only way to write a design: the bit-level front end (expression trees, `circuit do`) and the designs built on it were replaced by word-level versions. The layers, from what an agent writes to what tools read:
 
 | Layer | What it is | Main definitions | What is proved |
 | --- | --- | --- | --- |
 | Typed records | `hdl_record` declares inputs, outputs and registers as records of words, `R F` with `F` a width-indexed functor: `R Sig` in the builder, `R BitVec` in specs, `R (fun _ => Reset)` for resets | `Rtl.Record`, `Rtl.Bundle` | Generic encode/decode laws |
 | Builder (elaboration) | A state monad over a growing cell list: each primitive (`add`, `memRead`, `mux`, `instantiate`, ...) checks widths and references and appends one cell. Cells refer only to earlier cells (no combinational loops); instances only to earlier modules (no recursion) | `Rtl.Build` | The builder state carries `cellsValid` |
 | Word IR | `Design` = modules in dependency order; a module is ports, SSA cells (`width`, `Op`), registers (free-running or synchronous reset), memories (`2^aw` words, write ports, combinational reads) and instance cells. Ops: and/or/xor/nand/nor/xnor, add/sub/mul/udiv/umod, shl/lshr/ashr, eq/ne/ult/ule/slt/sle, mux, slice, concat, zext, sext | `Rtl.Syntax`, `Rtl.Semantics` | Total cycle semantics `Design.sem` over stores (registers, memories, child stores); every store is a power-up state |
-| Specs on the builder | Hoare-style `Ensures`/`Refines` per cell, `rtl_let`, `mealy_build[_with/_ex]` (body proof to cycle theorem), `mealy_mem` (memories as address→word functions), `instantiate_ensures` with `Design.env_lt` (a child's theorem is used as a black box) | `Rtl.Hoare`, `Rtl.Mealy`, `Rtl.Memory`, `Rtl.Instance` | Proved once |
+| Specs on the builder | Hoare-style `Ensures`/`Refines` per cell, `rtl_let`, `mealy_build[_with/_ex/_cells]` (body proof to cycle theorem; `_cells` also says which register each field of the register record reads), `mealy_mem` (memories as address→word functions), `instantiate_ensures` with `Design.env_lt` (a child's theorem is used as a black box); design-level forms (`mealy_step`, `mealy_output`, `mealy_isMoore`, `mealy_stateBits`, and per-module `mealy_sem_*` for multi-clock tops) | `Rtl.Hoare`, `Rtl.Mealy`, `Rtl.Memory`, `Rtl.Instance`, `Rtl.MealyCells`, `Rtl.MealyDesign` | Proved once |
 | Word SystemVerilog | One line per cell, modules and memories preserved | `Rtl.SystemVerilog` | `parse (print d) = d` and only canonical text parses |
 | Word RTLIL | Yosys word-level cells with explicit widths and signedness, `$memrd`/`$memwr`, `$dff` with a reset `$mux`, instances as cells; printed through RTLIL statements | `Rtl.RTLILStmt`, `Rtl.RTLIL` | `Design.parse_rtlil`, `parseRTLIL_canonical` (statement round trip proved once) |
 | Multiple clock domains | `MDesign`: shared modules, a top per domain, two-flop crossings from register outputs with a per-bit old/new oracle, shared memories (one write domain, asynchronous read at a register address); printed as the modules plus a top with clocks, synchronizers and memories | `Rtl.Multi`, `Rtl.MultiText` | Total semantics over arbitrary edges, resets and masks; `MDesign.parse_systemVerilog`, `parse_rtlil` (the top's structure comes from its header, the rest is checked by exact reprint) |
@@ -93,7 +93,7 @@ Since v0.4 designs are written at the word level, and bits appear only after a p
 **Passes.** Elaboration is Lean's own, plus the builder's local checks. Node sharing is explicit: every `let x ← ...` is one cell referenced as often as needed, and the AIG's cached constructors hash-cons identical gates during blasting. Three proved optimisation passes follow (see 13.5 for how they are trusted):
 
 1. **Word level** (`Design.optimize`): rewrites cells in place, so cell indices, registers, memories and instances keep their positions. `optimize_sem` makes it invisible to every challenge, because challenges see a design only through `step` and `output`.
-2. **AIG** (`Graph.optimize`, run by every backend): removes logic that feeds no register or output, folds constants and merges identical gates. On the bit-level designs it removes 15–93% of the gates.
+2. **AIG** (`Graph.optimize`, run by every backend): removes logic that feeds no register or output, folds constants and merges identical gates. On the former bit-level designs it removed 15–93% of the gates.
 3. **Validated ABC** (`hdlean abc-emit`, optional): ABC's full combinational optimisation, accepted only with an LRAT certificate checked by Lean's verified checker.
 
 Sequential optimisation (retiming, register merging, state re-encoding) is deferred: it changes the store layout and needs per-pass state mappings.
@@ -112,21 +112,21 @@ flowchart LR
 
 ```
 HDLean/                          framework, owned by maintainers
-  Semantics/                     Machine, PMachine, Synth, reset, clocks, composition, retirement
-  Core/                          Expr, Circuit, Word, Network, `circuit do` syntax (bit level)
+  Semantics/                     Machine, PMachine, reset, clock crossing (sampling, Gray code),
+                                 composition, retirement
   Rtl/                           word-level RTL: syntax, semantics, builder, records, Hoare specs,
-                                 memories, instances, word SystemVerilog, bit-blasting (Blast/)
-  Lib/                           verified primitives: memories, delays, pipes, streams, networks
-  MultiClock/                    multi-domain circuits, synchronizers, multi-clock backends
-  Netlist/                       semantic IR, proved lowering, proved rewrites
-  Backend/                       graph, validators, SystemVerilog / AIGER / RTLIL printers and parsers
-  Tactics/, Verification/        tactics, invariant search, simulation diagnostics
+                                 memories, instances, multiple clock domains, word-level passes,
+                                 word SystemVerilog and RTLIL, bit-blasting (Blast/)
+  Lib/                           reference models: RAM, Moore networks
+  Core/Dag.lean                  the bit-level node graph the bit-blaster produces
+  Netlist/                       proved lowering, proved AIG pass
+  Backend/                       gate graph, validation, SystemVerilog / AIGER / RTLIL printers and parsers
+  Verification/                  simulation diagnostics
 Designs/<Block>/                 one directory per hardware block
   Spec.lean                      reference machine, reviewer-owned, frozen
-  Interface.lean                 observation and input maps, reviewer-owned, frozen
+  Interface.lean                 ports and how the reference reads them, reviewer-owned, frozen
   Challenge.lean                 headline statements with holes, reviewer-owned, frozen
-  Scenarios.lean                 pinned example traces, agent-written, reviewer-read
-  Hardware.lean, Proof.lean      agent-owned
+  Word.lean, ...                 the design and its proofs, agent-owned
 verification/frozen.json         hashes of every reviewer-owned and framework file
 ```
 
@@ -945,6 +945,7 @@ Newest first.
 
 | Date | Decision | Change | Reason |
 | --- | --- | --- | --- |
+| 2026-10-17 | Front end | Word-level RTL only; the bit-level designs and front end replaced | One language; R2 closed by the word-level dual-clock FIFO |
 | 2026-10-16 | Checking | Official kernel only; extra kernels, export replay and custom comparator removed | Owner's choice; the extra tooling cost more than it added |
 | 2026-10-16 | Emission | Exact-byte certificates replaced by proved-parser read-back | Byte certificates only remove trust in compiled code and did not scale to the CPU (13.4) |
 | 2026-10-16 | Pipeline | Tree circuits compile to node graphs by the proved `Circuit.toDag`; validator pipeline deleted | One path to bits (R5) |
@@ -1003,9 +1004,9 @@ Remediation milestones:
 - **R3 Shared core and proved emitter (F6).** *Done:* node graph, node-allocating `circuit do`, lowering and printer round trips proved once, `emit_correct`. Hierarchical emission is still open (moved to S3).
 - **R4 Queue specs (F5).** *Done:* the general-depth FIFO refines `Fifo.spec (2^k)`; the dual-clock FIFO has a relational queue spec with progress stated from reset.
 - **R5 Consolidate.** *Done:* one pipeline (tree circuits compile to node graphs by the proved `Circuit.toDag`); validator pipeline, export-based checkers, custom comparator, byte certificates and generated statement dumps deleted; proved-parser read-back at every emission. *Done when:* every design is emitted by `emit_correct` and audited from its readable challenge.
-- **R2 Clock domains (F1).** Dual-clock FIFO hardware moved to the domain-indexed multi-domain graph, with the sampling oracle in its semantics and a hardware-level challenge. *Open.*
+- **R2 Clock domains (F1).** *Done in v0.7:* the dual-clock FIFO is a word-level multi-clock design (`MDesign`) with the sampling oracle in its semantics and a hardware-level challenge (queue trace and progress).
 
-Scaling milestones, needed before a pipelined RISC-V core. *All four done in v0.4* (3.1): memories, word-level ops, hierarchy and typed records, with the word-level Toy16 (`Toy16Rtl.Challenge`) and RAM (`RAMRtl.Challenge`) proved on them, word SystemVerilog with a proved round trip, and a proved bit-blaster feeding every bit-level backend. Done in v0.6: a word-level RTLIL printer, dead-cell removal in the word IR (renumbering cells, keeping the store layout) and multiple clock domains in the word IR. Next: a pipelined core. Proved optimisation (v0.5): word-level rewriting, AIG optimisation and validated ABC are done (3.1, 13.5); sequential optimisation is deferred.
+Scaling milestones, needed before a pipelined RISC-V core. *All four done in v0.4* (3.1): memories, word-level ops, hierarchy and typed records, with the word-level Toy16 and RAM proved on them, word SystemVerilog with a proved round trip, and a proved bit-blaster feeding every bit-level backend. Done in v0.6: a word-level RTLIL printer, dead-cell removal in the word IR (renumbering cells, keeping the store layout) and multiple clock domains in the word IR. Done in v0.7: every example rewritten at the word level and the bit-level front end removed. Next: a pipelined core. Proved optimisation (v0.5): word-level rewriting, AIG optimisation and validated ABC are done (3.1, 13.5); sequential optimisation is deferred.
 
 - **S1 Memory primitive.** One node with a proved read-before-write model, emitted as the pattern synthesis maps to block RAM. Register-array memories cost 4,096 of Toy16's 4,288 state bits and do not scale to kilobytes.
 - **S2 Word-level nodes.** add, sub, compare, shift, mux, slice, concat (later multiply) with `BitVec` semantics, emitted as Verilog operators with explicit widths, so synthesis can use carry chains and DSP blocks. The format parsers must then model Verilog's width rules for a strict subset.

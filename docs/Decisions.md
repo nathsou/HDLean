@@ -68,6 +68,19 @@ implementation limitations as the corresponding features and proofs land. The
 | Expose source registers through proved state observation ports | Native domain modules have no foreign register operations. The wrapper wires registered source pins into explicit first/second-flop primitives; its parser checks all dimensions, state taps and clock/reset connections. The generic parsed meaning preserves every sampling oracle without adding an oracle input pin. |
 | Emit scalar SV logic and storage wires | Very large packed buses caused excessive Icarus elaboration. Scalar names keep sharing explicit; a wire alias preserves the documented packed state observation. Both native printers tie the unused padding bit to zero, without initializing any real register. External transition checks split state aliases before exposing all flip-flop pins. |
 
+## One language, v0.7 (2026-10-17)
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Replace the bit-level examples instead of keeping both | Owner's choice. The counter, both FIFOs, the pipeline and the dual-clock FIFO were re-proved as word-level designs; the old designs, their challenges, the expression-tree front end (`Circuit`, `treeCircuit do`, `Circuit.toDag`), the node-graph builder (`circuit do`), the legacy multi-clock model and the bit-level RAM were deleted. `Dag` stays as the bit-blaster's target. |
+| Reuse the circular-buffer and dual-clock models as proof steps | The word-level general-depth FIFO implements `Fifo.Circular.machine` cycle for cycle and the dual-clock design implements `AsyncFifo.next` exactly (`decode_next`), so the existing queue and progress proofs carry over unchanged. The models are now implementation-side: no challenge statement mentions them. |
+| Gray pointers stored, binary decoded | A crossing source must be a register. Storing only the Gray pointer, with an XOR decoder (`ungray`, proved inverse in both directions), makes the design equal to the model from every power-up state, with no invariant. The read address register is the one invariant, re-established by any read-domain edge. |
+| Register cells exposed to the body (`mealy_build_cells`) | `MDesign.regOut` looks at syntax (an output driven directly by a register cell); the builder now tells the body which register each field reads, so a body can return a register and prove it. |
+| Pipeline as one module with a stage function | The IR forbids loops between sibling instances (instances refer only to earlier modules), and the stages' valid/ready signals form a loop. The FIFO's stage is split into `flags` (from the count) and `advance` (next state), generic in the context; the pipeline computes every stage's flags first. |
+| Budgets as `Blast.stateBits` bounds | The bit-blaster's state count (registers plus memory words) is what the old flip-flop budgets measured. `mealy_stateBits` computes it from the context for any builder module without submodules. |
+| Widths and depths must be positive | Cells have positive widths. The FIFO challenges take `0 < w` (and `0 < k`); width-zero payloads and depth-one rings had been allowed by the bit-level versions. |
+| Multi-clock checks run the word-level text | The dual-clock FIFO has no bit-level backend; `check_native_clocks.py` runs its word SystemVerilog and word RTLIL (through Yosys) in Icarus with two clocks against Lean traces of `MDesign.next`. |
+
 ## Word-level toolchain, v0.6 (2026-10-17)
 
 | Decision | Reason and consequence |

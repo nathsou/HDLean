@@ -19,7 +19,7 @@ class Workflow(unittest.TestCase):
     def report(self, constants=()):
         return [{'theorem': 'HDLean.Counter.Challenge.correctness', 'module': 'Designs.Counter.Challenge',
                  'axioms': ['propext'], 'statement_constants': [
-                     {'name': 'HDLean.Counter.wireSpec', 'module': 'Designs.Counter.Interface'},
+                     {'name': 'HDLean.Counter.Word.wordSpec', 'module': 'Designs.Counter.Interface'},
                      {'name': 'Nat', 'module': 'Init.Prelude'}, *constants]}]
 
     def test_sorry_and_custom_axioms_rejected(self):
@@ -30,13 +30,13 @@ class Workflow(unittest.TestCase):
                 audit('HDLEAN_AUDIT=' + json.dumps(data), set())
 
     def test_statement_constant_from_agent_code_rejected(self):
-        agent = {'name': 'HDLean.Counter.weakObserve', 'module': 'Designs.Counter.Proof'}
+        agent = {'name': 'HDLean.Counter.Word.weakObserve', 'module': 'Designs.Counter.Word'}
         with self.assertRaisesRegex(ValueError, 'non-frozen'):
             audit('HDLEAN_AUDIT=' + json.dumps(self.report([agent])), set())
 
     def test_declared_hole_accepted(self):
-        hole = {'name': 'HDLean.Counter.hardware', 'module': 'Designs.Counter.Impl'}
-        audit('HDLEAN_AUDIT=' + json.dumps(self.report([hole])), {'HDLean.Counter.hardware'})
+        hole = {'name': 'HDLean.Counter.Word.design', 'module': 'Designs.Counter.Word'}
+        audit('HDLEAN_AUDIT=' + json.dumps(self.report([hole])), {'HDLean.Counter.Word.design'})
 
     def test_fake_report_ambiguity_rejected(self):
         text = 'HDLEAN_AUDIT=' + json.dumps(self.report())
@@ -75,14 +75,15 @@ class Workflow(unittest.TestCase):
             shutil.copytree(ROOT / '.lake/build/lib/lean/Designs', tmp / 'lib/Designs', copy_function=os.symlink)
             for f in (ROOT / '.lake/build/lib/lean').glob('Designs.olean*'):
                 (tmp / 'lib' / f.name).symlink_to(f)
-            for f in (tmp / 'lib/Designs/Counter').glob('Proof.olean*'):
+            for f in (tmp / 'lib/Designs/Counter').glob('Word.olean*'):
                 f.unlink()
-            source = (ROOT / 'Designs/Counter/Proof.lean').read_text()
-            source = source[:source.index('theorem correct')] + 'theorem correct : True := trivial\nend HDLean.Counter\n'
-            path = tmp / 'Designs/Counter/Proof.lean'
+            source = (ROOT / 'Designs/Counter/Word.lean').read_text()
+            start, end = source.index('theorem correct'), source.index('/-- Four state bits')
+            source = source[:start] + 'theorem correct : True := trivial\n\n' + source[end:]
+            path = tmp / 'Designs/Counter/Word.lean'
             path.write_text(source)
             env = dict(os.environ, LEAN_PATH=os.pathsep.join(map(str, [tmp / 'lib', ROOT / '.lake/build/lib/lean', prefix / 'lib/lean'])))
-            build = subprocess.run([lean, '-R', tmp, '-o', tmp / 'lib/Designs/Counter/Proof.olean', path], env=env, capture_output=True, text=True)
+            build = subprocess.run([lean, '-R', tmp, '-o', tmp / 'lib/Designs/Counter/Word.olean', path], env=env, capture_output=True, text=True)
             self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
             check = subprocess.run([lean, ROOT / 'Designs/Counter/Challenge.lean'], env=env, capture_output=True, text=True)
             self.assertNotEqual(check.returncode, 0)
@@ -123,12 +124,12 @@ class Workflow(unittest.TestCase):
         self.assertIn('3 | 101 | 0 | 0 | 0', render(rows, 'table'))
         self.assertIn('#6\nb101 a', render(rows, 'vcd'))
 
-    def test_clock_domain_and_width_errors_are_types(self):
+    def test_width_errors_are_types(self):
         lake = os.environ.get('LAKE', 'lake')
         cases = [
-            'def illegal : HDLean.Expr 1 1 1 := (HDLean.Expr.input 0 : HDLean.Expr 0 1 1)',
-            'def illegal : HDLean.WordExpr 0 1 1 4 := HDLean.WordExpr.literal (3 : BitVec 8)',
-            'def illegal : HDLean.Expr 0 1 1 := .reg ⟨2, by decide⟩',
+            'open HDLean.Rtl.Build in\ndef illegal (c : Ctx) (a : Sig 4) (b : Sig 8) : M c (Sig 4) := add a b',
+            'open HDLean.Rtl.Build in\ndef illegal (c : Ctx) (s : Sig 1) (a : Sig 4) (b : Sig 5) : M c (Sig 4) := mux s a b',
+            'open HDLean.Rtl.Build in\ndef illegal (c : Ctx) (s : Sig 2) (a b : Sig 4) : M c (Sig 4) := mux s a b',
         ]
         with tempfile.TemporaryDirectory(dir=ROOT / 'work') as tmp:
             for n, source in enumerate(cases):
