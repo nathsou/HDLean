@@ -30,6 +30,7 @@ def frameworkTheorems : List Name := [
   ``HDLean.Rtl.Design.toDag_nextState, ``HDLean.Rtl.Design.toDag_evalOutput,
   ``HDLean.Rtl.Design.parse_systemVerilog, ``HDLean.Rtl.Design.parseSystemVerilog_canonical,
   ``HDLean.Rtl.Design.parse_rtlil, ``HDLean.Rtl.Design.parseRTLIL_canonical,
+  ``HDLean.Rtl.MDesign.parse_systemVerilog, ``HDLean.Rtl.MDesign.parse_rtlil,
   ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,
   ``HDLean.Rtl.Build.instantiate_ensures]
 

@@ -68,6 +68,17 @@ implementation limitations as the corresponding features and proofs land. The
 | Expose source registers through proved state observation ports | Native domain modules have no foreign register operations. The wrapper wires registered source pins into explicit first/second-flop primitives; its parser checks all dimensions, state taps and clock/reset connections. The generic parsed meaning preserves every sampling oracle without adding an oracle input pin. |
 | Emit scalar SV logic and storage wires | Very large packed buses caused excessive Icarus elaboration. Scalar names keep sharing explicit; a wire alias preserves the documented packed state observation. Both native printers tie the unused padding bit to zero, without initializing any real register. External transition checks split state aliases before exposing all flip-flop pins. |
 
+## Word-level toolchain, v0.6 (2026-10-17)
+
+| Decision | Reason and consequence |
+| --- | --- |
+| Print RTLIL through a statement layer | Wire, connect, cell, memory, attribute and comment statements print and decode generically (`decStmts_print`, proved once); design decoding is then a small pattern match per operation instead of a line grammar per cell. |
+| Escaped names classify like plain ones | `\n_3` is the wire `n_3` for the shared lexer, so RTLIL reuses every token kind of the SystemVerilog printer. Words with a `'` not followed by `d` (`1'0`) are literals. |
+| Division, remainder, NAND and NOR are spelled out in RTLIL | Yosys's `$div`/`$mod` give `x` for a zero divisor; a `$logic_not` and a `$mux` restore `BitVec`'s `x / 0 = 0`, `x % 0 = x`. There is no word-level NAND/NOR cell. |
+| Dead-cell removal keeps instance cells | Each instance owns a slot of the store; dropping one would change what every store means. Liveness is a hint checked at the end, as in the other passes. |
+| Multi-clock designs as one module list plus a top per domain | Domains share modules and hierarchy; crossings name a register output (no combinational source) and are two flops with an explicit per-bit old/new oracle; shared memories cover dual-clock RAM (one write domain, asynchronous read at a register address). Each domain's reset is also its top's input 0 so that logic can gate writes during reset. |
+| Multi-clock top module checked by reprint | Its structure is fixed by the design (clock pins, one instance per domain, synchronizer flops, memories), so the decoder reads only its header and the exact-reprint check covers the rest. |
+
 ## Proved optimisation passes, v0.5 (2026-10-16)
 
 | Decision | Reason and consequence |
