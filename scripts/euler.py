@@ -100,7 +100,16 @@ def place_route(work, mhz, seed, args):
            '--json', work / 'top.json', '--asc', work / 'top.asc', '--pre-pack', work / 'clocks.py',
            '--seed', seed, '--timing-allow-fail']
     t0 = time.time()
-    log = run(cmd, cwd=work)
+    try:
+        log = run(cmd, cwd=work)
+    except (RuntimeError, subprocess.TimeoutExpired):
+        # nextpnr's default router can give up on a congested design; the other one may not
+        try:
+            log = run(cmd + ['--router', 'router2'], cwd=work, timeout=2400)
+        except (RuntimeError, subprocess.TimeoutExpired):
+            print(f'{work.name}: seed {seed} did not route at {mhz:.3f} MHz', flush=True)
+            return {'fmax_mhz': None, 'report_fmax_mhz': None, 'lcs': 0, 'brams': 0,
+                    'seconds': round(time.time() - t0, 1), 'failed': True}
     (work / f'nextpnr-{seed}.log').write_text(log)
     fmax = [float(m) for m in re.findall(r"Max frequency for clock\s+'fclk[^']*': ([\d.]+) MHz", log)]
     slow = [float(m) for m in re.findall(r"Max frequency for clock\s+'slow[^']*': ([\d.]+) MHz", log)]
@@ -141,6 +150,9 @@ def measure(n, args):
                 key=lambda r: r['fmax_mhz'] or 0)
     target = probe['fmax_mhz']
     best = None
+    if not target:
+        print(f'p{n}: no seed placed and routed', flush=True)
+        return result
     for _ in range(8):
         clock = pll(target, work, args)
         synthesize(work, module, width, args)
