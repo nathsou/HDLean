@@ -1,5 +1,6 @@
 import HDLean.Semantics.Clock
 import HDLean.Verification.Simulation
+import Designs.AsyncFifo.Interface
 namespace HDLean.AsyncFifo
 
 /-- Decode Gray pointers; a finite xor network, not a mathematical oracle. -/
@@ -13,18 +14,6 @@ structure State (k w : Nat) where
   read : BitVec (k + 1)
   seenWrite : Sync2 (BitVec (k + 1))
   seenRead : Sync2 (BitVec (k + 1))
-
-/-- Edges, resets, and metastability masks are explicit independent environmental inputs. -/
-structure Input (k w : Nat) where
-  writeEdge : Bool
-  readEdge : Bool
-  writeReset : Bool
-  readReset : Bool
-  valid : Bool
-  data : BitVec w
-  ready : Bool
-  writeMask : BitVec (k + 1)
-  readMask : BitVec (k + 1)
 
 /-- Current ready/valid ports; delayed pointers may conservatively suppress transfers. -/
 def enqReady (s : State k w) : Bool :=
@@ -63,6 +52,15 @@ theorem reset_empty (s : State k w) (i : Input k w)
     (hwr : i.writeReset = true) (hrr : i.readReset = true) :
     (next s i).write = 0 ∧ (next s i).read = 0 ∧ (next s i).memory = s.memory := by
   simp [next, push, hw, hr, hwr, hrr]
+
+/-- Ports seen by the queue reference; read data counts only when valid. -/
+def observe (s : State k w) : Fifo.Output (BitVec w) :=
+  ⟨enqReady s,deqValid s,if deqValid s then some (data s) else none⟩
+
+/-- Physical startup and every sampling-mask choice remain explicit in the trace. -/
+def stateFrom (s : State k w) (xs : Nat → Input k w) : Nat → State k w
+  | 0 => s
+  | t+1 => next (stateFrom s xs t) (xs t)
 
 /-- The executable regression varies edge interleavings and every per-bit sampling mask. -/
 def check (k w cycles seed : Nat) : Except String Unit := do

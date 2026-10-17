@@ -65,6 +65,20 @@ def regOut (d o : Nat) : Nat × Nat :=
     | _ => (0, 0)
   | none => (0, 0)
 
+theorem regOut_of {d o n w j : Nat} (ho : ((md.topModule d).outputs[o]?).map OutPort.node = some n)
+    (hc : (md.topModule d).cells[n]? = some ⟨w, .reg j⟩) : md.regOut d o = (j, w) := by
+  obtain ⟨op, h, rfl⟩ : ∃ op, (md.topModule d).outputs[o]? = some op ∧ op.node = n := by
+    cases h : (md.topModule d).outputs[o]? with
+    | none => simp [h] at ho
+    | some op => exact ⟨op, rfl, by simpa [h] using ho⟩
+  show (match (md.topModule d).outputs[o]? with
+    | some op => match (md.topModule d).cells[op.node]? with
+      | some ⟨w, .reg r⟩ => (r, w)
+      | _ => (0, 0)
+    | none => (0, 0)) = _
+  rw [h]
+  simp only [hc]
+
 structure State where
   stores : Array Store
   first : Array Nat

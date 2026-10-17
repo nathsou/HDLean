@@ -1,5 +1,5 @@
 import HDLean.Rtl.Blast.Module
-import HDLean.Rtl.Memory
+import HDLean.Rtl.MealyCells
 import HDLean.Rtl.Design
 
 /-!
@@ -140,6 +140,54 @@ theorem mealy_step_mem (hd : d.modules[d.top]? = some (t.toModule
       WriteSpec.apply specs ⟨d.env d.top, s, x.1, x.2⟩ a (s.mem i ms.addrWidth ms.width a) := by
   rw [Design.step_eq _ _ hd]
   exact mealy_mem t st i ms ps specs hm hw hp _ s x.1 x.2 a
+
+/-! ### Any module of a design
+
+Multi-clock designs run several top modules, one per domain; these are the
+lemmas above for module `k` of a design rather than for its top. -/
+
+theorem HRefines.toList_val {t : State c} (e : Env) :
+    ∀ {ws : List Nat} {v : HVec Sig ws} {f : Env → HVec BitVec ws}, HRefines t v f →
+      (v.toList Sig.ref).map (t.val e) = (f e).toList BitVec.toNat
+  | [], .nil, f, _ => by cases f e; rfl
+  | _ :: _, .cons x xs, f, h => by
+    rw [HVec.eta (f e)]
+    simp only [HVec.toList, List.map_cons]
+    have h1 : t.val e x.ref = (f e).head.toNat := h.1.2 e
+    have h2 : (xs.toList Sig.ref).map (t.val e) = (f e).tail.toList BitVec.toNat := HRefines.toList_val e h.2
+    rw [h1, h2]
+
+theorem mealy_sem_regs {k : Nat} (hd : d.modules[k]? = some (t.toModule
+      ⟨refs (Bundle.toVec st.out), refs (Bundle.toVec st.next), st.writes⟩))
+    {specR : Env → R BitVec} (hn : BRefines t st.next specR) (s : Store) (ins : Array Nat) (rst : Bool) :
+    Bundle.decode R ((d.sem k s ins rst).2.regs.getD · 0) = Bundle.reset rst resets (specR ⟨d.env k, s, ins, rst⟩) := by
+  rw [Design.sem_eq _ _ _ hd]
+  exact mealy_regs t st specR hn _ s ins rst
+
+theorem mealy_sem_outputs {k : Nat} (hd : d.modules[k]? = some (t.toModule
+      ⟨refs (Bundle.toVec st.out), refs (Bundle.toVec st.next), st.writes⟩))
+    {specO : Env → O BitVec} (ho : BRefines t st.out specO) (s : Store) (ins : Array Nat) (rst : Bool) :
+    (d.sem k s ins rst).1 = ((Bundle.toVec (specO ⟨d.env k, s, ins, rst⟩)).toList BitVec.toNat).toArray := by
+  rw [Design.sem_eq _ _ _ hd, toModule_evalWith]
+  apply Array.ext_iff.mpr
+  simp only [State.toModule, Array.map_map, List.size_toArray]
+  have hl := HRefines.toList_val ⟨d.env k, s, ins, rst⟩ ho
+  rw [← hl]
+  constructor
+  · simp [refs, Bundle.ports]
+  · intro i h1 h2
+    simp only [Array.getElem_map, Array.getElem_zip, refs, List.getElem_toArray, List.getElem_map,
+      Function.comp_def]
+
+theorem mealy_sem_mem {k : Nat} (hd : d.modules[k]? = some (t.toModule
+      ⟨refs (Bundle.toVec st.out), refs (Bundle.toVec st.next), st.writes⟩))
+    (i : Nat) (ms : MemSpec) (ps : Array WritePort) (specs : List (WriteSpec ms.addrWidth ms.width))
+    (hm : mems[i]? = some ms) (hw : st.writes[i]? = some ps) (hp : PortsRefine t ps.toList specs)
+    (s : Store) (ins : Array Nat) (rst : Bool) (a : BitVec ms.addrWidth) :
+    (d.sem k s ins rst).2.mem i ms.addrWidth ms.width a =
+      WriteSpec.apply specs ⟨d.env k, s, ins, rst⟩ a (s.mem i ms.addrWidth ms.width a) := by
+  rw [Design.sem_eq _ _ _ hd]
+  exact mealy_mem t st i ms ps specs hm hw hp _ s ins rst a
 
 end
 
