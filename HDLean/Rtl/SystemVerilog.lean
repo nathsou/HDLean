@@ -519,18 +519,22 @@ theorem decModule_ok (d : Design) (k : Nat) (m : Module) (hm : m.positive = true
   simp
 
 
-theorem decDesign_ok (d : Design) (hd : d.positive = true) :
-    decDesign ((designLines d).map TLine.toks) = some (d, []) := by
+theorem decDesign_ok_tail (d : Design) (hd : d.positive = true) (tail : List (List Tok)) :
+    decDesign ((designLines d).map TLine.toks ++ tail) = some (d, tail) := by
   have hms : ∀ m ∈ d.modules.toList, m.positive = true := by
     unfold Design.positive at hd
     exact List.all_eq_true.mp hd
   have h := decRepeat_ok decModule (fun i m => (moduleLines d i m).map TLine.toks) id (fun m => m.positive = true)
-    (fun i x t h => decModule_ok d i x h t) d.modules.toList 0 [] hms
-  simp only [Array.length_toList, List.map_id, List.append_nil, ← List.map_flatMap] at h
-  simp only [designLines, List.map_cons, decDesign, oneLine, TLine.toks, TW.num, List.map_nil, Option.map_some,
-    Option.bind_eq_bind, Option.bind_some]
+    (fun i x t h => decModule_ok d i x h t) d.modules.toList 0 tail hms
+  simp only [Array.length_toList, List.map_id, ← List.map_flatMap] at h
+  simp only [designLines, List.map_cons, List.cons_append, decDesign, oneLine, TLine.toks, TW.num, List.map_nil,
+    Option.map_some, Option.bind_eq_bind, Option.bind_some]
   rw [h]
   simp
+
+theorem decDesign_ok (d : Design) (hd : d.positive = true) :
+    decDesign ((designLines d).map TLine.toks) = some (d, []) := by
+  simpa using decDesign_ok_tail d hd []
 
 /-- Printing then parsing returns the design, for every design whose printed
 widths are positive (every well-formed design). -/

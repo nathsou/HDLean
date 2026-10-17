@@ -202,16 +202,20 @@ theorem decModule_ok (d : Design) (k : Nat) (m : Module) (hm : m.rtlilOk = true)
   cases m
   simp
 
-theorem decDesign_ok (d : Design) (hd : d.rtlilOk = true) :
-    decDesign ((designStmts d).map PStmt.erase) = some (d, []) := by
+theorem decDesign_ok_tail (d : Design) (hd : d.rtlilOk = true) (tail : List Stmt) :
+    decDesign ((designStmts d).map PStmt.erase ++ tail) = some (d, tail) := by
   have hms : ∀ m ∈ d.modules.toList, m.rtlilOk = true := List.all_eq_true.mp hd
   have h := sRepeat_ok decModule (fun i m => (moduleStmts d i m).map PStmt.erase) id (fun m => m.rtlilOk = true)
-    (fun i x t h => decModule_ok d i x h t) d.modules.toList 0 [] hms
-  simp only [Array.length_toList, List.map_id, List.append_nil] at h
-  simp only [designStmts, List.map_cons, List.map_flatMap, decDesign, sOne, PStmt.erase, toks, List.map_cons,
-    List.map_nil, TW.num, Option.map_some, Option.bind_eq_bind, Option.bind_some]
+    (fun i x t h => decModule_ok d i x h t) d.modules.toList 0 tail hms
+  simp only [Array.length_toList, List.map_id] at h
+  simp only [designStmts, List.map_cons, List.cons_append, List.map_flatMap, decDesign, sOne, PStmt.erase, toks,
+    List.map_cons, List.map_nil, TW.num, Option.map_some, Option.bind_eq_bind, Option.bind_some]
   rw [h]
   simp
+
+theorem decDesign_ok (d : Design) (hd : d.rtlilOk = true) :
+    decDesign ((designStmts d).map PStmt.erase) = some (d, []) := by
+  simpa using decDesign_ok_tail d hd []
 
 /-- Printing then parsing returns the design, for every design whose printed
 widths are positive and whose constants fit their widths. -/
