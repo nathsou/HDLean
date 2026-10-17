@@ -10,9 +10,9 @@ private def usage : String := "HDLean 0.2.0\n\
   hdlean trace <fifo|counter|pipeline|ram|ring|toy16> <path.json> [width=8] [cycles=60] [seed=1]\n\
   hdlean check <fifo|counter|pipeline|ram|ring|toy16> [width=8] [cycles=200] [seed=1]\n\
   hdlean toy16 [cycles=60]\n\
-  hdlean rtl-emit <rtl-ram|rtl-toy16> <path.sv>        (word-level SystemVerilog, read back)\n\
-  hdlean rtl-trace <rtl-ram|rtl-toy16> <path.json> [cycles=100] [seed=1]\n\
-  hdlean rtl-metrics <rtl-ram|rtl-toy16>\n\
+  hdlean rtl-emit <rtl-ram|rtl-toy16|rtl-ops> <path.sv|path.il> (word-level SystemVerilog or RTLIL, read back)\n\
+  hdlean rtl-trace <rtl-ram|rtl-toy16|rtl-ops> <path.json> [cycles=100] [seed=1]\n\
+  hdlean rtl-metrics <rtl-ram|rtl-toy16|rtl-ops>\n\
   hdlean abc-emit <design> <aiger|rtlil|systemverilog> <path> [width=8]  (ABC-optimised, checked by a verified LRAT certificate)\n\
   hdlean review <path.md>      (challenge statements, axioms, interfaces, scenarios; run under `lake env`)\n\
 Word-level designs also work with emit/metrics/trace/check: they are bit-blasted by the proved Design.toDag.\n\
@@ -29,6 +29,7 @@ private def rtlDesign (name : String) : IO Rtl.Design :=
   match name with
   | "rtl-ram" => pure (RAM.Word.design 4 8)
   | "rtl-toy16" => pure Toy16.Word.design
+  | "rtl-ops" => pure RtlOps.design
   | _ => throw (IO.userError s!"unknown word-level design: {name}")
 
 /-- Bit-blast a word-level design with the proved `Design.toDag`, after the proved
@@ -49,7 +50,7 @@ private def withDesign (name : String) (width : Nat)
   | "ring" => f (Fifo.Circular.Physical.hardware 4 width).toDag
   | "ram" => f (RAMCircuit.hardware 4 width).toDag
   | "toy16" => f (Toy16.DagPhysical.hardware Toy16.sumProgram)
-  | "rtl-ram" | "rtl-toy16" => do withRtl (← rtlDesign name) f
+  | "rtl-ram" | "rtl-toy16" | "rtl-ops" => do withRtl (← rtlDesign name) f
   | _ => throw (IO.userError s!"unknown design: {name}")
 
 private def parseFormat (format : String) : IO Proved.Format :=
@@ -258,14 +259,17 @@ private def execute (args : List String) : IO Unit := do
     unless d0.check do throw (IO.userError s!"{design} does not pass Design.check")
     -- The proved word-level pass: same `step` and `output` as the design.
     let d := d0.optimized
-    writeFile path d.systemVerilog
+    -- `.il` selects word-level RTLIL, anything else word-level SystemVerilog; both are read back.
+    let rtlil := path.endsWith ".il"
+    writeFile path (if rtlil then d.rtlil else d.systemVerilog)
     let bytes ← IO.FS.readFile (System.FilePath.mk path)
-    unless Rtl.Design.parseSystemVerilog bytes == some d do
+    let back := if rtlil then Rtl.Design.parseRTLIL bytes else Rtl.Design.parseSystemVerilog bytes
+    unless back == some d do
       throw (IO.userError s!"{path}: the proved parser did not read back the design")
     let cells := d.modules.toList.foldl (fun n m => n + m.cells.size) 0
-    let rewritten := (d0.modules.zip d.modules).toList.foldl (fun n (a, b) =>
-      n + ((a.cells.zip b.cells).toList.filter fun (x, y) => x != y).length) 0
-    IO.println s!"Wrote {path} ({d.modules.size} modules, {cells} cells, {rewritten} rewritten by the proved word-level pass; proved round trip, read back)."
+    let cells0 := d0.modules.toList.foldl (fun n m => n + m.cells.size) 0
+    let fmt := if rtlil then "RTLIL" else "SystemVerilog"
+    IO.println s!"Wrote {path}: word-level {fmt}, {d.modules.size} modules, {cells} cells ({cells0} before the proved word-level passes); proved round trip, read back."
   | "rtl-trace" :: design :: path :: rest =>
     if rest.length > 2 then throw (IO.userError usage)
     let cycles ← parseNum (rest[0]?.getD "100") 100000
@@ -286,8 +290,8 @@ private def execute (args : List String) : IO Unit := do
     withRtl d fun g => do
       let lg := Dag.lowerOpt g
       IO.println (Lean.Json.mkObj [("design", .str design), ("modules", Lean.toJson d.modules.size),
-        ("cells", Lean.toJson cells), ("cells_rewritten", Lean.toJson ((d.modules.zip d.optimized.modules).toList.foldl
-          (fun n (a, b) => n + ((a.cells.zip b.cells).toList.filter fun (x, y) => x != y).length) 0)),
+        ("cells", Lean.toJson cells),
+        ("cells_optimized", Lean.toJson (d.optimized.modules.toList.foldl (fun n m => n + m.cells.size) 0)),
         ("register_bits", Lean.toJson regBits), ("memory_bits", Lean.toJson memBits),
         ("blasted_state_bits", Lean.toJson lg.ffBits), ("blasted_and_gates", Lean.toJson lg.andCount),
         ("blasted_logic_depth", Lean.toJson lg.depth)]).pretty

@@ -1,11 +1,11 @@
 import Designs.Toy16Rtl.Challenge
 import Designs.RAMRtl.Challenge
-import HDLean.Rtl.Optimize
+import HDLean.Rtl.Compact
 
 /-!
 # Challenges transfer to optimised designs
 
-The word-level pass (`Design.optimize`) leaves `step` and `output` unchanged, and
+The word-level passes (`Design.optimized`: rewriting, then dead-cell removal) leave `step` and `output` unchanged, and
 every challenge sees a design only through them. So each challenge holds for the
 optimised design with a two-line proof: rewrite, then apply the original.
 -/

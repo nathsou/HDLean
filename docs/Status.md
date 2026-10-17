@@ -95,12 +95,12 @@ Physical measurements are run on demand ([Physical.md](Physical.md)) and not com
 - Dual-clock FIFO hardware still uses the legacy multi-clock model (clock labels,
   deterministic sampling). Its challenge is model-level until it moves to
   `MultiClock.Shared.MultiDag` (milestone R2).
-- Word-level RTLIL is not printed yet (bit-level RTLIL is); Yosys reads the word
-  SystemVerilog instead.
-- The word-level pass rewrites cells in place but does not remove dead cells (that
-  needs renumbering); the two word-level designs have nothing for it to rewrite.
+- The two word-level designs have nothing for the word-level passes to rewrite or
+  remove; `Tests/Backend.lean` exercises them on a redundant module.
 - No sequential optimisation (retiming, register merging, state re-encoding):
   deferred, see [Design.md](Design.md) 13.5.
-- The word IR has one clock domain; multi-clock designs still use the bit-level
-  multi-clock layer.
+- Multi-clock word designs (`MDesign`) have no bit-level backend: they are emitted
+  as word SystemVerilog and RTLIL only. Their top module's structure is decoded from
+  its header comments; the rest of it is checked by exact reprint, so Yosys and
+  Icarus runs are its independent check.
 - Exact emitted bytes are not kernel-checked; the proved-parser read-back replaces it.

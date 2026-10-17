@@ -25,3 +25,4 @@ import Designs.Toy16.WordBody
 import Designs.Toy16Rtl.Challenge
 import Designs.Review
 import Designs.Optimized.Transfer
+import Designs.RtlOps

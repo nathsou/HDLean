@@ -66,8 +66,13 @@ def checkWordPass : IO Unit := do
   require o.check "the optimised module does not pass Design.check"
   let changed := ((m.cells.zip o.modules[0]!.cells).toList.filter fun (a, b) => a != b).length
   require (changed ≥ 8) s!"the word-level pass rewrote only {changed} cells"
+  let c := d.optimized
+  require (c.modules[0]!.cells.size < m.cells.size) "dead-cell removal kept every cell"
+  require c.check "the compacted module does not pass Design.check"
   for x in [0, 1, 7, 200, 255] do
     for y in [0, 3, 128, 255] do
       let st : Rtl.Store := .mk #[x ^^^ y] #[] #[]
       require (o.output st #[x, y] == d.output st #[x, y]) "the optimised outputs differ"
+      require (c.output st #[x, y] == d.output st #[x, y]) "the compacted outputs differ"
+      require ((c.step st (#[x, y], false)).regs == (d.step st (#[x, y], false)).regs) "the compacted state differs"
       require ((o.step st (#[x, y], false)).regs == (d.step st (#[x, y], false)).regs) "the optimised state differs"

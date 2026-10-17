@@ -25,10 +25,12 @@ def frameworkTheorems : List Name := [
   ``HDLean.Dag.lowerOpt_correct, ``HDLean.Dag.lowerOpt_wellFormed,
   ``HDLean.Backend.Validate.check_sound, ``HDLean.Backend.Validate.select_eval,
   ``HDLean.Backend.Validate.select_wellFormed, ``HDLean.Backend.Proved.emitWith_correct,
-  ``HDLean.Rtl.Design.optimize_sem, ``HDLean.Rtl.Design.optimized_step, ``HDLean.Rtl.Design.optimized_output,
+  ``HDLean.Rtl.Design.optimize_sem, ``HDLean.Rtl.Design.compact_sem, ``HDLean.Rtl.Design.optimized_step, ``HDLean.Rtl.Design.optimized_output,
   ``HDLean.Optimized.toy16_correctness, ``HDLean.Optimized.ram_correctness,
   ``HDLean.Rtl.Design.toDag_nextState, ``HDLean.Rtl.Design.toDag_evalOutput,
   ``HDLean.Rtl.Design.parse_systemVerilog, ``HDLean.Rtl.Design.parseSystemVerilog_canonical,
+  ``HDLean.Rtl.Design.parse_rtlil, ``HDLean.Rtl.Design.parseRTLIL_canonical,
+  ``HDLean.Rtl.MDesign.parse_systemVerilog, ``HDLean.Rtl.MDesign.parse_rtlil,
   ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,
   ``HDLean.Rtl.Build.instantiate_ensures]
 

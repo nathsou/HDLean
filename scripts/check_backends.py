@@ -209,7 +209,19 @@ def check_rtl(work, design, iverilog, vvp, yosys, ivl_base, cycles=200):
     log = run([yosys, '-p', f'read_verilog -sv {words.name}; hierarchy -check -top {info["module"]}; proc; '
                f'memory; flatten; opt; check -assert; stat'], cwd=work)
     (work / f'{design}_words_yosys.log').write_text(log)
-    print(f'PASS {design}: word SV and bit-blasted SV match {cycles} cycles of Design.step; Yosys elaborates')
+    # Word-level RTLIL: Yosys reads it (memories, hierarchy, Yosys cell semantics)
+    # and writes Verilog, which must match the same trace.
+    il = work / f'{design}_words.il'
+    il_v = work / f'{design}_words_il.v'
+    run([EXE, 'rtl-emit', design, il])
+    log = run([yosys, '-p', f'read_rtlil {il.name}; hierarchy -check -top \\{info["module"]}; proc; '
+               f'memory_collect; check -assert; write_verilog -noattr {il_v.name}'], cwd=work)
+    (work / f'{design}_words_il_yosys.log').write_text(log)
+    binary = work / f'{design}_words_il.vvp'
+    run([iverilog, *options, '-g2012', '-s', 'tb', '-o', binary, il_v, bits, tb])
+    assert 'PASS' in run([vvp, binary])
+    print(f'PASS {design}: word SV, word RTLIL (through Yosys) and bit-blasted SV match {cycles} cycles '
+          f'of Design.step; Yosys elaborates both word-level texts')
 
 
 def check_abc(work, design, width, yosys):
@@ -242,8 +254,8 @@ def main():
     parser.add_argument('--yosys', default=os.environ.get('YOSYS', 'yosys'))
     parser.add_argument('--ivl-base', default=os.environ.get('IVL_BASE'))
     parser.add_argument('--designs', nargs='+',
-                        choices=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16'],
-                        default=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16'])
+                        choices=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16','rtl-ops'],
+                        default=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16','rtl-ops'])
     parser.add_argument('--output', type=Path, default=ROOT / 'build/backend-checks')
     args = parser.parse_args()
     for tool in (args.iverilog, args.vvp, args.yosys):
@@ -252,7 +264,7 @@ def main():
     work = args.output.resolve()
     work.mkdir(parents=True, exist_ok=True)
     widths = {'fifo':(0,1,8,16), 'counter':(8,), 'pipeline':(1,8),
-              'ram':(1,8), 'ring':(1,8), 'toy16':(8,), 'rtl-ram':(8,), 'rtl-toy16':(8,)}
+              'ram':(1,8), 'ring':(1,8), 'toy16':(8,), 'rtl-ram':(8,), 'rtl-toy16':(8,), 'rtl-ops':(8,)}
     for design in args.designs:
         for width in widths[design]:
             check_design(work, design, width, args.iverilog, args.vvp, args.yosys, args.ivl_base)

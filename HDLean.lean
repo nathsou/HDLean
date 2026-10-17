@@ -27,6 +27,10 @@ import HDLean.Core.TreeToDag
 import HDLean.MultiClock.Core
 import HDLean.Rtl.Instance
 import HDLean.Rtl.SystemVerilog
+import HDLean.Rtl.RTLILProof
 import HDLean.Rtl.Memory
 import HDLean.Rtl.Blast.Top
 import HDLean.Rtl.Optimize
+import HDLean.Rtl.Compact
+import HDLean.Rtl.Multi
+import HDLean.Rtl.MultiText
