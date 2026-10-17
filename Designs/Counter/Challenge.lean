@@ -1,7 +1,15 @@
-import Designs.Counter.Proof
+import Designs.Counter.Word
+
 namespace HDLean.Counter.Challenge
-/-- Exact natural-number decade behavior, from any power-up state after reset. -/
-theorem correctness : RefinesAfterReset (hardware.denote moore) wireSpec value 1 := correct
-/-- Four physical state bits. -/
-theorem budget : hardware.ffBits = 4 := ffBits
+open HDLean.Rtl HDLean.Counter.Word
+
+/-- From any power-up store, after one reset cycle, the output word follows the
+decade counter. Implementation holes: `Counter.Word.design`, `Counter.Word.moore`. -/
+theorem correctness : RefinesAfterReset (Counter.Word.design.denote Counter.Word.moore) wordSpec value 1 :=
+  Counter.Word.correct
+
+/-- Four state bits. -/
+theorem budget : Rtl.Blast.stateBits Counter.Word.design Counter.Word.design.top = 4 :=
+  Counter.Word.stateBits
+
 end HDLean.Counter.Challenge

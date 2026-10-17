@@ -1,6 +1,25 @@
-import HDLean.Core.Circuit
+import HDLean.Semantics.Machine
+
+/-!
+# Bit-level node graphs
+
+The bit-level netlist every word-level design is blasted into (`Rtl.Design.toDag`)
+and every backend lowers from: shared Boolean nodes over inputs and registers,
+one next-state node and one reset kind per register, one node per output.
+-/
 
 namespace HDLean
+
+/-- A clock domain is a static identity, never a runtime signal. -/
+abbrev Domain := Nat
+
+/-- What a register does on reset. -/
+inductive ResetKind where
+  | unreset
+  | hold
+  | synchronous (value : Bool)
+  deriving Repr, BEq
+
 namespace Dag
 
 /-- Node references name earlier results in this domain's local node list.

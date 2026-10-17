@@ -3,34 +3,39 @@ import Designs
 import Lean
 open HDLean HDLean.Backend HDLean.Verification
 
-private def usage : String := "HDLean 0.2.0\n\
-  hdlean emit <fifo|counter|pipeline|ram|ring|toy16> <sv|aiger|rtlil> <path> [width=8]\n\
-  hdlean emit-async <sv|rtlil|aiger> <path> [width=8] [log2depth=4]   (clock edges as inputs)\n\
-  hdlean metrics <fifo|counter|pipeline|ram|ring|toy16> [width=8]\n\
-  hdlean trace <fifo|counter|pipeline|ram|ring|toy16> <path.json> [width=8] [cycles=60] [seed=1]\n\
-  hdlean check <fifo|counter|pipeline|ram|ring|toy16> [width=8] [cycles=200] [seed=1]\n\
-  hdlean toy16 [cycles=60]\n\
-  hdlean rtl-emit <rtl-ram|rtl-toy16|rtl-ops> <path.sv|path.il> (word-level SystemVerilog or RTLIL, read back)\n\
-  hdlean rtl-trace <rtl-ram|rtl-toy16|rtl-ops> <path.json> [cycles=100] [seed=1]\n\
-  hdlean rtl-metrics <rtl-ram|rtl-toy16|rtl-ops>\n\
-  hdlean abc-emit <design> <aiger|rtlil|systemverilog> <path> [width=8]  (ABC-optimised, checked by a verified LRAT certificate)\n\
+private def usage : String := "HDLean 0.3.0\n\
+  Single-clock designs: counter, fifo, pipeline, ring (2^4 words), ram (16 words), toy16, ops.\n\
+  The multi-clock design async (dual-clock FIFO, 2^4 words) is emitted word-level only.\n\
+  hdlean emit <design> <sv|aiger|rtlil> <path> [width=8]   (bit-blasted by the proved Design.toDag)\n\
+  hdlean abc-emit <design> <sv|aiger|rtlil> <path> [width=8]  (ABC-optimised, checked by a verified LRAT certificate)\n\
+  hdlean metrics <design> [width=8]\n\
+  hdlean trace <design> <path.json> [width=8] [cycles=60] [seed=1]\n\
+  hdlean check <design> [width=8] [cycles=200] [seed=1]\n\
+  hdlean rtl-emit <design|async> <path.sv|path.il> [width=8]  (word-level SystemVerilog or RTLIL, read back)\n\
+  hdlean rtl-trace <design|async> <path.json> [width=8] [cycles=100] [seed=1]\n\
+  hdlean rtl-metrics <design> [width=8]\n\
+  hdlean toy16 [cycles=60]     (retirement reports of the word-level CPU running the sum program)\n\
   hdlean review <path.md>      (challenge statements, axioms, interfaces, scenarios; run under `lake env`)\n\
-Word-level designs also work with emit/metrics/trace/check: they are bit-blasted by the proved Design.toDag.\n\
-FIFO is a verified two-entry skid buffer. Inputs: valid, ready, payload LSB first, reset.\n\
-Outputs: ready, valid, payload LSB first. Counter inputs: enable, reset. Clock is implicit."
+Inputs and outputs are the ports of each design's top module; reset is the last bit-level input.\n\
+Width applies to fifo, pipeline, ring, ram and async."
 
 private def number (s : String) (max : Nat := 1000000) : Except String Nat := do
   let some n := s.toNat? | throw s!"invalid natural number: {s}"
   if n > max then throw s!"value exceeds limit {max}: {n}"
   return n
 
-/-- Word-level designs. -/
-private def rtlDesign (name : String) : IO Rtl.Design :=
+/-- Single-clock word-level designs. -/
+private def rtlDesign (name : String) (width : Nat := 8) : IO Rtl.Design :=
   match name with
-  | "rtl-ram" => pure (RAM.Word.design 4 8)
-  | "rtl-toy16" => pure Toy16.Word.design
-  | "rtl-ops" => pure RtlOps.design
-  | _ => throw (IO.userError s!"unknown word-level design: {name}")
+  | "counter" => pure Counter.Word.design
+  | "fifo" => pure (Fifo.Word.design width)
+  | "pipeline" => pure (SkidBuffer.Word.design width)
+  | "ring" => pure (Fifo.Circular.Word.design 4 width)
+  | "ram" => pure (RAM.Word.design 4 width)
+  | "toy16" => pure Toy16.Word.design
+  | "ops" => pure RtlOps.design
+  | "async" => throw (IO.userError "async is a multi-clock design: use rtl-emit or rtl-trace")
+  | _ => throw (IO.userError s!"unknown design: {name}")
 
 /-- Bit-blast a word-level design with the proved `Design.toDag`, after the proved
 word-level pass (`Design.optimized_step`/`optimized_output`: same cycle semantics). -/
@@ -39,19 +44,11 @@ private def withRtl (d : Rtl.Design) (f : {i r o : Nat} → Dag 0 i r o → IO U
   | some g => f g
   | none => throw (IO.userError "bit-blasting failed: the design does not pass the blaster's width checks")
 
-/-- Every design reaches the emitter as a node graph: tree circuits through the
-proved `Circuit.toDag`, the CPU directly. -/
+/-- Every design reaches the bit-level emitters as a node graph, through the
+proved `Design.toDag`. -/
 private def withDesign (name : String) (width : Nat)
     (f : {i r o : Nat} → Dag 0 i r o → IO Unit) : IO Unit := do
-  match name with
-  | "fifo" => f (Fifo.hardware width).toDag
-  | "counter" => f Counter.hardware.toDag
-  | "pipeline" => f (SkidBuffer.hardware width).toDag
-  | "ring" => f (Fifo.Circular.Physical.hardware 4 width).toDag
-  | "ram" => f (RAMCircuit.hardware 4 width).toDag
-  | "toy16" => f (Toy16.DagPhysical.hardware Toy16.sumProgram)
-  | "rtl-ram" | "rtl-toy16" | "rtl-ops" => do withRtl (← rtlDesign name) f
-  | _ => throw (IO.userError s!"unknown design: {name}")
+  withRtl (← rtlDesign name width) f
 
 private def parseFormat (format : String) : IO Proved.Format :=
   match format with
@@ -187,6 +184,41 @@ private def rtlTrace (d : Rtl.Design) (cycles seed : Nat) : Lean.Json := Id.run 
       [("path", .str n), ("depth", Lean.toJson depth)])),
     ("rows", .arr rows)]
 
+/-- A multi-clock trace from the all-zero state: random clock edges, inputs and
+resets (an edge with reset in both domains on the first two steps), synchronizers sampling
+the old source value (as two simultaneous edges do in an event simulator).
+Outputs are read before the edges. -/
+private def asyncTrace (md : Rtl.MDesign) (cycles seed : Nat) : Lean.Json := Id.run do
+  let mut s : Rtl.MDesign.State := ⟨#[default, default], #[0, 0], #[0, 0], #[#[]]⟩
+  let mut seed := seed
+  let mut rows : Array Lean.Json := #[]
+  let draw := fun (seed : Nat) => (seed * 1103515245 + 12345) % 2147483648
+  for t in [:cycles] do
+    let mut ins : Array (Array Nat) := #[]
+    for d in [0, 1] do
+      let m := md.topModule d
+      let mut x : Array Nat := #[]
+      for p in (m.inputs.toList.drop 1).take (md.nExt d) do
+        seed := draw seed
+        x := x.push (seed % 2 ^ p.width)
+      ins := ins.push x
+    seed := draw seed
+    let edges := #[t < 2 || seed % 3 != 0, t < 2 || seed / 3 % 3 != 0]
+    seed := draw seed
+    let rsts := #[t < 2 || seed % 29 == 0, t < 2 || seed / 29 % 31 == 0]
+    let masks := md.crossings.map fun c => 2 ^ (md.regOut c.src c.out).2 - 1
+    let e : Rtl.MDesign.Event := ⟨ins, rsts, edges, masks⟩
+    let outs := (List.range md.tops.size).toArray.map (md.outputs s e)
+    rows := rows.push (Lean.Json.mkObj [("step", Lean.toJson t), ("edges", Lean.toJson edges),
+      ("resets", Lean.toJson rsts), ("inputs", Lean.toJson ins), ("outputs", Lean.toJson outs)])
+    s := md.next s e
+  let ports := (List.range md.tops.size).map fun d =>
+    let m := md.topModule d
+    Lean.Json.mkObj [("inputs", Lean.toJson (((m.inputs.toList.drop 1).take (md.nExt d)).map (·.width))),
+      ("outputs", Lean.toJson (m.outputs.toList.map fun o => m.cellWidth o.node))]
+  return Lean.Json.mkObj [("module", .str "hd_mtop"), ("domains", Lean.toJson ports),
+    ("memories", Lean.toJson (md.mems.toList.map fun mm => 2 ^ mm.addrWidth)), ("rows", .arr rows)]
+
 private unsafe def enableInitUnsafe : IO Unit := Lean.enableInitializersExecution
 /-- Notation and pretty-printer extensions of imported modules are registered by initializers. -/
 @[implemented_by enableInitUnsafe] private opaque enableInit : IO Unit
@@ -194,15 +226,7 @@ private unsafe def enableInitUnsafe : IO Unit := Lean.enableInitializersExecutio
 private def execute (args : List String) : IO Unit := do
   match args with
   | ["--help"] | ["help"] | [] => IO.println usage
-  | ["--version"] => IO.println "HDLean 0.2.0 (Lean 4.35.0)"
-  | "emit-async" :: format :: path :: rest =>
-    if rest.length > 2 then throw (IO.userError usage)
-    let width ← parseNum (rest[0]?.getD "8") 64
-    let k ← parseNum (rest[1]?.getD "4") 8
-    let f ← parseFormat format
-    let c := (AsyncFifo.Physical.hardware k width).eventCircuit.toDag
-    emitChecked f c path
-    IO.println s!"Wrote {path}: event-encoded, the two clock edges are inputs after the payload and reset."
+  | ["--version"] => IO.println "HDLean 0.3.0 (Lean 4.35.0)"
   | "emit" :: design :: format :: path :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let width ← parseNum (rest.headD "8") 64
@@ -247,15 +271,31 @@ private def execute (args : List String) : IO Unit := do
   | "toy16" :: rest =>
     if rest.length > 1 then throw (IO.userError usage)
     let cycles ← parseNum (rest.headD "60") 1000
-    let mut s : Toy16.CoreState := ⟨Toy16.ArchState.atReset (fun _ => 0xAAAA) (fun _ => 0x5555), 0, false⟩
-    let m := Toy16.core Toy16.sumProgram
+    let imem := Toy16.sumProgram
+    let mut st : Rtl.Store := default
     IO.println "cycle,pc,instruction,next_pc,halt"
     for t in [:cycles] do
-      if let some r := m.out s then IO.println s!"{t},{r.pc.toNat},{r.instr.toNat},{r.nextPc.toNat},{r.halt}"
-      s := m.next s false
-    IO.println s!"halted={s.arch.halted}, memory[0]={s.arch.dmem 0}"
-  | ["rtl-emit", design, path] =>
-    let d0 ← rtlDesign design
+      let r := Toy16.Word.observe (Rtl.Bundle.decode Toy16.Word.CpuOut
+        ((Toy16.Word.design.output st (Toy16.Word.fetch imem st)).getD · 0))
+      if let some r := r then IO.println s!"{t},{r.pc.toNat},{r.instr.toNat},{r.nextPc.toNat},{r.halt}"
+      st := Toy16.Word.design.step st (Toy16.Word.fetch imem st, t == 0)
+  | "rtl-emit" :: "async" :: path :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let width ← parseNum (rest.headD "8") 64
+    let md := AsyncFifo.Word.design 4 width
+    unless md.check do throw (IO.userError "async does not pass MDesign.check")
+    let rtlil := path.endsWith ".il"
+    writeFile path (if rtlil then md.rtlil else md.systemVerilog)
+    let bytes ← IO.FS.readFile (System.FilePath.mk path)
+    let back := if rtlil then Rtl.MDesign.parseRTLIL bytes else Rtl.MDesign.parseSystemVerilog bytes
+    unless back == some md do
+      throw (IO.userError s!"{path}: the proved parser did not read back the design")
+    let fmt := if rtlil then "RTLIL" else "SystemVerilog"
+    IO.println s!"Wrote {path}: word-level {fmt}, {md.tops.size} clock domains, {md.crossings.size} synchronizers, {md.mems.size} shared memory; proved round trip, read back."
+  | "rtl-emit" :: design :: path :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let width ← parseNum (rest.headD "8") 64
+    let d0 ← rtlDesign design width
     unless d0.check do throw (IO.userError s!"{design} does not pass Design.check")
     -- The proved word-level pass: same `step` and `output` as the design.
     let d := d0.optimized
@@ -270,19 +310,28 @@ private def execute (args : List String) : IO Unit := do
     let cells0 := d0.modules.toList.foldl (fun n m => n + m.cells.size) 0
     let fmt := if rtlil then "RTLIL" else "SystemVerilog"
     IO.println s!"Wrote {path}: word-level {fmt}, {d.modules.size} modules, {cells} cells ({cells0} before the proved word-level passes); proved round trip, read back."
+  | "rtl-trace" :: "async" :: path :: rest =>
+    if rest.length > 3 then throw (IO.userError usage)
+    let width ← parseNum (rest[0]?.getD "8") 64
+    let cycles ← parseNum (rest[1]?.getD "100") 100000
+    let seed ← parseNum (rest[2]?.getD "1") 4294967295
+    writeFile path (asyncTrace (AsyncFifo.Word.design 4 width) cycles seed).pretty
   | "rtl-trace" :: design :: path :: rest =>
-    if rest.length > 2 then throw (IO.userError usage)
-    let cycles ← parseNum (rest[0]?.getD "100") 100000
-    let seed ← parseNum (rest[1]?.getD "1") 4294967295
-    writeFile path (rtlTrace (← rtlDesign design) cycles seed).pretty
+    if rest.length > 3 then throw (IO.userError usage)
+    let width ← parseNum (rest[0]?.getD "8") 64
+    let cycles ← parseNum (rest[1]?.getD "100") 100000
+    let seed ← parseNum (rest[2]?.getD "1") 4294967295
+    writeFile path (rtlTrace (← rtlDesign design width) cycles seed).pretty
   | ["review", path] =>
     Lean.initSearchPath (← Lean.findSysroot)
     enableInit
     let env ← Lean.importModules #[{ module := `Designs }] {} (trustLevel := 1024) (loadExts := true)
     writeFile path (← Review.render env)
     IO.println s!"Wrote {path}."
-  | ["rtl-metrics", design] =>
-    let d ← rtlDesign design
+  | "rtl-metrics" :: design :: rest =>
+    if rest.length > 1 then throw (IO.userError usage)
+    let width ← parseNum (rest.headD "8") 64
+    let d ← rtlDesign design width
     let regBits := d.modules.toList.foldl (fun n m => n + (m.regs.toList.map Rtl.Reg.width).sum) 0
     let memBits := d.modules.toList.foldl (fun n m =>
       n + (m.mems.toList.map fun mm => 2 ^ mm.addrWidth * mm.width).sum) 0

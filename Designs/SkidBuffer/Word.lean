@@ -1,5 +1,5 @@
 import Designs.Fifo.Word
-import Designs.PipelineRtl.Interface
+import Designs.SkidBuffer.Interface
 
 /-!
 # The three-stage pipeline in word-level RTL

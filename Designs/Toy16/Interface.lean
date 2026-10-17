@@ -1,51 +1,56 @@
+import HDLean
 import Designs.Toy16.Spec
-import HDLean.Core.WordBank
 
-namespace HDLean.Toy16
+/-!
+# Interface of the word-level Toy16 core (reviewer-owned)
 
-/-- A two-stage fetch/execute core. Serialization avoids forwarding and branch-flush hazards. -/
-structure CoreState where
-  arch : ArchState
-  fetched : Word
-  execute : Bool
+The core is any word-level design with one 16-bit input, the instruction bus,
+and the output record `CpuOut`: the fetch address and a registered retirement
+report. The environment answers the fetch address shown on the outputs with
+the program word at that address in the same cycle (`loop`). The challenge
+reads the retirement report off the outputs (`retireAt`).
+-/
+namespace HDLean.Toy16.Word
+open HDLean.Rtl
 
-namespace Physical
-open WordExpr
+hdl_record CpuIn where
+  instr : 16
 
-/-- Uniform 16-bit bank: PC, halted, execute, fetched instruction, eight registers,
-and 256 data words. Narrow controls use their low bits. -/
-abbrev W (n : Nat) := WordExpr 0 0 (268*16) n
-abbrev E := Expr 0 0 (268*16)
+/-- Fetch address, then the retirement report of the previous cycle. -/
+hdl_record CpuOut where
+  pc : 8
+  valid : 1
+  rpc : 8
+  rinstr : 16
+  rnext : 8
+  wbv : 1
+  wbr : 3
+  wbval : 16
+  stv : 1
+  sta : 8
+  stval : 16
+  halt : 1
 
-def word (j : Fin 268) : W 16 := bankWord j
+/-- The output record of a design in a given store (outputs do not depend on the inputs). -/
+def outputsOf (d : Design) (st : Store) : CpuOut BitVec := Bundle.decode CpuOut ((d.output st #[]).getD · 0)
 
-def pc : W 8 := extract (word ⟨0, by decide⟩) 0 8 (by decide)
-def halted : E := (word ⟨1, by decide⟩)[0]
-def execute : E := (word ⟨2, by decide⟩)[0]
-def fetched : W 16 := word ⟨3, by decide⟩
+/-- What the outputs report: nothing, or a retired instruction. -/
+def observe (o : CpuOut BitVec) : Option Retire :=
+  if o.valid.getLsbD 0 then
+    some { pc := o.rpc, instr := o.rinstr, nextPc := o.rnext,
+           wb := if o.wbv.getLsbD 0 then some (o.wbr, o.wbval) else none,
+           store := if o.stv.getLsbD 0 then some (o.sta, o.stval) else none,
+           halt := o.halt.getLsbD 0 }
+  else none
 
-def regWord (j : Fin 8) : W 16 := word ⟨4+j.val, by omega⟩
-def memWord (j : Fin 256) : W 16 := word ⟨12+j.val, by omega⟩
-def decode (s : Fin (268*16) → Bool) : CoreState :=
-  { arch := { pc := pc.eval Fin.elim0 s
-              halted := halted.eval Fin.elim0 s
-              regs := fun r => (regWord r.toFin).eval Fin.elim0 s
-              dmem := fun a => (memWord a.toFin).eval Fin.elim0 s }
-    fetched := fetched.eval Fin.elim0 s
-    execute := execute.eval Fin.elim0 s }
+/-- The instruction bus: the program word at the fetch address shown on the outputs. -/
+def fetchOut (d : Design) (imem : Addr → Word) (st : Store) : Array Nat := #[(imem (outputsOf d st).pc).toNat]
 
-/-- Decode the emitted retirement bus; invalid fields are intentionally ignored. -/
-def readOutput (bits : Fin 79 → Bool) (offset width : Nat) (h : offset+width ≤ 79) : BitVec width :=
-  (WordExpr.inputs offset h : WordExpr 0 79 0 width).eval bits Fin.elim0
+/-- The closed loop: the design, its instruction bus answered by `imem`, and the reset input. -/
+def loop (d : Design) (imem : Addr → Word) : PMachine Store Bool Store := ⟨id, fun st r => d.step st (fetchOut d imem st, r)⟩
 
-def observe (bits : Fin 79 → Bool) : Option Retire :=
-  if bits 0 then some
-    { pc := readOutput bits 1 8 (by decide)
-      instr := readOutput bits 9 16 (by decide)
-      nextPc := readOutput bits 25 8 (by decide)
-      wb := if bits 33 then some (readOutput bits 34 3 (by decide), readOutput bits 37 16 (by decide)) else none
-      store := if bits 53 then some (readOutput bits 54 8 (by decide), readOutput bits 62 16 (by decide)) else none
-      halt := bits 78 } else none
+/-- The retirement report on the outputs at time `t`. -/
+def retireAt (d : Design) (imem : Addr → Word) (s₀ : Store) (rst : Nat → Bool) (t : Nat) : Option Retire :=
+  observe (outputsOf d ((loop d imem).stateFrom s₀ rst t))
 
-end Physical
-end HDLean.Toy16
+end HDLean.Toy16.Word

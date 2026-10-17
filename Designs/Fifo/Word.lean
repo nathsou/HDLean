@@ -1,6 +1,6 @@
 import HDLean.Rtl.MealyDesign
 import HDLean.Rtl.Tactic
-import Designs.FifoRtl.Interface
+import Designs.Fifo.Interface
 
 /-!
 # The two-entry FIFO in word-level RTL

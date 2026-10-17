@@ -1,7 +1,7 @@
 import HDLean.Rtl.Mealy
 import HDLean.Rtl.Tactic
 import HDLean.Rtl.MealyDesign
-import Designs.CounterRtl.Interface
+import Designs.Counter.Interface
 
 /-!
 # The decade counter in word-level RTL

@@ -1,6 +1,6 @@
 import HDLean.Rtl.Memory
 import HDLean.Rtl.Instance
-import Designs.Toy16Rtl.Interface
+import Designs.Toy16.Interface
 
 /-!
 # Toy16 on word-level RTL

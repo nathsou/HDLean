@@ -1,14 +1,18 @@
-import Designs.SkidBuffer.Hardware
+import Designs.SkidBuffer.Word
 
 namespace HDLean.SkidBuffer.Challenge
+open HDLean.Rtl HDLean.SkidBuffer.Word
 
-/-- Three physical FIFO instances implement the complete queue-network reference. -/
-theorem correctness (w : Nat) :
-    RefinesAfterReset ((hardware w).denote (hardware_moore w))
-      (pipelineWireSpec w) observePipeline 1 := hardware_correct w
+/-- From any power-up store, after one reset cycle, every stage's ports follow
+the reviewed network of three two-entry queues, for every positive payload
+width. Implementation holes: `SkidBuffer.Word.design`, `SkidBuffer.Word.moore`. -/
+theorem correctness (w : Nat) (hw : 0 < w) :
+    RefinesAfterReset ((SkidBuffer.Word.design w).denote (SkidBuffer.Word.moore w hw)) (wordSpec w) (observe w) 1 :=
+  SkidBuffer.Word.correct w hw
 
-/-- Module elaboration must introduce no additional registers. -/
-theorem budget (w : Nat) : (hardware w).ffBits ≤ 3 * (2 * w + 2) :=
-  Nat.le_of_eq (hardware_budget w)
+/-- Three stages of two payload words and a two-bit count each. -/
+theorem budget (w : Nat) (hw : 0 < w) :
+    Rtl.Blast.stateBits (SkidBuffer.Word.design w) (SkidBuffer.Word.design w).top ≤ 3 * (2 * w + 2) :=
+  Nat.le_of_eq (SkidBuffer.Word.stateBits w hw)
 
 end HDLean.SkidBuffer.Challenge

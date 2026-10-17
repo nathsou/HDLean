@@ -15,9 +15,6 @@ open Lean Elab Command
 /-- Generic framework results that no single challenge depends on. -/
 def frameworkTheorems : List Name := [
   ``HDLean.Backend.Proved.emit_correct, ``HDLean.Dag.lower_correct, ``HDLean.Dag.lower_wellFormed,
-  ``HDLean.Circuit.toDag_nextState, ``HDLean.Circuit.toDag_evalOutput,
-  ``HDLean.Dag.Build.run_implements,
-  ``HDLean.MultiClock.Shared.MultiDag.lower_correct, ``HDLean.MultiClock.Shared.MultiDag.emitNative_correct,
   ``HDLean.refinesAfterReset_of_simulation, ``HDLean.refinesResetSchedule_of_simulation,
   ``HDLean.retiresLike_of_simulation, ``HDLean.compose_contracts, ``HDLean.reset_noninterference,
   ``HDLean.Dag.lowerTight_correct, ``HDLean.Dag.lowerTight_wellFormed,
@@ -32,7 +29,10 @@ def frameworkTheorems : List Name := [
   ``HDLean.Rtl.Design.parse_rtlil, ``HDLean.Rtl.Design.parseRTLIL_canonical,
   ``HDLean.Rtl.MDesign.parse_systemVerilog, ``HDLean.Rtl.MDesign.parse_rtlil,
   ``HDLean.Rtl.Blast.sem_reset, ``HDLean.Rtl.Build.mealy_build, ``HDLean.Rtl.Build.mealy_mem,
-  ``HDLean.Rtl.Build.instantiate_ensures]
+  ``HDLean.Rtl.Build.instantiate_ensures, ``HDLean.Rtl.Build.mealy_build_cells,
+  ``HDLean.Rtl.mealy_stateBits, ``HDLean.Rtl.mealy_isMoore, ``HDLean.Rtl.mealy_step, ``HDLean.Rtl.mealy_output,
+  ``HDLean.Rtl.mealy_sem_regs, ``HDLean.Rtl.mealy_sem_outputs, ``HDLean.Rtl.MDesign.regOut_of,
+  ``HDLean.AsyncFifo.Word.decode_next, ``HDLean.Fifo.Circular.Word.decode_step]
 
 run_cmd liftTermElabM do
   let env ← getEnv

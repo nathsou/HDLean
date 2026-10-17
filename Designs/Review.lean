@@ -1,6 +1,11 @@
 import Lean
-import Designs.Toy16Rtl.Challenge
-import Designs.RAMRtl.Challenge
+import Designs.Counter.Challenge
+import Designs.Fifo.Challenge
+import Designs.CircularFifo.Challenge
+import Designs.SkidBuffer.Challenge
+import Designs.AsyncFifo.Challenge
+import Designs.Toy16.Challenge
+import Designs.RAM.Challenge
 import Designs.Toy16.Programs
 
 /-!
@@ -17,16 +22,19 @@ open Lean HDLean.Rtl
 
 /-- Challenge theorems, in reading order. -/
 def challenges : List (Name × String) :=
-  [(`HDLean.Toy16Rtl.Challenge.correctness, "Toy16 on word-level RTL: retirement refines the ISA"),
-   (`HDLean.RAMRtl.Challenge.correctness, "Single-port RAM on the memory primitive"),
-   (`HDLean.Toy16.Challenge.correctness, "Toy16, bit-level node graph (legacy)"),
-   (`HDLean.Toy16.Challenge.budget, "Toy16 flip-flop budget (legacy)"),
-   (`HDLean.RAM.Challenge.correctness, "RAM in flip-flops (legacy)"),
-   (`HDLean.Fifo.Challenge.correctness, "Two-entry skid FIFO"),
-   (`HDLean.Fifo.Circular.Challenge.correctness, "Circular FIFO"),
-   (`HDLean.SkidBuffer.Challenge.correctness, "Three-stage pipeline"),
+  [(`HDLean.Toy16.Challenge.correctness, "Toy16: retirement refines the ISA"),
+   (`HDLean.RAM.Challenge.correctness, "Single-port RAM on the memory primitive"),
    (`HDLean.Counter.Challenge.correctness, "Decade counter"),
-   (`HDLean.AsyncFifo.Challenge.correctness, "Asynchronous FIFO (two clock domains)")]
+   (`HDLean.Counter.Challenge.budget, "Decade counter: state bits"),
+   (`HDLean.Fifo.Challenge.correctness, "Two-entry FIFO"),
+   (`HDLean.Fifo.Challenge.budget, "Two-entry FIFO: state bits"),
+   (`HDLean.CircularFifo.Challenge.correctness, "General-depth FIFO on a memory"),
+   (`HDLean.CircularFifo.Challenge.budget, "General-depth FIFO: state bits"),
+   (`HDLean.SkidBuffer.Challenge.correctness, "Three-stage pipeline"),
+   (`HDLean.SkidBuffer.Challenge.budget, "Three-stage pipeline: state bits"),
+   (`HDLean.AsyncFifo.Challenge.correctness, "Dual-clock FIFO (two clock domains)"),
+   (`HDLean.AsyncFifo.Challenge.enqueue_progress, "Dual-clock FIFO: writes complete"),
+   (`HDLean.AsyncFifo.Challenge.dequeue_progress, "Dual-clock FIFO: reads complete")]
 
 def mdEscape (s : String) : String := s.replace "|" "\\|"
 
@@ -158,11 +166,62 @@ def ramScenario : String := Id.run do
     t := t + 1
   return out ++ "\n"
 
+/-- A decade counter run: enable, reference count, design output. -/
+def counterScenario : String := Id.run do
+  let ens := [true, true, false, true, true, true, true, true, true, true, true, false, true]
+  let mut st : Store := default
+  st := Counter.Word.design.step st (#[0], true)
+  let mut n := Counter.Word.wordSpec.init
+  let mut out := "#### Scenario: after one reset cycle\n\n| cycle | en | reference | design |\n|---|---|---|---|\n"
+  let mut t := 1
+  for en in ens do
+    let ins := #[en.toNat]
+    out := out ++ s!"| {t} | {en} | {Counter.Word.wordSpec.out n} | {Counter.Word.value (Counter.Word.design.output st ins)} |\n"
+    n := Counter.Word.wordSpec.next n ins
+    st := Counter.Word.design.step st (ins, false)
+    t := t + 1
+  return out ++ "\n"
+
+def outputText (o : Fifo.Output (BitVec w)) : String :=
+  s!"{o.enqReady} / {o.deqValid} / {(o.deqData.map (·.toNat)).getD 0}"
+
+/-- A two-entry FIFO run at width 8: inputs, reference ports, design ports. -/
+def fifoScenario : String := Id.run do
+  let w := 8
+  let ins : List (Nat × Nat × Nat) := [(1, 0, 11), (1, 0, 22), (1, 0, 33), (0, 1, 0), (1, 1, 44), (0, 1, 0), (0, 1, 0), (0, 1, 0)]
+  let mut st : Store := default
+  st := (Fifo.Word.design w).step st (#[0, 0, 0], true)
+  let mut q := (Fifo.Word.queueSpec 2 w).init
+  let mut out := "#### Scenario: width 8, after one reset cycle\n\nPorts are ready / valid / data (data shown only when valid).\n\n" ++
+    "| cycle | enqValid | deqReady | data | reference | design |\n|---|---|---|---|---|---|\n"
+  let mut t := 1
+  for (v, r, d) in ins do
+    let x := #[v, r, d]
+    out := out ++ s!"| {t} | {v} | {r} | {d} | {outputText ((Fifo.Word.queueSpec 2 w).out q)} | " ++
+      s!"{outputText (Fifo.Word.observe w ((Fifo.Word.design w).output st x))} |\n"
+    q := (Fifo.Word.queueSpec 2 w).next q x
+    st := (Fifo.Word.design w).step st (x, false)
+    t := t + 1
+  return out ++ "\n"
+
 def extra (n : Name) : String :=
-  if n == `HDLean.Toy16Rtl.Challenge.correctness then
+  if n == `HDLean.Toy16.Challenge.correctness then
     "### Interface\n\n" ++ designTables Toy16.Word.design ++ toy16Scenario
-  else if n == `HDLean.RAMRtl.Challenge.correctness then
+  else if n == `HDLean.RAM.Challenge.correctness then
     "### Interface (instantiated with a = 4, w = 8)\n\n" ++ designTables (RAM.Word.design 4 8) ++ ramScenario
+  else if n == `HDLean.Counter.Challenge.correctness then
+    "### Interface\n\n" ++ designTables Counter.Word.design ++ counterScenario
+  else if n == `HDLean.Fifo.Challenge.correctness then
+    "### Interface (instantiated with w = 8)\n\n" ++ designTables (Fifo.Word.design 8) ++ fifoScenario
+  else if n == `HDLean.CircularFifo.Challenge.correctness then
+    "### Interface (instantiated with k = 4, w = 8)\n\n" ++ designTables (Fifo.Circular.Word.design 4 8)
+  else if n == `HDLean.SkidBuffer.Challenge.correctness then
+    "### Interface (instantiated with w = 8)\n\n" ++ designTables (SkidBuffer.Word.design 8)
+  else if n == `HDLean.AsyncFifo.Challenge.correctness then
+    "### Interface (instantiated with k = 4, w = 8)\n\nDomain 0 (write) is module 0, domain 1 (read) is module 1. " ++
+    "Crossing 0 carries write-domain output 1 into the read domain, crossing 1 carries read-domain output 2 " ++
+    "into the write domain; the shared memory `ram` (16 × 8) is written by write-domain outputs 2–4 and read " ++
+    "at read-domain output 3.\n\n" ++ designTables (AsyncFifo.Word.design 4 8).design
   else ""
 
 /-- The review document. -/
