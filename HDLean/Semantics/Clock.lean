@@ -1,16 +1,6 @@
-import HDLean.Core.Expr
 import Init.Data.BitVec.Bitblast
 import Init.Data.Nat.Power2.Bitwise
 namespace HDLean
-
-/-- Each global step carries independent edges, chosen by the environment. -/
-structure ClockOracle where
-  edge : Domain → Bool
-  sampleNew : Domain → Nat → Bool
-
-/-- A signal cannot change domains by coercion. -/
-structure Signal (domain : Domain) (α : Type) where
-  value : α
 
 /-- Per-bit metastable sampling chooses old or new independently. -/
 def sampleBits (old new mask : BitVec w) : BitVec w := (old &&& mask) ||| (new &&& ~~~mask)
@@ -70,12 +60,6 @@ theorem sync2_no_edge (s : Sync2 Bool) (a b m : Bool) : sync2Step s false a b m 
 theorem sync2_stable (s : Sync2 Bool) (v a b : Bool) :
     (sync2Step (sync2Step s true v v a) true v v b).second = v := by
   cases a <;> cases b <;> rfl
-
-/-- The only generic crossing exposed for raw data is a single bit. -/
-def crossBit (s : Sync2 Bool) (sourceOld sourceNew : Signal a Bool)
-    (oracle : ClockOracle) (dest : Domain) : Sync2 Bool × Signal dest Bool :=
-  let s' := sync2Step s (oracle.edge dest) sourceOld.value sourceNew.value (oracle.sampleNew dest 0)
-  (s', ⟨s'.second⟩)
 
 
 /-- A single differing bit gives the relational adjacency needed by the sampler. -/

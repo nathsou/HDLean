@@ -1,5 +1,5 @@
 import HDLean.Rtl.Memory
-import Designs.RAMRtl.Interface
+import Designs.RAM.Interface
 
 /-!
 # A single-port RAM on the memory primitive

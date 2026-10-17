@@ -1,19 +1,18 @@
 # HDLean
 
-HDLean is a Lean 4 embedded hardware language with executable circuit semantics,
-kernel-checked refinement proofs, and SystemVerilog, AIGER, and Yosys RTLIL output.
+HDLean is a Lean 4 embedded hardware language with executable semantics,
+kernel-checked refinement proofs, and SystemVerilog, AIGER and Yosys RTLIL output.
 
-Designs are written either in a word-level RTL (typed records of words, memories,
-module instances, arithmetic and comparison operators; [design](docs/Design.md) 3.1)
-or at the bit level. The word level prints as SystemVerilog with a proved round trip
-and reaches AIGER, RTLIL and bit-level SystemVerilog through a proved bit-blaster.
+Designs are written in a word-level RTL: typed records of words, memories, module
+instances, arithmetic and comparison operators, and several clock domains joined
+by two-flop synchronizers and shared memories ([design](docs/Design.md) 3.1). The
+word level prints as SystemVerilog and RTLIL with proved round trips, and reaches
+AIGER, RTLIL and bit-level SystemVerilog through a proved bit-blaster.
 
-The library includes physical counter, FIFO, circular FIFO, elastic pipeline,
-register-array RAM, Toy16 CPU and dual-clock FIFO implementations, plus word-level
-RAM and Toy16 cores (register file and data memory as RTL memories, ALU as a
-submodule). [Review.md](docs/Review.md) lists every proved guarantee. Generic proofs
-cover reset, queue ordering, retirement, progress, lowering and parsed backend
-semantics. [Coverage and limitations](docs/Status.md) state the exact guarantees.
+The examples are a decade counter, a two-entry FIFO, a general-depth FIFO on a
+memory, a three-stage elastic pipeline, a single-port RAM, the Toy16 CPU and a
+dual-clock FIFO. [Review.md](docs/Review.md) lists every proved guarantee;
+[coverage and limitations](docs/Status.md) state exactly what is proved.
 
 ## Build and run
 
@@ -23,95 +22,79 @@ Install [elan](https://github.com/leanprover/elan), then:
 lake build
 lake exe tests
 lake exe hdlean --help
-lake exe hdlean emit fifo sv build/fifo.sv 8
+lake exe hdlean emit fifo sv build/fifo.sv 8          # bit-blasted by the proved Design.toDag
 lake exe hdlean emit fifo aiger build/fifo.aag 8
-lake exe hdlean emit fifo rtlil build/fifo.il 8
-lake exe hdlean metrics fifo 8
-lake exe hdlean check fifo 8 200 42
-lake exe hdlean toy16 48
 lake exe hdlean emit ring rtlil build/ring.il 8
-lake exe hdlean emit ram sv build/ram.sv 8
-lake exe hdlean emit toy16 sv build/toy16.sv
-lake exe hdlean emit-async rtlil build/async.il 8 4
-lake exe hdlean rtl-emit rtl-toy16 build/toy16_words.sv     # word-level SystemVerilog
-lake exe hdlean emit rtl-toy16 aiger build/toy16_words.aag   # bit-blasted, proved
-lake exe hdlean rtl-trace rtl-ram build/ram.json 100 1
-lake exe hdlean rtl-metrics rtl-toy16
-lake exe hdlean abc-emit toy16 aiger build/toy16_abc.aag      # ABC-optimised, LRAT-validated
-lake env .lake/build/bin/hdlean review docs/Review.md        # reviewer document
+lake exe hdlean rtl-emit toy16 build/toy16.sv          # word-level SystemVerilog, read back
+lake exe hdlean rtl-emit async build/async.il 8        # dual-clock FIFO, word-level RTLIL
+lake exe hdlean rtl-trace ram build/ram.json 8 100 1
+lake exe hdlean rtl-metrics toy16
+lake exe hdlean metrics pipeline 8
+lake exe hdlean check fifo 8 200 42
+lake exe hdlean abc-emit toy16 aiger build/toy16_abc.aag  # ABC-optimised, LRAT-validated
+lake exe hdlean toy16 48
+lake env .lake/build/bin/hdlean review docs/Review.md     # reviewer document
 ```
 
 The toolchain is pinned to **Lean 4.35.0**; all proofs are checked by its official
-kernel. No Mathlib or third-party Lean packages
-are required. `fifo` currently means the proved two-entry skid buffer; its width
-argument is the payload width, not queue depth. `counter` is a four-bit decade
-counter; it ignores the width argument. Widths 0–64 are accepted for the FIFO.
+kernel. No Mathlib or third-party Lean packages are required. The width argument
+is the payload width of `fifo`, `pipeline`, `ring`, `ram` and `async` (default 8);
+`ring` and `async` hold 16 words, `ram` has 16 addresses.
 
-The example Toy16 program starts with garbage register/memory contents, sums
-5+4+3+2+1, stores 15 at address zero, and halts on the 23rd retirement (cycle 45 of
-the serialized two-stage core).
+The example Toy16 program starts with garbage register and memory contents, sums
+5+4+3+2+1, stores 15 at address zero, and halts on the 23rd retirement.
 
-## A circuit is data
+## A design is a Lean program
 
 ```lean
-import HDLean
-open HDLean
+hdl_record Regs where
+  count : 4
 
-def enabledToggle : Circuit 0 1 1 1 := treeCircuit do
-  let q : Expr 0 1 1 := .reg 0
-  return {
-    name := "enabled_toggle"
-    state := #v[⟨"q", .synchronous false, .mux (.input 0) (.inv q) q, "example"⟩]
-    output := #v[q] }
+def ctx : Ctx := Ctx.mealy "counter" In Out Regs ⟨.sync 0⟩ #[]
+
+def body (i : In Sig) (r : Regs Sig) : M ctx (Step Out Regs) := do
+  let nine ← const 4 9
+  let one ← const 4 1
+  let zero ← const 4 0
+  let atNine ← eq r.count nine
+  let inc ← add r.count one
+  let wrapped ← mux atNine zero inc
+  let nxt ← mux i.en wrapped r.count
+  pure { out := ⟨r.count⟩, next := ⟨nxt⟩ }
+
+def design : Design := ⟨#[ctx.module (mealy In Out Regs body)]⟩
 ```
 
-`Circuit domain inputs registers outputs` fixes all dimensions. Expressions cannot
-read an out-of-range wire or cross a clock domain. Each register has one next-state
-expression and an explicit reset kind. Width-indexed `WordExpr` provides literal,
-input, register, mux, Boolean, equality and ripple-add builders. Arithmetic does
-not implicitly extend or narrow. The surface syntax is ordinary Lean do-notation
-and reifies conditionals, equality, Boolean logic and typed word arithmetic.
-
-`Circuit.step` exposes Mealy outputs explicitly. `Circuit.denote` requires an
-`IsMoore` proof, so input-dependent outputs cannot silently become Moore outputs.
-All transitions sample old register values. There are no HDL initial blocks;
-power-up contents are supplied by the environment.
-
-`Synth` has checked encodings for Booleans, bit vectors, products, nonempty `Fin`,
-and vectors. `Synth.transport` builds structure/enum layouts from a proved
-representation map. `deriving Synth` handles structures and nullary enums,
-including generic structure parameters. Finite indices use compact binary layouts.
-Tagged unions with payloads use explicit layouts.
+This is the whole decade counter ([Designs/Counter/Word.lean](Designs/Counter/Word.lean)).
+Each `let` emits one cell, checked for widths and references as it is built, so
+the module the kernel reasons about is exactly the one emitted. The proof walks
+the same program with one lemma per operator (`rtl_let`), giving the next
+registers and the outputs as functions of the decoded records; the challenge is
+then a simulation proof against the reviewed `Counter.spec`. Ports and registers
+are records (`hdl_record`); registers declare their reset; memories have no
+reset; power-up contents are always arbitrary.
 
 ## What to review
 
 - [Review.md](docs/Review.md): every challenge statement, its axioms, the definitions it
   uses, interfaces and scenarios, generated from the checked environment.
-- Word-level Toy16 [interface](Designs/Toy16Rtl/Interface.lean) and
-  [challenge](Designs/Toy16Rtl/Challenge.lean); word-level RAM
-  [interface](Designs/RAMRtl/Interface.lean) and [challenge](Designs/RAMRtl/Challenge.lean).
-- [FIFO specification](Designs/Fifo/Spec.lean), [interface](Designs/Fifo/Interface.lean),
-  and [challenge](Designs/Fifo/Challenge.lean).
-- [Counter specification](Designs/Counter/Spec.lean), [interface](Designs/Counter/Interface.lean),
-  and [challenge](Designs/Counter/Challenge.lean).
-- [Toy16 ISA](Designs/Toy16/Spec.lean), [interface](Designs/Toy16/Interface.lean)
-  and [challenge](Designs/Toy16/Challenge.lean).
-- General-depth FIFO [interface](Designs/CircularFifo/Interface.lean) and
-  [challenge](Designs/CircularFifo/Challenge.lean); [RAM challenge](Designs/RAM/Challenge.lean).
-- Dual-clock FIFO [model](Designs/AsyncFifo/Model.lean), [queue spec](Designs/AsyncFifo/Spec.lean),
-  [interface](Designs/AsyncFifo/Interface.lean) and [challenge](Designs/AsyncFifo/Challenge.lean).
+- Each design directory holds its frozen `Spec.lean` (where it has its own
+  reference), `Interface.lean` (ports and how the reference reads them) and
+  `Challenge.lean` (the theorems): [Counter](Designs/Counter), [Fifo](Designs/Fifo)
+  (also the ports of the general-depth FIFO), [CircularFifo](Designs/CircularFifo),
+  [SkidBuffer](Designs/SkidBuffer) (the pipeline), [RAM](Designs/RAM),
+  [Toy16](Designs/Toy16) and [AsyncFifo](Designs/AsyncFifo).
 - The implementation holes in [verification/frozen.json](verification/frozen.json).
 
 The FIFO spec fixes every ready/valid cycle and masks invalid data with `Option`.
-A full FIFO rejects enqueue even when it dequeues in the same cycle. Capacity two
-supports full rate with an always-ready consumer. Payload registers are unreset;
-the proof quantifies over every initial bit pattern. The physical budget is
-`2 * width + 2` flip-flops for this shift-register implementation.
+A full FIFO rejects enqueue even when it dequeues in the same cycle. Payload
+registers and memories are unreset; the proofs quantify over every power-up store.
+Budgets bound state bits (`Blast.stateBits`, registers plus memory words).
 
-Reference models use lists and natural numbers. They are distinct from the finite
-AST that is lowered. The development manifest freezes the framework, review
-interfaces, specifications, challenges, and checker sources. Its initial status
-is **review-required**: generating a manifest is not human approval.
+Reference models use lists and natural numbers; they are distinct from the
+designs that are emitted. The manifest freezes the framework, review interfaces,
+specifications, challenges and checker sources. Its initial status is
+**review-required**: generating a manifest is not human approval.
 
 ## Verification
 
@@ -122,7 +105,6 @@ python3 scripts/verify.py
 
 # Also cross-check with Icarus Verilog and Yosys (must be on PATH).
 python3 scripts/verify.py --backends
-python3 Tests/test_workflow.py
 
 # Check against the reviewer-approved manifest digest, as CI does.
 python3 scripts/verify.py --manifest-sha256 <reviewed-digest> --backends
@@ -133,11 +115,12 @@ hashes, structural metrics, toolchain and commit. Each design's guarantees are t
 theorems in its frozen `Challenge.lean`; [Trust.md](docs/Trust.md) explains what the
 audit enforces and what remains trusted.
 
-Every design is emitted by one proved path: a node graph (`Dag`), the proved
-lowering, and printers whose parse-after-print round trips are proved, giving
-`Proved.emit_correct` for every design. Expression-tree circuits reach it through
-the proved `Circuit.toDag`. The CLI decodes every file it writes with the proved
-parser and requires the lowered graph back.
+Word-level text is printed and parsed back with proved round trips
+(`Design.parse_systemVerilog`, `Design.parse_rtlil`, and the same for multi-clock
+designs). Bit-level text comes from one proved path: the bit-blaster
+(`Design.toDag_nextState`, `toDag_evalOutput`), the proved lowering, and printers
+whose parse-after-print round trips are proved (`Proved.emit_correct`). The CLI
+decodes every file it writes with the proved parser.
 
 ## Pins, waveforms, and metrics
 
@@ -153,52 +136,29 @@ python3 scripts/freeze.py --write
 python3 scripts/synthesize.py fifo --width 8 --liberty /path/to/cells.lib
 ```
 
-Trace rows contain inputs, old state, pre-edge outputs and next state. Testbench
-initialization is used only to compare the same arbitrary power-up assignment;
-no initialization is inserted into generated designs. Inputs and payload words
-are LSB first. The final input bit is synchronous reset; SystemVerilog/RTLIL also
-have a `clk` port. Numeric wire names remain stable; original names and source
-paths remain in the internal graph.
+Trace rows contain inputs, old state, pre-edge outputs and next state of the
+bit-blasted netlist. Inputs and words are LSB first. The final input bit is
+synchronous reset; SystemVerilog and RTLIL also have a `clk` port. No
+initialization is inserted into generated designs.
 
 Graph metrics count the emitted AND gates, flip-flops and Boolean depth, including
-reset logic; the proved lowering does not optimize, so synthesis tools will shrink them. They are not physical timing or area predictions. The
-optional synthesis script records the Liberty hash and actual tool statistics.
-For actual FPGA placement and routing, use the [pinned physical flow](docs/Physical.md).
-The complete Toy16 CPU met a 12 MHz target on ECP5-25K with a measured tool-model
-Fmax of 47.0 MHz, using the previous emitter; re-run the flow for the current one.
-No board timing or power measurement is claimed.
+reset logic. They are not physical timing or area predictions. For FPGA placement
+and routing, use the [pinned physical flow](docs/Physical.md). No board timing or
+power measurement is claimed.
 
 ## Repository
 
-`HDLean/Semantics` contains machines, reset, clocks, composition, and retirement.
-`HDLean/Core` contains the expression-tree circuits, the node graph `Dag`, its
-builder and allocator, and the proved `Circuit.toDag`. `HDLean/Lib` contains
-memory, stream contracts, causal latency contracts, finite delay/retiming proofs,
-and Moore networks. `HDLean/MultiClock` has multi-domain node graphs with typed
-synchronizers and native SV/RTLIL emission, plus the legacy model still used by the
-dual-clock FIFO. `HDLean/Netlist/DagLower.lean` is the proved lowering;
-`HDLean/Backend` has the gate graph and the proved printers and parsers. `Designs`
-contains specs, interfaces, challenges, implementations and proofs. `Tests`
-contains the audit, behavioral regressions and rejection tests.
+`HDLean/Semantics` has machines, reset, clock-crossing primitives (sampling, Gray
+code), composition and retirement; `HDLean/Lib` has the RAM model and Moore
+networks. `HDLean/Rtl` is the word-level language: syntax and semantics, the
+builder and its Hoare-style lemmas, records, memories, instances, multi-clock
+designs, the word-level passes, the text printers and parsers, and the
+bit-blaster. `HDLean/Core/Dag.lean` is the bit-level node graph,
+`HDLean/Netlist` its proved lowering and AIG pass, `HDLean/Backend` the gate graph
+and the proved bit-level printers and parsers. `Designs` contains specs,
+interfaces, challenges, implementations and proofs. `Tests` contains the audit,
+behavioral regressions and rejection tests.
 
-The [renamed design proposal](docs/Design.md), [decision log](docs/Decisions.md),
-and [current status](docs/Status.md) distinguish the original goals from what is
+The [design document](docs/Design.md), [decision log](docs/Decisions.md) and
+[current status](docs/Status.md) distinguish the original goals from what is
 implemented. MIT licensed.
-
-The shared allocator supports resettable and arbitrary-power-up storage without
-manual register offsets:
-
-```lean
-open HDLean.Dag.Allocate
-
-def toggle : Option (HDLean.Dag 0 1 1 1) := circuit "toggle" do
-  let enable ← input 0
-  let count ← regR
-  let next ← xor count.value enable
-  drive count next
-  pure #v[count.value]
-```
-
-Each binding allocates the explicitly requested nodes or register handles.
-Finalization rejects missing or duplicate drivers and invalid node references.
-The older expression-tree syntax is named `treeCircuit do`.

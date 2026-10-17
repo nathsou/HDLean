@@ -1,4 +1,4 @@
-import HDLean.Core.Circuit
+import HDLean.Core.Dag
 namespace HDLean.Backend
 
 /-- AIGER literal: variable index in the high bits, inversion in the low bit. -/

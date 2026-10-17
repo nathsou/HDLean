@@ -26,7 +26,7 @@ def command(args, cwd, log, env=None):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('design', choices=['counter', 'fifo', 'pipeline', 'ram', 'toy16'])
+    p.add_argument('design', choices=['counter', 'fifo', 'pipeline', 'ring', 'ram', 'toy16'])
     p.add_argument('--device', choices=['ice40-hx8k','ecp5-25k'], default='ice40-hx8k')
     p.add_argument('--width', type=int, default=8)
     p.add_argument('--frequency-mhz', type=float, default=12)
@@ -66,8 +66,7 @@ def main():
     env = dict(os.environ, PATH=str(tools['abc'].parent) + os.pathsep + os.environ.get('PATH', ''))
     command([ROOT / '.lake/build/bin/hdlean', 'emit', a.design, 'sv', 'input.sv', a.width],
             work, work / 'emit.log', env)
-    module = {'counter':'hd_decade', 'fifo':f'hd_fifo2_w{a.width}',
-              'pipeline':f'hd_pipeline3_w{a.width}', 'ram':f'hd_ram_16x{a.width}', 'toy16':'hd_top'}[a.design]
+    module = 'hd_top'  # the proved bit-level emitter writes one module
     # Filenames/module identifiers are controlled; no user path enters Yosys source.
     flow = 'synth_ecp5' if a.device == 'ecp5-25k' else 'synth_ice40'
     command([tools['yosys'], '-Q', '-T', '-p',

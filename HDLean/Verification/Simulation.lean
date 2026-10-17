@@ -1,4 +1,3 @@
-import HDLean.Core.TreeToDag
 import HDLean.Netlist.DagLower
 namespace HDLean.Verification
 
@@ -44,11 +43,6 @@ def checkStep (graph : Backend.Graph) (i r o : Nat)
           signals := signals.push s!"output {graph.outputNames[k]!}: expected {out[k]!}, actual {actual.2[k]!}"
       throw s!"cycle {t}: reference/graph mismatch; {String.intercalate "; " signals.toList}; input={input}, state={state}"
     state := next
-
-/-- A tree circuit against its emitted gate graph. -/
-def checkCircuit (c : Circuit d i r o) (cycles seed : Nat) : Except String Unit :=
-  checkStep c.toDag.lower i r o (fun s xs rst =>
-    ((Vector.ofFn (c.next s (xs, rst))).toArray, (Vector.ofFn (c.evalOutput s xs)).toArray)) cycles seed
 
 /-- A node graph against its emitted gate graph. -/
 def checkDag (c : Dag d i r o) (cycles seed : Nat) : Except String Unit :=

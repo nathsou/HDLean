@@ -27,8 +27,8 @@ from freeze import MANIFEST, frozen_modules, protected_files  # noqa: E402
 
 BASE_AXIOMS = {'propext', 'Classical.choice', 'Quot.sound'}
 LEAN_MODULES = ('Init', 'Std', 'Lean')
-DESIGNS = ('fifo', 'counter', 'pipeline', 'ram', 'ring', 'toy16', 'rtl-ram', 'rtl-toy16')
-RTL_DESIGNS = ('rtl-ram', 'rtl-toy16')
+DESIGNS = ('counter', 'fifo', 'pipeline', 'ring', 'ram', 'toy16')
+WORD_DESIGNS = DESIGNS + ('async',)
 FORMATS = ('sv', 'aiger', 'rtlil')
 
 
@@ -129,18 +129,15 @@ def main():
             path = work / f'{design}.{fmt}'
             run([cli, 'emit', design, fmt, path, '8'])  # the CLI reads every file back
             artifacts[str(path.relative_to(ROOT))] = sha(path)
-    for design in RTL_DESIGNS:
-        path = work / f'{design}-words.sv'
-        run([cli, 'rtl-emit', design, path])  # word-level text, read back by the proved parser
-        artifacts[str(path.relative_to(ROOT))] = sha(path)
+    for design in WORD_DESIGNS:
+        for ext in ('sv', 'il'):
+            path = work / f'{design}-words.{ext}'
+            run([cli, 'rtl-emit', design, path, '8'])  # word-level text, read back by the proved parser
+            artifacts[str(path.relative_to(ROOT))] = sha(path)
     review = work / 'Review.md'
     run([args.lake, 'env', cli, 'review', review])
     if review.read_text() != (ROOT / 'docs/Review.md').read_text():
         raise ValueError('docs/Review.md is stale; regenerate it with `lake env .lake/build/bin/hdlean review docs/Review.md`')
-    for fmt in FORMATS:
-        path = work / f'async-events.{fmt}'
-        run([cli, 'emit-async', fmt, path, '8', '4'])
-        artifacts[str(path.relative_to(ROOT))] = sha(path)
     check_manifest(args.manifest_sha256 or initial)
     result = {
         'schema': 2, 'project': 'HDLean', 'status': 'checks-passed',

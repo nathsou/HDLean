@@ -187,18 +187,18 @@ def rtl_testbench(info, rows, bits_module):
     return '\n'.join(lines + ['$display("PASS"); $finish;', 'end', 'endmodule'])
 
 
-def check_rtl(work, design, iverilog, vvp, yosys, ivl_base, cycles=200):
+def check_rtl(work, design, width, iverilog, vvp, yosys, ivl_base, cycles=200):
     """Word-level printer: Icarus runs the word SystemVerilog against the Lean
     trace of Design.step, alongside the proved bit-blasted netlist; Yosys must
     elaborate the word-level text, memories and hierarchy included."""
     words = work / f'{design}_words.sv'
     bits = work / f'{design}_bits.sv'
-    run([EXE, 'rtl-emit', design, words])
-    run([EXE, 'emit', design, 'sv', bits])
+    run([EXE, 'rtl-emit', design, words, width])
+    run([EXE, 'emit', design, 'sv', bits, width])
     tracepath = work / f'{design}_words.json'
-    run([EXE, 'rtl-trace', design, tracepath, cycles, 7])
+    run([EXE, 'rtl-trace', design, tracepath, width, cycles, 7])
     info = json.loads(tracepath.read_text())
-    metrics = json.loads(run([EXE, 'rtl-metrics', design]))
+    metrics = json.loads(run([EXE, 'rtl-metrics', design, width]))
     info['state_bits'] = metrics['blasted_state_bits']
     tb = work / f'{design}_words_tb.sv'
     tb.write_text(rtl_testbench(info, info['rows'], 'hd_top'))
@@ -213,7 +213,7 @@ def check_rtl(work, design, iverilog, vvp, yosys, ivl_base, cycles=200):
     # and writes Verilog, which must match the same trace.
     il = work / f'{design}_words.il'
     il_v = work / f'{design}_words_il.v'
-    run([EXE, 'rtl-emit', design, il])
+    run([EXE, 'rtl-emit', design, il, width])
     log = run([yosys, '-p', f'read_rtlil {il.name}; hierarchy -check -top \\{info["module"]}; proc; '
                f'memory_collect; check -assert; write_verilog -noattr {il_v.name}'], cwd=work)
     (work / f'{design}_words_il_yosys.log').write_text(log)
@@ -253,9 +253,8 @@ def main():
     parser.add_argument('--vvp', default=os.environ.get('VVP', 'vvp'))
     parser.add_argument('--yosys', default=os.environ.get('YOSYS', 'yosys'))
     parser.add_argument('--ivl-base', default=os.environ.get('IVL_BASE'))
-    parser.add_argument('--designs', nargs='+',
-                        choices=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16','rtl-ops'],
-                        default=['fifo','counter','pipeline','ram','ring','toy16','rtl-ram','rtl-toy16','rtl-ops'])
+    designs = ['counter', 'fifo', 'pipeline', 'ring', 'ram', 'toy16', 'ops']
+    parser.add_argument('--designs', nargs='+', choices=designs, default=designs)
     parser.add_argument('--output', type=Path, default=ROOT / 'build/backend-checks')
     args = parser.parse_args()
     for tool in (args.iverilog, args.vvp, args.yosys):
@@ -263,14 +262,16 @@ def main():
             parser.error(f'required external checker is missing: {tool}')
     work = args.output.resolve()
     work.mkdir(parents=True, exist_ok=True)
-    widths = {'fifo':(0,1,8,16), 'counter':(8,), 'pipeline':(1,8),
-              'ram':(1,8), 'ring':(1,8), 'toy16':(8,), 'rtl-ram':(8,), 'rtl-toy16':(8,), 'rtl-ops':(8,)}
+    # Every design is word-level: its bit-blasted netlist goes through AIGER,
+    # Icarus and Yosys equivalence, and its word-level SystemVerilog and RTLIL
+    # through Icarus (against the Lean trace) and Yosys.
+    widths = {'counter': (8,), 'fifo': (1, 8, 16), 'pipeline': (1, 8), 'ring': (1, 8), 'ram': (1, 8),
+              'toy16': (8,), 'ops': (8,)}
     for design in args.designs:
         for width in widths[design]:
             check_design(work, design, width, args.iverilog, args.vvp, args.yosys, args.ivl_base)
-        if design.startswith('rtl-'):
-            check_rtl(work, design, args.iverilog, args.vvp, args.yosys, args.ivl_base)
-        if design in ('counter', 'ring', 'rtl-ram') and shutil.which(os.environ.get('HDLEAN_ABC', 'yosys-abc')):
+        check_rtl(work, design, widths[design][-1], args.iverilog, args.vvp, args.yosys, args.ivl_base)
+        if design in ('counter', 'ring', 'ram') and shutil.which(os.environ.get('HDLEAN_ABC', 'yosys-abc')):
             check_abc(work, design, widths[design][-1], args.yosys)
 
 

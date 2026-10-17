@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('design', choices=['fifo', 'counter'])
+    p.add_argument('design', choices=['counter', 'fifo', 'pipeline', 'ring', 'ram', 'toy16'])
     p.add_argument('--width', type=int, default=8)
     p.add_argument('--liberty', required=True, type=Path)
     p.add_argument('--yosys', default='yosys')
@@ -30,7 +30,7 @@ def main():
         work = Path(tmp)
         shutil.copyfile(a.liberty, work / 'cells.lib')
         subprocess.run([ROOT / '.lake/build/bin/hdlean', 'emit', a.design, 'sv', work / 'input.sv', str(a.width)], check=True)
-        module = f'hd_fifo2_w{a.width}' if a.design == 'fifo' else 'hd_decade'
+        module = 'hd_top'  # the proved bit-level emitter writes one module
         abc = Path(shutil.which(a.abc)).resolve()
         if any(c in str(abc) for c in ' ;"\n'):
             p.error('ABC executable path must not contain whitespace or command delimiters')

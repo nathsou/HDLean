@@ -1,6 +1,7 @@
 # Reproducible physical measurements
 
-The FPGA flow emits the same physical AST used by the correctness theorems,
+The FPGA flow emits the bit-blasted netlist of the word-level design the
+correctness theorems are about (through the proved bit-blaster and emitter),
 synthesizes it with Yosys/ABC, then places and routes it with nextpnr. A report is
 written only after routing succeeds, resources fit, and timing meets the target.
 Reports include artifact, executable and device-model hashes, tool versions,
@@ -33,7 +34,7 @@ approximately 748 MB compressed and 2.5 GB extracted.
 
 Reports are not committed: they go stale with every design, tool or constraint
 change. Run the commands above, or the `Routed FPGA measurements` workflow, and read
-the JSON reports it uploads. For scale, the old bit-level Toy16 (flip-flop memories)
+the JSON reports it uploads. For scale, an earlier bit-level Toy16 (flip-flop memories)
 routed at 47 MHz on an ECP5-25K and did not fit an iCE40HX8K.
 
 Fmax is a tool/model estimate for register timing after placement and routing.

@@ -1,5 +1,5 @@
-import Designs.Toy16Rtl.Challenge
-import Designs.RAMRtl.Challenge
+import Designs.Toy16.Challenge
+import Designs.RAM.Challenge
 import HDLean.Rtl.Compact
 
 /-!
@@ -23,13 +23,13 @@ theorem toy16_correctness (imem : Addr → Word) (s₀ : Store) (rst : Nat → B
     ∃ regs mem, let retire := fun t => retireAt Toy16.Word.design.optimized imem s₀ rst (t + 1)
       RetiresLike retire (isaRetire imem (ArchState.atReset regs mem)) ∧ Progress 2 retire Retire.halt := by
   rw [toy16_retireAt]
-  exact Toy16Rtl.Challenge.correctness imem s₀ rst hr hd
+  exact Toy16.Challenge.correctness imem s₀ rst hr hd
 
 /-- The RAM challenge, for the optimised RAM. -/
 theorem ram_correctness (a w : Nat) (ha : 0 < a) (hw : 0 < w) (s₀ : Store) (xs : Nat → Array Nat × Bool) :
     ∃ m₀ : RAMState (2 ^ a) w, ∀ t, readWord w (design a w).optimized
       ((machine (design a w).optimized).stateFrom s₀ xs t) = (ram (2 ^ a) w).runFrom m₀ (fun n => request a w (xs n).1) t := by
   simp only [readWord, machine, Design.optimized_step, Design.optimized_output]
-  exact RAMRtl.Challenge.correctness a w ha hw s₀ xs
+  exact RAM.Challenge.correctness a w ha hw s₀ xs
 
 end HDLean.Optimized

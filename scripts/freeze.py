@@ -14,8 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / 'verification/frozen.json'
 
-# Reviewer-owned files whose names predate the Spec/Interface/Challenge convention.
-EXTRA_FROZEN = ('Designs/AsyncFifo/Model.lean', 'Designs/Fifo/Circular.lean')
+# Reviewer-owned files outside the Spec/Interface/Challenge convention.
+EXTRA_FROZEN = ()
 TOOLING = ('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'Tests/Audit.lean',
            'scripts/verify.py', 'scripts/freeze.py', 'scripts/check_backends.py',
            'scripts/check_native_clocks.py', 'verification/branch-protection.json')

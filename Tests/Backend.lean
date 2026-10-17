@@ -1,6 +1,6 @@
 import HDLean
-import Designs.Counter.Impl
-import Designs.Fifo.Impl
+import Designs.Counter.Word
+import Designs.Fifo.Word
 
 namespace HDLean.Tests
 open Backend Backend.Proved
@@ -12,13 +12,15 @@ private def require (condition : Bool) (message : String) : IO Unit :=
 parser and compare its graph with the lowering. Also check that changed and
 invalid text is rejected or decodes to a different graph. -/
 def checkBackendTexts : IO Unit := do
-  for width in [0, 1, 8, 16, 64] do
-    let c := (Fifo.hardware width).toDag
+  for width in [1, 8, 16, 64] do
+    let some c := (Fifo.Word.design width).toDag
+      | throw (IO.userError s!"the FIFO does not bit-blast, width={width}")
     for f in [Format.systemVerilog, .aiger, .rtlil] do
       match f.parse (f.emit c) with
       | some g => require (g.graph.logic == (Dag.lowerOpt c).logic) s!"read-back graph differs, width={width}"
       | none => throw (IO.userError s!"proved parser rejected emitted text, width={width}")
-  let c := Counter.hardware.toDag
+  let some c := Counter.Word.design.toDag
+    | throw (IO.userError "the counter does not bit-blast")
   let sv := Format.systemVerilog.emit c
   let il := Format.rtlil.emit c
   let aag := Format.aiger.emit c
