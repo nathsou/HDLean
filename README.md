@@ -44,6 +44,15 @@ is the payload width of `fifo`, `pipeline`, `ring`, `ram` and `async` (default 8
 The example Toy16 program starts with garbage register and memory contents, sums
 5+4+3+2+1, stores 15 at address zero, and halts on the 23rd retirement.
 
+## Project Euler on a board
+
+[Euler.md](docs/Euler.md) describes ten Project Euler solvers written in HDLean
+for the Alchitry Cu (iCE40-HX8K): sieves, Collatz lanes with memoised tails,
+Miller–Rabin in Montgomery form, systolic and streamed dynamic programmes, BCD
+bignums. Each is checked against a plain-Lean reference, placed and routed with
+timing closed, and reports its answer and cycle count over the board's serial
+port (`scripts/euler.py`).
+
 ## A design is a Lean program
 
 ```lean

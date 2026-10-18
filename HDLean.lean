@@ -22,3 +22,4 @@ import HDLean.Rtl.MultiText
 import HDLean.Rtl.MealyCells
 import HDLean.Rtl.MealyDesign
 import HDLean.Rtl.Tactic
+import HDLean.Rtl.Named

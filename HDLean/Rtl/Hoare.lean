@@ -125,7 +125,7 @@ theorem Refines.mono {s t : State c} {x : Sig w} {f} (h : Refines s x f) (hx : E
   ⟨hx.widths h.1, fun e => (hx.val e h.lt).trans (h.2 e)⟩
 
 def Ensures (s : State c) (m : M c α) (post : α → State c → Prop) : Prop :=
-  ∃ a t, m s = some (a, t) ∧ Extends s t ∧ post a t
+  ∃ a t, m s = .ok (a, t) ∧ Extends s t ∧ post a t
 
 theorem ensures_pure (s : State c) (a : α) {post : α → State c → Prop} (h : post a s) :
     Ensures s (pure a) post := ⟨a, s, rfl, Extends.refl s, h⟩
@@ -135,7 +135,7 @@ theorem ensures_bind {s : State c} {m : M c α} {f : α → M c β} {p : α → 
     (k : ∀ a t, Extends s t → p a t → Ensures t (f a) q) : Ensures s (m >>= f) q := by
   obtain ⟨a, t, hm, he, hp⟩ := h
   obtain ⟨b, u, hf, he', hq⟩ := k a t he hp
-  exact ⟨b, u, by simp [bind, StateT.bind, hm, hf], he.trans he', hq⟩
+  exact ⟨b, u, by simp [bind, StateT.bind, Except.bind, hm, hf], he.trans he', hq⟩
 
 theorem ensures_weaken {s : State c} {m : M c α} {p q : α → State c → Prop} (h : Ensures s m p)
     (hp : ∀ a t, p a t → q a t) : Ensures s m q := by
@@ -437,7 +437,7 @@ theorem toModule_check (t : State c) (r : Wiring) (hc : c.ok = true) (hw : Wired
 
 /-- A program run whose wiring is well-typed yields exactly the module of its final state. -/
 theorem run_eq {c : Ctx} (program : M c Wiring) (r : Wiring) (t : State c)
-    (hp : program (init c) = some (r, t)) (hc : c.ok = true) (hw : Wired t r) :
+    (hp : program (init c) = .ok (r, t)) (hc : c.ok = true) (hw : Wired t r) :
     run c program = some (t.toModule r) := by
   have hcheck := toModule_check t r hc hw
   simp [run, hp, hc, hw.1, hcheck]

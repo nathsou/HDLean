@@ -341,7 +341,7 @@ theorem Ctx.mealy_ok_pos (hc : (Ctx.mealy name I O R resets mems subs).ok = true
 def Ctx.module (c : Ctx) (program : M c Wiring) : Module := (run c program).getD default
 
 theorem Ctx.module_eq {c : Ctx} {program : M c Wiring} {r : Wiring} {t : State c}
-    (hp : program (init c) = some (r, t)) (hc : c.ok = true) (hw : Wired t r) :
+    (hp : program (init c) = .ok (r, t)) (hc : c.ok = true) (hw : Wired t r) :
     c.module program = t.toModule r := by
   simp [Ctx.module, run_eq program r t hp hc hw]
 
